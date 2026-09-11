@@ -1009,7 +1009,7 @@ declarada como aprovada nesta máquina.
 
 # 13. Fase 7 — Financeiro
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona gestão financeira do ERP`
 
 ## Objetivo
@@ -1104,6 +1104,18 @@ Derivar de títulos vencidos e não liquidados.
 - origem em venda/compra;
 - fluxo previsto/realizado;
 - valores decimais exatos.
+
+## Resultado da execução
+
+Implementadas categorias financeiras, contas/caixas, títulos a receber e a
+pagar, parcelamento com fechamento exato, liquidações parciais e reversíveis,
+derivação de status por vencimento e fluxo de caixa previsto versus realizado.
+O escopo permanece operacional e não cria contabilidade formal, conciliação
+bancária ou integração de pagamentos.
+
+Validação local: `51 passed`, `65 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff e validações estruturais aprovados. A suíte PostgreSQL real não foi
+declarada como aprovada nesta máquina.
 
 ---
 

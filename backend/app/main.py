@@ -12,6 +12,7 @@ from app.api.custom_fields import router as custom_fields_router
 from app.api.customers import router as customers_router
 from app.api.dashboard import router as dashboard_router
 from app.api.employees import router as employees_router
+from app.api.finance import router as finance_router
 from app.api.health import router as health_router
 from app.api.inventory import router as inventory_router
 from app.api.products import router as products_router
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     application.include_router(sales_router)
     application.include_router(inventory_router)
     application.include_router(purchases_router)
+    application.include_router(finance_router)
     return application
 
 

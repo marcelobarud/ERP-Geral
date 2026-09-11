@@ -96,6 +96,10 @@ A migration `20260911_0008` integra vendas e devoluções ao estoque: vendas
 podem ser postadas uma única vez, cancelamentos geram reversões compensatórias
 e devoluções aprovadas geram entradas idempotentes.
 
+A migration `20260911_0009` adiciona categorias financeiras, contas/caixas,
+títulos a receber e pagar, parcelamento, liquidações reversíveis e fluxo de
+caixa previsto versus realizado.
+
 ## Execução local
 
 Backend, em um terminal:

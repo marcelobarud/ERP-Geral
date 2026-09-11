@@ -29,6 +29,7 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[str]] = {
             "commercial:write",
             "inventory:write",
             "purchases:write",
+            "finance:write",
             "sales:create",
             "sales:cancel",
             "settings:write",
@@ -56,9 +57,7 @@ class BootstrapDisabledError(Exception):
 
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac(
-        "sha256", password.encode(), salt, PASSWORD_ITERATIONS
-    )
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PASSWORD_ITERATIONS)
     encode = base64.urlsafe_b64encode
     return "pbkdf2_sha256${}${}${}".format(
         PASSWORD_ITERATIONS,
@@ -74,9 +73,7 @@ def verify_password(password: str, encoded_hash: str) -> bool:
             return False
         salt = base64.urlsafe_b64decode(salt_value.encode())
         expected = base64.urlsafe_b64decode(digest_value.encode())
-        actual = hashlib.pbkdf2_hmac(
-            "sha256", password.encode(), salt, int(iterations)
-        )
+        actual = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, int(iterations))
     except (TypeError, ValueError):
         return False
     return hmac.compare_digest(actual, expected)

@@ -47,8 +47,13 @@ REQUIRED_TABLES = {
     "recebimentos_compra_itens",
     "devolucoes_venda",
     "devolucoes_venda_itens",
+    "categorias_financeiras",
+    "contas_financeiras",
+    "titulos_financeiros",
+    "parcelas_financeiras",
+    "liquidacoes_financeiras",
 }
-EXPECTED_MIGRATION = "20260911_0008"
+EXPECTED_MIGRATION = "20260911_0009"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
@@ -71,6 +76,11 @@ TEST_DATA_TABLES = (
     "pedidos_compra",
     "devolucoes_venda_itens",
     "devolucoes_venda",
+    "liquidacoes_financeiras",
+    "parcelas_financeiras",
+    "titulos_financeiros",
+    "contas_financeiras",
+    "categorias_financeiras",
     "produtos_fornecedores",
     "categorias_produto",
     "unidades_medida",
@@ -145,9 +155,7 @@ def test_engine():
 @pytest.fixture(scope="session")
 def clean_test_database(test_engine):
     table_names = ", ".join(TEST_DATA_TABLES)
-    cleanup_statement = text(
-        f"TRUNCATE TABLE {table_names} RESTART IDENTITY"
-    )
+    cleanup_statement = text(f"TRUNCATE TABLE {table_names} RESTART IDENTITY")
 
     with test_engine.begin() as connection:
         connection.execute(cleanup_statement)

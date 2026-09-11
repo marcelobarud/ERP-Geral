@@ -37,6 +37,13 @@ from app.models.entities import (
     Venda,
     VendaItem,
 )
+from app.models.finance import (
+    CategoriaFinanceira,
+    ContaFinanceira,
+    LiquidacaoFinanceira,
+    ParcelaFinanceira,
+    TituloFinanceiro,
+)
 from app.models.inventory import (
     ConfiguracaoEstoque,
     DepositoEstoque,
@@ -82,6 +89,11 @@ __all__ = [
     "RecebimentoCompraItem",
     "DevolucaoVenda",
     "DevolucaoVendaItem",
+    "CategoriaFinanceira",
+    "ContaFinanceira",
+    "TituloFinanceiro",
+    "ParcelaFinanceira",
+    "LiquidacaoFinanceira",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

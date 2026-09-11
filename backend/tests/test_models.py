@@ -19,6 +19,7 @@ from app.models import (
     ProdutoFornecedor,
     RecebimentoCompra,
     SessaoAutenticacao,
+    TituloFinanceiro,
     Usuario,
     Venda,
     VendaItem,
@@ -314,6 +315,39 @@ EXPECTED_COLUMNS = {
         "quantidade",
         "preco_unitario",
     },
+    "categorias_financeiras": {"id", "nome", "tipo", "ativo"},
+    "contas_financeiras": {"id", "nome", "saldo_inicial", "ativo"},
+    "titulos_financeiros": {
+        "id",
+        "numero",
+        "tipo",
+        "cliente_id",
+        "fornecedor_id",
+        "categoria_id",
+        "origem_tipo",
+        "origem_id",
+        "valor_original",
+        "descricao",
+        "created_at",
+        "updated_at",
+    },
+    "parcelas_financeiras": {
+        "id",
+        "titulo_id",
+        "numero",
+        "vencimento",
+        "valor",
+    },
+    "liquidacoes_financeiras": {
+        "id",
+        "parcela_id",
+        "conta_id",
+        "valor",
+        "data_liquidacao",
+        "status",
+        "observacao",
+        "created_at",
+    },
     "configuracoes_aparencia": {
         "id",
         "nome_sistema",
@@ -369,26 +403,30 @@ EXPECTED_COLUMNS = {
         "pagina",
         "properties",
     },
-    "cliente_campos": {
-        "id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"
-    },
+    "cliente_campos": {"id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"},
     "cliente_campos_valores": {"id", "cliente_id", "campo_id", "valor"},
-    "produto_campos": {
-        "id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"
-    },
+    "produto_campos": {"id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"},
     "produto_campos_valores": {"id", "produto_id", "campo_id", "valor"},
     "funcionario_campos": {
-        "id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"
+        "id",
+        "nome",
+        "tipo",
+        "opcoes",
+        "obrigatorio",
+        "ativo",
+        "ordem",
     },
-    "funcionario_campos_valores": {
-        "id", "funcionario_id", "campo_id", "valor"
-    },
+    "funcionario_campos_valores": {"id", "funcionario_id", "campo_id", "valor"},
     "fornecedor_campos": {
-        "id", "nome", "tipo", "opcoes", "obrigatorio", "ativo", "ordem"
+        "id",
+        "nome",
+        "tipo",
+        "opcoes",
+        "obrigatorio",
+        "ativo",
+        "ordem",
     },
-    "fornecedor_campos_valores": {
-        "id", "fornecedor_id", "campo_id", "valor"
-    },
+    "fornecedor_campos_valores": {"id", "fornecedor_id", "campo_id", "valor"},
 }
 
 
@@ -397,18 +435,13 @@ def test_v1_tables_have_exactly_the_approved_columns() -> None:
 
     for table_name, expected_columns in EXPECTED_COLUMNS.items():
         assert (
-            set(Cliente.metadata.tables[table_name].columns.keys())
-            == expected_columns
+            set(Cliente.metadata.tables[table_name].columns.keys()) == expected_columns
         )
 
 
 def test_only_approved_columns_are_nullable() -> None:
     nullable_columns = {
-        table_name: {
-            column.name
-            for column in table.columns
-            if column.nullable
-        }
+        table_name: {column.name for column in table.columns if column.nullable}
         for table_name, table in Cliente.metadata.tables.items()
     }
 
@@ -460,6 +493,18 @@ def test_only_approved_columns_are_nullable() -> None:
         "recebimentos_compra_itens": set(),
         "devolucoes_venda": {"usuario_id"},
         "devolucoes_venda_itens": set(),
+        "categorias_financeiras": set(),
+        "contas_financeiras": set(),
+        "titulos_financeiros": {
+            "cliente_id",
+            "fornecedor_id",
+            "categoria_id",
+            "origem_tipo",
+            "origem_id",
+            "descricao",
+        },
+        "parcelas_financeiras": set(),
+        "liquidacoes_financeiras": {"observacao"},
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",
@@ -537,6 +582,7 @@ def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
         PedidoCompra,
         RecebimentoCompra,
         DevolucaoVenda,
+        TituloFinanceiro,
     ):
         created_at = model.__table__.c.created_at
         updated_at = model.__table__.c.updated_at
@@ -589,8 +635,7 @@ def test_constraints_and_foreign_keys_are_named_and_restrictive() -> None:
     ].foreign_key_constraints
     assert any(
         foreign_key.column_keys == ["fornecedor_id"]
-        and str(foreign_key.elements[0].target_fullname)
-        == "fornecedores.id"
+        and str(foreign_key.elements[0].target_fullname) == "fornecedores.id"
         for foreign_key in supplier_foreign_keys
     )
 
