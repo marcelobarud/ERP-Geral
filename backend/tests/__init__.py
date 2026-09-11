@@ -1,1 +1,1 @@
-"""Testes do backend do CRM Geral."""
+"""Testes do backend do ERP Geral."""

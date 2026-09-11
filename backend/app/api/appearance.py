@@ -33,7 +33,7 @@ MAX_LOGO_PIXELS = 25_000_000
 
 DEFAULTS = {
     "id": 1,
-    "nome_sistema": "CRM Geral",
+    "nome_sistema": "ERP Geral",
     "logo_url": None,
     "cor_primaria": "#487A98",
     "cor_secundaria": "#2F5975",

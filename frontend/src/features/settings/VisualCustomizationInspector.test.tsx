@@ -104,7 +104,7 @@ describe('inspector visual automático', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Navegar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Ação repetida' }))
     expect(onNavigate).toHaveBeenCalledOnce()
-    expect(screen.getByText('Modo Navegar: use o CRM normalmente.')).toBeTruthy()
+    expect(screen.getByText('Modo Navegar: use o ERP normalmente.')).toBeTruthy()
   })
 
   it('mantém a mesma chave estrutural para células repetidas da mesma coluna', () => {

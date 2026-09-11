@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     database_url: str = Field(description="URL de conexão do PostgreSQL")
-    app_name: str = "CRM Geral"
+    app_name: str = "ERP Geral"
     environment: str = "development"
 
     model_config = SettingsConfigDict(

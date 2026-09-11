@@ -1,4 +1,4 @@
-"""Configuração persistente da identidade visual do CRM."""
+"""Configuração persistente da identidade visual do ERP."""
 
 from sqlalchemy import JSON, CheckConstraint, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column

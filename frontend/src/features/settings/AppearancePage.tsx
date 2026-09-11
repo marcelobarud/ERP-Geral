@@ -96,7 +96,7 @@ export function AppearancePage() {
     {feedback ? <FeedbackBanner kind={feedback.kind} message={feedback.message} onDismiss={() => setFeedback(null)} /> : null}
     <div className="settings-layout">
       <form className="settings-card" onSubmit={(event) => void submit(event)}>
-        <div className="settings-card-heading"><div><p className="eyebrow">Branding global</p><h2>Identidade do CRM</h2><span className="form-help">Estas opções formam a base visual herdada por toda a aplicação.</span></div></div>
+        <div className="settings-card-heading"><div><p className="eyebrow">Branding global</p><h2>Identidade do ERP</h2><span className="form-help">Estas opções formam a base visual herdada por toda a aplicação.</span></div></div>
         <div className="form-grid">
           <div className="form-field form-grid-wide"><label htmlFor="appearance-name">Nome do sistema</label><input id="appearance-name" value={form.nome_sistema} onChange={(event) => updateField('nome_sistema', event.target.value)} required /></div>
           <div className="form-field form-grid-wide"><label htmlFor="appearance-logo">Logo (PNG, JPEG ou WEBP até 2 MB)</label><input id="appearance-logo" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void chooseLogo(event)} /></div>

@@ -49,7 +49,7 @@ def client(session):
 def test_appearance_can_be_read_updated_and_restored(client: TestClient) -> None:
     default_response = client.get("/api/settings/appearance")
     assert default_response.status_code == 200
-    assert default_response.json()["nome_sistema"] == "CRM Geral"
+    assert default_response.json()["nome_sistema"] == "ERP Geral"
 
     update_response = client.patch(
         "/api/settings/appearance",
@@ -68,12 +68,12 @@ def test_appearance_can_be_read_updated_and_restored(client: TestClient) -> None
 
     restored_response = client.post("/api/settings/appearance/reset")
     assert restored_response.status_code == 200
-    assert restored_response.json()["nome_sistema"] == "CRM Geral"
+    assert restored_response.json()["nome_sistema"] == "ERP Geral"
     assert restored_response.json()["cor_primaria"] == "#487A98"
 
     read_after_restore = client.get("/api/settings/appearance")
     assert read_after_restore.status_code == 200
-    assert read_after_restore.json()["nome_sistema"] == "CRM Geral"
+    assert read_after_restore.json()["nome_sistema"] == "ERP Geral"
     assert read_after_restore.json()["rotulo_clientes"] == "Clientes"
 
 

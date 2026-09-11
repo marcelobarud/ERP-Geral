@@ -8,7 +8,7 @@ from app.main import app, create_app
 
 
 def test_fastapi_app_can_be_imported() -> None:
-    assert app.title == "CRM Geral"
+    assert app.title == "ERP Geral"
 
 
 def test_health_check_returns_minimal_contract() -> None:
@@ -69,7 +69,7 @@ def test_settings_load_database_url_from_environment(
 ) -> None:
     monkeypatch.setenv(
         "DATABASE_URL",
-        "postgresql+psycopg://user:password@localhost:5432/crm_geral",
+        "postgresql+psycopg://user:password@localhost:5432/erp_geral",
     )
     get_settings.cache_clear()
 
@@ -94,7 +94,7 @@ def test_settings_reject_non_postgresql_url() -> None:
 
 def test_sqlalchemy_session_factory_can_open_and_close_without_connecting() -> None:
     settings = Settings(
-        database_url="postgresql+psycopg://user:password@localhost:5432/crm_geral"
+        database_url="postgresql+psycopg://user:password@localhost:5432/erp_geral"
     )
     engine = create_engine_from_settings(settings)
     session_factory = create_session_factory(engine)

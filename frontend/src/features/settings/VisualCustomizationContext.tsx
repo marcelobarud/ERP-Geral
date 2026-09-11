@@ -617,7 +617,7 @@ function VisualCustomizationPanel({ hovered, hoverRect, selectedRect }: { hovere
     {selectedRect && (!hovered || hovered.element !== selected?.element) ? <div className="visual-editor-overlay visual-editor-overlay-selected" data-customization-ignore="true" style={{ top: selectedRect.top, left: selectedRect.left, width: selectedRect.width, height: selectedRect.height }} /> : null}
     <div className="visual-editor-bar" data-customization-ignore="true" role="status" aria-label="Personalização visual ativa">
       <strong>🎨 Personalização ativa</strong>
-      <span>{selected ? selected.label : mode === 'navigate' ? 'Modo Navegar: use o CRM normalmente.' : 'Modo Selecionar: aponte e clique em um elemento visual.'}</span>
+      <span>{selected ? selected.label : mode === 'navigate' ? 'Modo Navegar: use o ERP normalmente.' : 'Modo Selecionar: aponte e clique em um elemento visual.'}</span>
       <div className="visual-editor-mode" aria-label="Modo do editor"><span>Modo</span><button className="button button-secondary" type="button" aria-pressed={mode === 'select'} onClick={() => setMode('select')}>Selecionar</button><button className="button button-secondary" type="button" aria-pressed={mode === 'navigate'} onClick={() => setMode('navigate')}>Navegar</button></div>
       <div className="visual-editor-actions"><button className="button button-secondary" type="button" onClick={undo} disabled={!canUndo || saving}>Desfazer</button><button className="button button-secondary" type="button" onClick={cancel} disabled={saving}>Cancelar</button><button className="button button-primary" type="button" onClick={() => void save()} disabled={!dirty || saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div>
     </div>

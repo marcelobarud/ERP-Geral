@@ -15,7 +15,7 @@ from app.core.errors import register_exception_handlers
 
 
 def create_app() -> FastAPI:
-    application = FastAPI(title="CRM Geral", version="0.1.0")
+    application = FastAPI(title="ERP Geral", version="0.1.0")
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[

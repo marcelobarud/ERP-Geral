@@ -1,1 +1,1 @@
-"""Aplicação backend do CRM Geral."""
+"""Aplicação backend do ERP Geral."""

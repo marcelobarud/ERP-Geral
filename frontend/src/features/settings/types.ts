@@ -94,7 +94,7 @@ export type AppearanceOverridePayload = Omit<AppearanceOverride, 'id' | 'customi
 
 export const defaultAppearance: AppearanceConfig = {
   id: 1,
-  nome_sistema: 'CRM Geral',
+  nome_sistema: 'ERP Geral',
   logo_url: null,
   cor_primaria: '#487A98',
   cor_secundaria: '#2F5975',

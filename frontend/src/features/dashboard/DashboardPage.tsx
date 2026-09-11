@@ -166,7 +166,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       <PageHeader
         eyebrow="Visão geral"
         title="Olá, que bom ter você aqui."
-        description="Acompanhe o estado atual do CRM e acesse rapidamente o que precisa ser feito."
+        description="Acompanhe o estado atual do ERP e acesse rapidamente o que precisa ser feito."
         pageId="dashboard"
       />
 
