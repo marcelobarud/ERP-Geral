@@ -1,0 +1,4 @@
+export type FinancialAccount = { id: number; nome: string; saldo_inicial: string | number; ativo: boolean }
+export type FinancialInstallment = { id: number; numero: number; vencimento: string; valor: string | number; valor_liquidado: string | number; status: 'ABERTO' | 'PARCIAL' | 'PAGO' | 'VENCIDO' | 'CANCELADO' }
+export type FinancialTitle = { id: number; numero: string; tipo: 'RECEBER' | 'PAGAR'; cliente_id: number | null; fornecedor_id: number | null; categoria_id: number | null; origem_tipo: string | null; origem_id: number | null; valor_original: string | number; valor_liquidado: string | number; saldo: string | number; status: FinancialInstallment['status']; descricao: string | null; created_at: string; updated_at: string; parcelas: FinancialInstallment[] }
+export type Cashflow = { previsto_receber: string | number; previsto_pagar: string | number; realizado_receber: string | number; realizado_pagar: string | number }

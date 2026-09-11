@@ -132,6 +132,11 @@ A interface de estoque agora oferece saldos, movimentações, ajustes,
 inventários e depósitos, mantendo o saldo derivado das movimentações e o
 depósito padrão resolvido explicitamente.
 
+A interface financeira agora oferece contas a receber, contas a pagar,
+liquidações, reversões e fluxo de caixa previsto versus realizado. Vendas e
+recebimentos confirmados integram automaticamente seus títulos financeiros,
+com vínculo de origem idempotente.
+
 ## Execução local
 
 Backend, em um terminal:

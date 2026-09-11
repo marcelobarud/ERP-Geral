@@ -159,7 +159,10 @@ def create_sale(db: Session, payload: VendaCreate) -> Venda:
     persisted_sale = get_sale(db, sale.id)
     if persisted_sale is None:
         raise SalePersistenceError
-    return persisted_sale
+    from app.services.finance import ensure_sale_receivable
+
+    ensure_sale_receivable(db, persisted_sale.id)
+    return get_sale(db, persisted_sale.id) or persisted_sale
 
 
 def sale_to_read(sale: Venda) -> VendaRead:

@@ -997,4 +997,21 @@ fase por ausência de contrato atual e foi registrada para evolução posterior.
 
 Validação da fase: PostgreSQL específico de estoque `1 passed`; suíte backend
 `118 passed`; frontend `77 passed`, lint, typecheck e build aprovados; Ruff e
-`git diff --check` aprovados. A Fase 4 permanece pendente.
+`git diff --check` aprovados. A Fase 4 foi executada na sequência.
+
+## Atualização — Plano 05, Fase 4 concluída em 2026-09-11
+
+A navegação de Financeiro agora expõe Contas a receber, Contas a pagar e
+Caixa e fluxo de caixa. Vendas comuns e vendas convertidas de pedidos geram
+títulos a receber automaticamente; recebimentos confirmados de compras geram
+títulos a pagar. Os links `origem_tipo`/`origem_id` preservam a origem e a
+criação é idempotente.
+
+Títulos podem ser filtrados por tipo e status, consultados com suas parcelas,
+liquidados parcial ou totalmente e revertidos. O fluxo de caixa separa
+previsto de realizado, e a interface permite cadastrar contas/caixas. A
+fundação da migration `20260911_0009` foi reutilizada sem migration nova.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados. A Fase 5 será executada na sequência.

@@ -64,6 +64,14 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       ],
     },
     {
+      label: 'Financeiro',
+      items: [
+        { path: '/finance/receivables', label: 'Contas a receber', icon: '↗' },
+        { path: '/finance/payables', label: 'Contas a pagar', icon: '↙' },
+        { path: '/finance/cashflow', label: 'Caixa e fluxo', icon: '◫' },
+      ],
+    },
+    {
       label: 'Configurações',
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
@@ -95,6 +103,9 @@ const routeDescriptions: Record<string, string> = {
   '/inventory/adjustments': 'Registre ajustes manuais com motivo.',
   '/inventory/inventories': 'Faça contagens e confirme inventários.',
   '/inventory/deposits': 'Gerencie depósitos e o depósito padrão.',
+  '/finance/receivables': 'Acompanhe contas a receber e liquidações.',
+  '/finance/payables': 'Acompanhe contas a pagar e liquidações.',
+  '/finance/cashflow': 'Consulte o fluxo previsto e realizado.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
   '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',

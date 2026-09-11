@@ -134,12 +134,16 @@ def create_payable(
 @router.get("/titles", response_model=list[FinancialTitleRead])
 def list_titles(
     title_type: str | None = Query(default=None, alias="tipo"),
+    status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db_session),
 ):
     query = title_query().order_by(TituloFinanceiro.created_at.desc())
     if title_type:
         query = query.where(TituloFinanceiro.tipo == title_type)
-    return [title_to_read(item) for item in db.scalars(query).all()]
+    titles = [title_to_read(item) for item in db.scalars(query).all()]
+    if status_filter:
+        titles = [item for item in titles if item.status == status_filter]
+    return titles
 
 
 @router.get("/titles/{title_id}", response_model=FinancialTitleRead)

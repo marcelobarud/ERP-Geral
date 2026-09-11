@@ -146,3 +146,10 @@ def test_purchase_partial_receipt_updates_stock_once_and_cost_history(
     assert Decimal(str(completed.json()["itens"][0]["quantidade_recebida"])) == Decimal(
         "10.000"
     )
+    payables = client.get("/api/finance/titles?tipo=PAGAR")
+    assert payables.status_code == 200
+    assert any(
+        item["origem_tipo"] == "RECEBIMENTO_COMPRA"
+        and item["origem_id"] == final_receipt.json()["id"]
+        for item in payables.json()
+    )

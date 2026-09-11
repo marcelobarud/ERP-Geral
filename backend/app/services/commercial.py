@@ -462,7 +462,10 @@ def convert_order_to_sale(db: Session, order_id: int) -> VendaRead:
     persisted = get_sale(db, sale.id)
     if persisted is None:
         raise CommercialConflict("Venda convertida não encontrada.")
-    return sale_to_read(persisted)
+    from app.services.finance import ensure_sale_receivable
+
+    ensure_sale_receivable(db, persisted.id)
+    return sale_to_read(get_sale(db, persisted.id) or persisted)
 
 
 def item_read(item) -> CommercialItemRead:

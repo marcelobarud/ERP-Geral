@@ -14,7 +14,10 @@ from app.models import (
     Fornecedor,
     LiquidacaoFinanceira,
     ParcelaFinanceira,
+    PedidoCompra,
+    RecebimentoCompra,
     TituloFinanceiro,
+    Venda,
 )
 from app.schemas.finance import FinancialTitleCreate
 
@@ -25,6 +28,94 @@ class FinanceNotFound(Exception):
 
 class FinanceConflict(Exception):
     pass
+
+
+def _origin_title_exists(db: Session, origin_type: str, origin_id: int) -> bool:
+    return db.scalar(
+        select(TituloFinanceiro.id).where(
+            TituloFinanceiro.origem_tipo == origin_type,
+            TituloFinanceiro.origem_id == origin_id,
+        )
+    ) is not None
+
+
+def ensure_sale_receivable(db: Session, sale_id: int) -> TituloFinanceiro | None:
+    sale = db.get(Venda, sale_id)
+    if sale is None:
+        return None
+    if _origin_title_exists(db, "VENDA", sale.id):
+        return get_title(
+            db,
+            db.scalar(
+                select(TituloFinanceiro.id).where(
+                    TituloFinanceiro.origem_tipo == "VENDA",
+                    TituloFinanceiro.origem_id == sale.id,
+                )
+            ),
+        )
+    total = sum(
+        (item.quantidade * item.preco_unitario for item in sale.itens),
+        Decimal("0.00"),
+    )
+    title = TituloFinanceiro(
+        numero=f"VENDA-{sale.id}",
+        tipo="RECEBER",
+        cliente_id=sale.cliente_id,
+        origem_tipo="VENDA",
+        origem_id=sale.id,
+        valor_original=total.quantize(Decimal("0.01")),
+        descricao=f"Venda #{sale.id}",
+        parcelas=[
+            ParcelaFinanceira(
+                numero=1,
+                vencimento=sale.data_venda.date(),
+                valor=total.quantize(Decimal("0.01")),
+            )
+        ],
+    )
+    db.add(title)
+    db.commit()
+    return get_title(db, title.id)
+
+
+def ensure_receipt_payable(db: Session, receipt_id: int) -> TituloFinanceiro | None:
+    receipt = db.get(RecebimentoCompra, receipt_id)
+    if receipt is None:
+        return None
+    if _origin_title_exists(db, "RECEBIMENTO_COMPRA", receipt.id):
+        title_id = db.scalar(
+            select(TituloFinanceiro.id).where(
+                TituloFinanceiro.origem_tipo == "RECEBIMENTO_COMPRA",
+                TituloFinanceiro.origem_id == receipt.id,
+            )
+        )
+        return get_title(db, title_id)
+    purchase = db.get(PedidoCompra, receipt.pedido_id)
+    if purchase is None:
+        return None
+    total = sum(
+        (item.quantidade * item.custo_efetivo for item in receipt.itens),
+        Decimal("0.00"),
+    ).quantize(Decimal("0.01"))
+    title = TituloFinanceiro(
+        numero=f"RECEBIMENTO-{receipt.id}",
+        tipo="PAGAR",
+        fornecedor_id=purchase.fornecedor_id,
+        origem_tipo="RECEBIMENTO_COMPRA",
+        origem_id=receipt.id,
+        valor_original=total,
+        descricao=f"Recebimento #{receipt.id} do pedido {purchase.numero}",
+        parcelas=[
+            ParcelaFinanceira(
+                numero=1,
+                vencimento=receipt.data_recebimento,
+                valor=total,
+            )
+        ],
+    )
+    db.add(title)
+    db.commit()
+    return get_title(db, title.id)
 
 
 def title_query():

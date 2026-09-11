@@ -15,6 +15,7 @@ import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
 import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
+import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -68,6 +69,12 @@ function PageForRoute({
       return <InventoriesPage />
     case '/inventory/deposits':
       return <DepositsPage />
+    case '/finance/receivables':
+      return <FinancialTitlesPage kind="RECEBER" />
+    case '/finance/payables':
+      return <FinancialTitlesPage kind="PAGAR" />
+    case '/finance/cashflow':
+      return <CashflowPage />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':

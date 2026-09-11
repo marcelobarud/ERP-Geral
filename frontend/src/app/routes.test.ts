@@ -28,6 +28,11 @@ describe('navegação comercial', () => {
       '/inventory/inventories',
       '/inventory/deposits',
     ])
+    expect(groups.find((group) => group.label === 'Financeiro')?.items.map((item) => item.path)).toEqual([
+      '/finance/receivables',
+      '/finance/payables',
+      '/finance/cashflow',
+    ])
   })
 
   it('resolve as rotas comerciais com descrição própria', () => {
@@ -36,5 +41,6 @@ describe('navegação comercial', () => {
     expect(getRoute('/commercial/returns').description).toContain('devoluções')
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
     expect(getRoute('/inventory/balances').label).toBe('Saldos')
+    expect(getRoute('/finance/receivables').label).toBe('Contas a receber')
   })
 })

@@ -117,6 +117,12 @@ def test_quote_order_and_sale_conversion_are_controlled(client, session) -> None
     assert Decimal(str(sale.json()["itens"][0]["preco_unitario"])) == Decimal("15.00")
     assert sale.json()["pedido_id"] == order.json()["id"]
     assert sale.json()["condicao_pagamento_id"] == payment_condition.id
+    receivables = client.get("/api/finance/titles?tipo=RECEBER")
+    assert receivables.status_code == 200
+    assert any(
+        item["origem_tipo"] == "VENDA" and item["origem_id"] == sale.json()["id"]
+        for item in receivables.json()
+    )
 
     repeated_sale = client.post(
         f"/api/commercial/orders/{order.json()['id']}/convert-to-sale"

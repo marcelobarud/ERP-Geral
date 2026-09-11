@@ -218,6 +218,9 @@ def create_receipt(
     )
     db.add(receipt)
     db.commit()
+    from app.services.finance import ensure_receipt_payable
+
+    ensure_receipt_payable(db, receipt.id)
     return get_receipt(db, receipt.id)  # type: ignore[return-value]
 
 

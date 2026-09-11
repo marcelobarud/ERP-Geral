@@ -707,8 +707,8 @@ Validações da fase: teste PostgreSQL de compras `1 passed`, backend completo
 
 ## 10. Fase 4 — Financeiro integrado
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: integra financeiro às operações do ERP`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: integra financeiro às operações do ERP`
 
 ### Objetivo
 
@@ -797,6 +797,24 @@ Revisar `origem_tipo` / `origem_id`.
 Se a ausência de FK estiver causando risco real, propor solução segura.
 
 Não fazer refatoração grande apenas por estética.
+
+### Resultado da execução
+
+A navegação de Financeiro foi exposta no frontend com Contas a receber,
+Contas a pagar e Caixa e fluxo de caixa. Vendas comuns e vendas originadas de
+pedidos passam a gerar títulos a receber automaticamente; a confirmação de
+recebimentos de compras gera títulos a pagar. Os vínculos polimórficos de
+origem são preservados e a criação é idempotente.
+
+A interface permite filtrar títulos por tipo e status, consultar parcelas,
+registrar liquidações parciais ou totais, reverter liquidações e selecionar a
+conta utilizada. O fluxo de caixa separa valores previstos e realizados, e a
+interface permite cadastrar contas/caixas. A fundação financeira da migration
+`20260911_0009` foi suficiente; não foi necessária migration nova.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados.
 
 ---
 
