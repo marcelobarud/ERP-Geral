@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -7,7 +8,15 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import Fornecedor, Produto, VendaItem
+from app.models import (
+    CategoriaProduto,
+    Fornecedor,
+    HistoricoCustoProduto,
+    Produto,
+    ProdutoFornecedor,
+    UnidadeMedida,
+    VendaItem,
+)
 from app.schemas.pagination import PaginationResponse
 from app.schemas.products import ProdutoCreate, ProdutoRead, ProdutoUpdate
 from app.services.custom_fields import (
@@ -30,11 +39,55 @@ def ensure_supplier_exists(db: Session, supplier_id: int) -> None:
         raise HTTPException(status_code=404, detail="Fornecedor não encontrado.")
 
 
+def ensure_category_exists(db: Session, category_id: int | None) -> None:
+    if category_id is not None and db.get(CategoriaProduto, category_id) is None:
+        raise HTTPException(status_code=404, detail="Categoria não encontrada.")
+
+
+def ensure_unit_exists(db: Session, unit_code: str | None) -> None:
+    if unit_code is not None and db.scalar(
+        select(UnidadeMedida.id).where(
+            UnidadeMedida.codigo == unit_code,
+            UnidadeMedida.ativo.is_(True),
+        )
+    ) is None:
+        raise HTTPException(status_code=422, detail="Unidade de medida inválida.")
+
+
+def generate_sku() -> str:
+    return f"ERP-{uuid.uuid4().hex[:12].upper()}"
+
+
+def sync_primary_supplier(db: Session, product: Produto) -> None:
+    db.query(ProdutoFornecedor).filter(
+        ProdutoFornecedor.produto_id == product.id
+    ).update({"preferencial": False}, synchronize_session=False)
+    link = db.scalar(
+        select(ProdutoFornecedor).where(
+            ProdutoFornecedor.produto_id == product.id,
+            ProdutoFornecedor.fornecedor_id == product.fornecedor_id,
+        )
+    )
+    if link is None:
+        db.add(
+            ProdutoFornecedor(
+                produto_id=product.id,
+                fornecedor_id=product.fornecedor_id,
+                custo_referencia=product.preco_custo,
+                preferencial=True,
+            )
+        )
+    else:
+        link.preferencial = True
+        link.ativo = True
+
+
 @router.get("", response_model=PaginationResponse[ProdutoRead])
 def list_products(
     search: str | None = Query(default=None),
     category: str | None = Query(default=None),
     supplier_id: int | None = Query(default=None, gt=0),
+    active: bool | None = Query(default=None),
     cost_min: Decimal | None = Query(default=None, ge=0),
     cost_max: Decimal | None = Query(default=None, ge=0),
     sale_price_min: Decimal | None = Query(default=None, ge=0),
@@ -74,6 +127,8 @@ def list_products(
         query = query.where(Produto.categoria.ilike(normalized_category))
     if supplier_id is not None:
         query = query.where(Produto.fornecedor_id == supplier_id)
+    if active is not None:
+        query = query.where(Produto.ativo == active)
     if cost_min is not None:
         query = query.where(Produto.preco_custo >= cost_min)
     if cost_max is not None:
@@ -120,11 +175,23 @@ def create_product(
     db: Session = Depends(get_db_session),
 ) -> Produto:
     ensure_supplier_exists(db, payload.fornecedor_id)
+    ensure_category_exists(db, payload.categoria_id)
+    ensure_unit_exists(db, payload.unidade_medida)
     custom_values = payload.campos_personalizados
-    product = Produto(**payload.model_dump(exclude={"campos_personalizados"}))
+    product_data = payload.model_dump(exclude={"campos_personalizados", "sku"})
+    product = Produto(sku=payload.sku or generate_sku(), **product_data)
     db.add(product)
     try:
         db.flush()
+        db.add(
+            HistoricoCustoProduto(
+                produto_id=product.id,
+                fornecedor_id=product.fornecedor_id,
+                custo=product.preco_custo,
+                origem="produto_criado",
+            )
+        )
+        sync_primary_supplier(db, product)
         apply_values(db, CUSTOM_FIELD_DOMAINS["products"], product.id, custom_values)
         db.commit()
     except CustomFieldValidationError as exception:
@@ -165,10 +232,28 @@ def update_product(
     custom_values = updates.pop("campos_personalizados", None)
     if "fornecedor_id" in updates:
         ensure_supplier_exists(db, updates["fornecedor_id"])
+    ensure_category_exists(db, updates.get("categoria_id"))
+    ensure_unit_exists(db, updates.get("unidade_medida"))
+    previous_cost = product.preco_custo
+    previous_supplier_id = product.fornecedor_id
     for field_name, value in updates.items():
         setattr(product, field_name, value)
     try:
         db.flush()
+        if "preco_custo" in updates and updates["preco_custo"] != previous_cost:
+            db.add(
+                HistoricoCustoProduto(
+                    produto_id=product.id,
+                    fornecedor_id=product.fornecedor_id,
+                    custo=product.preco_custo,
+                    origem="produto_atualizado",
+                )
+            )
+        if (
+            "fornecedor_id" in updates
+            and updates["fornecedor_id"] != previous_supplier_id
+        ):
+            sync_primary_supplier(db, product)
         apply_values(
             db,
             CUSTOM_FIELD_DOMAINS["products"],

@@ -6,6 +6,12 @@ from app.models.appearance import (
     PageAppearanceSettings,
 )
 from app.models.auth import LogAuditoria, SessaoAutenticacao, Usuario
+from app.models.catalog import (
+    CategoriaProduto,
+    HistoricoCustoProduto,
+    ProdutoFornecedor,
+    UnidadeMedida,
+)
 from app.models.custom_fields import (
     ClienteCampo,
     ClienteCampoValor,
@@ -35,6 +41,10 @@ __all__ = [
     "Usuario",
     "SessaoAutenticacao",
     "LogAuditoria",
+    "UnidadeMedida",
+    "CategoriaProduto",
+    "ProdutoFornecedor",
+    "HistoricoCustoProduto",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

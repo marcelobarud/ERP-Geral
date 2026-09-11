@@ -1,11 +1,14 @@
 from sqlalchemy import Boolean, Date, DateTime, Integer, Numeric, inspect
 
 from app.models import (
+    CategoriaProduto,
     Cliente,
     Fornecedor,
     Funcionario,
+    HistoricoCustoProduto,
     LogAuditoria,
     Produto,
+    ProdutoFornecedor,
     SessaoAutenticacao,
     Usuario,
     Venda,
@@ -54,7 +57,13 @@ EXPECTED_COLUMNS = {
     "produtos": {
         "id",
         "nome",
+        "sku",
+        "codigo_barras",
         "categoria",
+        "categoria_id",
+        "unidade_medida",
+        "ativo",
+        "estoque_minimo",
         "preco_custo",
         "preco_venda",
         "fornecedor_id",
@@ -109,6 +118,34 @@ EXPECTED_COLUMNS = {
         "entidade",
         "entidade_id",
         "metadata_json",
+        "created_at",
+    },
+    "unidades_medida": {"id", "codigo", "nome", "ativo"},
+    "categorias_produto": {
+        "id",
+        "nome",
+        "ativo",
+        "created_at",
+        "updated_at",
+    },
+    "produtos_fornecedores": {
+        "id",
+        "produto_id",
+        "fornecedor_id",
+        "codigo_fornecedor",
+        "custo_referencia",
+        "preferencial",
+        "ativo",
+        "created_at",
+        "updated_at",
+    },
+    "historicos_custo_produto": {
+        "id",
+        "produto_id",
+        "fornecedor_id",
+        "custo",
+        "registrado_em",
+        "origem",
         "created_at",
     },
     "configuracoes_aparencia": {
@@ -213,12 +250,16 @@ def test_only_approved_columns_are_nullable() -> None:
         "clientes": {"complemento"},
         "fornecedores": {"complemento"},
         "funcionarios": {"complemento", "rg"},
-        "produtos": set(),
+        "produtos": {"categoria_id", "codigo_barras"},
         "vendas": {"cancelada_em", "motivo_cancelamento", "observacao"},
         "venda_itens": set(),
         "usuarios": {"funcionario_id"},
         "sessoes_autenticacao": {"revoked_at"},
         "logs_auditoria": {"usuario_id", "entidade_id", "metadata_json"},
+        "unidades_medida": set(),
+        "categorias_produto": set(),
+        "produtos_fornecedores": {"codigo_fornecedor", "custo_referencia"},
+        "historicos_custo_produto": {"fornecedor_id"},
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",
@@ -279,7 +320,17 @@ def test_money_and_date_types_are_explicit() -> None:
 
 
 def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
-    for model in (Cliente, Fornecedor, Funcionario, Produto, Venda, VendaItem, Usuario):
+    for model in (
+        Cliente,
+        Fornecedor,
+        Funcionario,
+        Produto,
+        Venda,
+        VendaItem,
+        Usuario,
+        CategoriaProduto,
+        ProdutoFornecedor,
+    ):
         created_at = model.__table__.c.created_at
         updated_at = model.__table__.c.updated_at
         assert callable(created_at.default.arg)
@@ -288,6 +339,7 @@ def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
 
     for model in (SessaoAutenticacao, LogAuditoria):
         assert callable(model.__table__.c.created_at.default.arg)
+    assert callable(HistoricoCustoProduto.__table__.c.created_at.default.arg)
 
     assert Venda.__table__.c.status.default.arg == "CONCLUIDA"
     assert Venda.__table__.c.status.server_default is not None

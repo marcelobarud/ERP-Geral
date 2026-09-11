@@ -7,6 +7,8 @@ permitir itens fracionáveis sem usar ponto flutuante binário.
 
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from sqlalchemy import (
     Boolean,
@@ -24,9 +26,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
+if TYPE_CHECKING:
+    from app.models.catalog import (
+        CategoriaProduto,
+        HistoricoCustoProduto,
+        ProdutoFornecedor,
+    )
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def default_product_sku() -> str:
+    return f"ERP-{uuid4().hex[:12].upper()}"
 
 
 class Cliente(Base):
@@ -129,7 +142,28 @@ class Produto(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
+    sku: Mapped[str] = mapped_column(
+        String(80), nullable=False, unique=True, default=default_product_sku
+    )
+    codigo_barras: Mapped[str | None] = mapped_column(
+        String(80), nullable=True, unique=True
+    )
     categoria: Mapped[str] = mapped_column(String(100), nullable=False)
+    categoria_id: Mapped[int | None] = mapped_column(
+        ForeignKey("categorias_produto.id"), nullable=True, index=True
+    )
+    unidade_medida: Mapped[str] = mapped_column(
+        ForeignKey("unidades_medida.codigo"),
+        nullable=False,
+        default="UN",
+        server_default="UN",
+    )
+    ativo: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
+    )
+    estoque_minimo: Mapped[Decimal] = mapped_column(
+        Numeric(12, 3), nullable=False, default=Decimal("0"), server_default="0"
+    )
     preco_custo: Mapped[Decimal] = mapped_column(
         Numeric(12, 2),
         nullable=False,
@@ -151,6 +185,15 @@ class Produto(Base):
     )
 
     fornecedor: Mapped[Fornecedor] = relationship(back_populates="produtos")
+    categoria_estruturada: Mapped["CategoriaProduto | None"] = relationship(
+        back_populates="produtos"
+    )
+    fornecedores_adicionais: Mapped[list["ProdutoFornecedor"]] = relationship(
+        back_populates="produto", passive_deletes=True
+    )
+    historico_custos: Mapped[list["HistoricoCustoProduto"]] = relationship(
+        back_populates="produto", passive_deletes=True
+    )
     itens: Mapped[list["VendaItem"]] = relationship(
         back_populates="produto",
         passive_deletes=True,

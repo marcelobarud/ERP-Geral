@@ -486,7 +486,7 @@ A partir desta fase, nenhuma nova rota mutável de módulo operacional deve ser 
 
 # 8. Fase 2 — Catálogo ERP
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: expande catálogo operacional do ERP`
 
 ## Objetivo
@@ -571,6 +571,21 @@ Preparar registro histórico de custos sem substituir o snapshot histórico já 
 - unidade obrigatória conforme decisão de domínio;
 - múltiplos fornecedores;
 - fornecedor preferencial único por produto quando aplicável.
+
+## Resultado da execução
+
+Implementado na migration `20260911_0004`: SKU único com geração compatível,
+código de barras opcional, unidades de medida catalogadas, categorias
+estruturadas com preservação da categoria textual legada, produto ativo/inativo,
+estoque mínimo, relação produto-fornecedor com fornecedor preferencial único e
+histórico de custos. Produtos inativos são rejeitados em novas vendas, enquanto
+o snapshot histórico de `VendaItem` permanece preservado. A relação do
+fornecedor atual continua sincronizada com o catálogo novo.
+
+Validação local: `41 passed`, `60 skipped` por ausência de
+`TEST_DATABASE_URL`; Ruff, testes estruturais, lint, typecheck e build do
+frontend aprovados. Os testes PostgreSQL reais não foram declarados como
+aprovados nesta máquina.
 
 ---
 

@@ -6,6 +6,7 @@ from app.api.appearance import LOGO_STORAGE_DIR
 from app.api.appearance import router as appearance_router
 from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
+from app.api.catalog import router as catalog_router
 from app.api.custom_fields import router as custom_fields_router
 from app.api.customers import router as customers_router
 from app.api.dashboard import router as dashboard_router
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     application.include_router(auth_router)
     application.include_router(users_router)
     application.include_router(audit_router)
+    application.include_router(catalog_router)
     LOGO_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     application.mount(
         "/uploads",

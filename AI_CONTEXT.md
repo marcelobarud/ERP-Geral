@@ -60,7 +60,16 @@ A Fase 1 do Plano 04 também foi concluída em 2026-09-11 com a migration
 `20260911_0003`: autenticação por sessão revogável, usuários, papéis,
 permissões centralizadas e logs de auditoria foram adicionados. Em produção,
 `AUTH_SECRET` e `AUTH_BOOTSTRAP_TOKEN` são obrigatórios; o frontend oferece
-login e logout quando `auth_required` está ativo.
+login e logout quando `auth_required` está ativo. A Fase 2 do Plano 04 foi
+concluída em 2026-09-11 com a migration
+`20260911_0004`: o catálogo de produtos agora possui SKU, código de barras,
+unidade de medida, categoria estruturada, ativo/inativo e estoque mínimo;
+produtos legados foram preservados e receberam SKU compatível. A relação
+produto-fornecedor suporta múltiplos fornecedores com fornecedor preferencial
+único, e há histórico de custos separado do snapshot de `VendaItem`. Produtos
+inativos não entram em novas vendas. A validação local passou com 41 testes e
+60 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`; Ruff e a
+validação frontend também passaram.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de

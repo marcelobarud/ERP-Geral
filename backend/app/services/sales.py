@@ -29,6 +29,10 @@ class SaleEmployeeInactive(Exception):
     """Indica que um funcionário inativo tentou iniciar uma venda."""
 
 
+class SaleProductInactive(Exception):
+    """Indica que um produto inativo foi usado em nova venda."""
+
+
 class SalePersistenceError(Exception):
     """Indica falha controlada ao persistir uma venda."""
 
@@ -118,6 +122,8 @@ def create_sale(db: Session, payload: VendaCreate) -> Venda:
     for product_id in product_ids:
         if product_id not in products:
             raise SaleReferenceNotFound("Produto não encontrado.")
+        if not products[product_id].ativo:
+            raise SaleProductInactive("Produto inativo não pode entrar em nova venda.")
 
     sale = Venda(
         cliente_id=customer.id,

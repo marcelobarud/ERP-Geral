@@ -74,6 +74,12 @@ A migration `20260911_0002` prepara a fundação transacional do ERP: adiciona
 timestamps operacionais, ciclo de vida e observação das vendas, paginação das
 listagens e agregações do dashboard.
 
+A migration `20260911_0003` adiciona autenticação por sessão revogável,
+usuários, permissões e auditoria operacional. A migration `20260911_0004`
+expande o catálogo com SKU, código de barras, unidades, categorias estruturadas,
+produto ativo/inativo, estoque mínimo, múltiplos fornecedores e histórico de
+custos.
+
 ## Execução local
 
 Backend, em um terminal:

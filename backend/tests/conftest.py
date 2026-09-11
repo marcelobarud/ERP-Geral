@@ -27,13 +27,21 @@ REQUIRED_TABLES = {
     "usuarios",
     "sessoes_autenticacao",
     "logs_auditoria",
+    "unidades_medida",
+    "categorias_produto",
+    "produtos_fornecedores",
+    "historicos_custo_produto",
 }
-EXPECTED_MIGRATION = "20260911_0003"
+EXPECTED_MIGRATION = "20260911_0004"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
     "sessoes_autenticacao",
     "usuarios",
+    "historicos_custo_produto",
+    "produtos_fornecedores",
+    "categorias_produto",
+    "unidades_medida",
     "cliente_campos_valores",
     "produto_campos_valores",
     "funcionario_campos_valores",

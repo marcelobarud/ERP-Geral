@@ -15,6 +15,7 @@ from app.services.sales import (
     SaleEmployeeInactive,
     SaleNotFound,
     SalePersistenceError,
+    SaleProductInactive,
     SaleReferenceNotFound,
     cancel_sale,
     create_sale,
@@ -45,6 +46,8 @@ def create_sale_endpoint(
     except SaleReferenceNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except SaleEmployeeInactive as exception:
+        raise HTTPException(status_code=422, detail=str(exception)) from None
+    except SaleProductInactive as exception:
         raise HTTPException(status_code=422, detail=str(exception)) from None
     except SalePersistenceError:
         raise HTTPException(
