@@ -1,6 +1,6 @@
 # AI_CONTEXT.md
 
-Este arquivo é a referência do contexto atual do CRM Geral. Ele documenta o
+Este arquivo é a referência do contexto atual do ERP Geral. Ele documenta o
 produto, o escopo da V1 e as decisões arquiteturais que devem orientar agentes
 e implementações futuras.
 
@@ -8,7 +8,16 @@ AGENTS.md continua sendo a fonte das regras de trabalho do repositório.
 
 ## 1. Visão geral
 
-Produto: CRM genérico e adaptável, inicialmente voltado a lojas em geral.
+### Reposicionamento oficial — 2026-09-11
+
+O projeto anteriormente chamado CRM Geral foi oficialmente reposicionado e
+renomeado para ERP Geral. Seu foco é uma plataforma genérica e configurável de
+gestão administrativa e operacional, com evolução futura para funcionalidades
+típicas de ERP, incluindo estoque, compras e financeiro. CRM será tratado como
+um produto separado e não deve ser confundido com este projeto.
+
+Produto: ERP genérico, configurável e adaptável, inicialmente voltado à gestão
+administrativa e operacional de negócios em geral.
 
 Objetivo da V1: oferecer um sistema administrativo simples para cadastro de
 entidades básicas e registro de vendas. A arquitetura deve permitir evolução,
@@ -41,8 +50,9 @@ PostgreSQL real. A execução PostgreSQL final foi realizada externamente e
 confirmada como aprovada pelo usuário em 2026-08-22. O Plano 03 foi concluído
 com três commits locais separados; o Plano 04 não foi iniciado.
 
-Princípio central: privilegiar simplicidade sobre abrangência. Não tratar
-CRM genérico como autorização para construir uma plataforma completa.
+Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
+ERP genérico como autorização para construir uma plataforma completa antes de
+existir necessidade concreta.
 
 ## 2. Stack definida
 
@@ -74,7 +84,7 @@ CRM genérico como autorização para construir uma plataforma completa.
 
 O projeto deve seguir uma organização monorepo:
 
-    crm-geral/
+    erp-geral/
     ├── frontend/
     ├── backend/
     ├── AGENTS.md
@@ -735,7 +745,7 @@ Data: 2026-08-23
   depender da posição da linha. A seleção expõe a hierarquia visual de
   ancestrais, permitindo subir de texto/célula para card, superfície ou página.
 - O modo `Selecionar` intercepta clique, hover e seleção com overlay fixo,
-  enquanto `Navegar` preserva links, botões e o comportamento normal do CRM.
+  enquanto `Navegar` preserva links, botões e o comportamento normal do ERP.
   Eventos são delegados no `document`, portanto conteúdos dinâmicos,
   dropdowns, modais e portais também podem ser inspecionados. Toolbar, painel,
   overlay e estilos do editor ficam fora da descoberta.

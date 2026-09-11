@@ -1,5 +1,8 @@
 # CRM Geral — IMPLEMENTATION_PLAN_03
 
+> Este documento foi produzido quando o projeto ainda se chamava CRM Geral.
+> O produto foi posteriormente reposicionado como ERP Geral.
+
 ## Objetivo
 
 Este plano representa o terceiro ciclo de evolução do CRM Geral.

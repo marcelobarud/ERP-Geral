@@ -1,6 +1,29 @@
-# CRM Geral
+# ERP Geral
 
-CRM administrativo V1 para cadastros básicos e registro de vendas.
+ERP Geral é uma plataforma genérica e configurável de gestão administrativa e
+operacional.
+
+## Estado atual
+
+A versão atual oferece:
+
+- clientes;
+- produtos;
+- fornecedores;
+- funcionários;
+- registro de vendas;
+- campos personalizados;
+- filtros e busca operacional;
+- detalhes relacionais;
+- histórico operacional;
+- personalização visual e branding.
+
+## Direção futura
+
+O projeto deverá evoluir gradualmente para um ERP de uso geral, com módulos
+como pedidos, compras, estoque, movimentações, inventário, contas a pagar,
+contas a receber e fluxo de caixa. Esses módulos ainda não fazem parte da
+versão atual.
 
 ## Requisitos
 
@@ -11,7 +34,7 @@ CRM administrativo V1 para cadastros básicos e registro de vendas.
 
 ## Configuração
 
-Copie `.env.example` para um arquivo `.env` dentro de `backend/` e ajuste as
+Copie `.env.example` para um arquivo `.env` na raiz do projeto e ajuste as
 URLs para as credenciais locais do PostgreSQL. Não versione o arquivo `.env`.
 
 As variáveis principais são:
@@ -26,7 +49,7 @@ Ambas devem usar o formato `postgresql+psycopg://...`.
 No diretório `backend/`, execute:
 
 ```powershell
-\.venv\Scripts\python.exe -m alembic upgrade head
+python -m alembic upgrade head
 ```
 
 ## Execução local
@@ -35,7 +58,7 @@ Backend, em um terminal:
 
 ```powershell
 cd backend
-\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Frontend, em outro terminal:
@@ -55,8 +78,8 @@ Backend:
 
 ```powershell
 cd backend
-\.venv\Scripts\python.exe -m pytest
-\.venv\Scripts\ruff.exe check app tests
+python -m pytest
+python -m ruff check app tests
 ```
 
 Frontend:

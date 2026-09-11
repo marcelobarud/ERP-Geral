@@ -2,6 +2,9 @@
 
 # Plano técnico de evolução — CRM Geral
 
+> Este documento foi produzido quando o projeto ainda se chamava CRM Geral.
+> O produto foi posteriormente reposicionado como ERP Geral.
+
 Este plano é a continuação direta do `IMPLEMENTATION_PLAN.md`, cuja V1 foi concluída e validada.
 
 O objetivo desta segunda etapa é evoluir o CRM Geral sem perder a simplicidade, a integridade referencial e a organização consolidada na V1.

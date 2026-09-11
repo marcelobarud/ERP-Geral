@@ -1,5 +1,8 @@
 # Plano técnico da V1 — CRM Geral
 
+> Este documento foi produzido quando o projeto ainda se chamava CRM Geral.
+> O produto foi posteriormente reposicionado como ERP Geral.
+
 O plano abaixo segue exclusivamente as decisões de AI_CONTEXT.md e as regras de AGENTS.md. A implementação deve ocorrer de forma incremental, com commits pequenos e validação ao final de cada fase.
 
 ## Fase 1 — Bootstrap do monorepo

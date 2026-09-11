@@ -1,4 +1,4 @@
-# Frontend do CRM Geral
+# Frontend do ERP Geral
 
 Frontend administrativo construído com React, TypeScript e Vite.
 
