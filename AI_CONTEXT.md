@@ -69,7 +69,13 @@ produto-fornecedor suporta múltiplos fornecedores com fornecedor preferencial
 único, e há histórico de custos separado do snapshot de `VendaItem`. Produtos
 inativos não entram em novas vendas. A validação local passou com 41 testes e
 60 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`; Ruff e a
-validação frontend também passaram.
+validação frontend também passaram. A Fase 3 do Plano 04 foi concluída em
+2026-09-11 com a migration
+`20260911_0005`: condições de pagamento, orçamentos, pedidos de venda,
+snapshots comerciais, transições controladas, conversões idempotentes para
+pedido/venda e impressão HTML foram adicionados. Os documentos não movimentam
+estoque definitivamente nesta fase. A validação local passou com 43 testes e
+61 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de

@@ -591,7 +591,7 @@ aprovados nesta máquina.
 
 # 9. Fase 3 — Comercial: orçamento e pedido de venda
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona orçamentos e pedidos de venda`
 
 ## Objetivo
@@ -702,6 +702,21 @@ Reserva poderá ser planejada depois.
 - venda mantém snapshots históricos;
 - valores monetários exatos;
 - cancelamento preserva histórico.
+
+## Resultado da execução
+
+Implementadas as entidades próprias de condições de pagamento, orçamento,
+itens de orçamento, pedido de venda e itens de pedido na migration
+`20260911_0005`. Os itens preservam snapshots de produto, SKU, fornecedor,
+quantidade e preço; descontos, acréscimos e frete permanecem discriminados no
+documento. As transições de status são validadas, a conversão de orçamento
+aprovado para pedido é idempotente e a conversão de pedido confirmado/concluído
+para venda preserva os preços históricos. Foram adicionadas rotas de consulta,
+criação, transição, conversão e impressão HTML.
+
+Validação local: `43 passed`, `61 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff e validações estruturais aprovados. A suíte PostgreSQL real não foi
+declarada como aprovada nesta máquina.
 
 ---
 

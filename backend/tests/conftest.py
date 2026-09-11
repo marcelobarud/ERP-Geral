@@ -31,14 +31,24 @@ REQUIRED_TABLES = {
     "categorias_produto",
     "produtos_fornecedores",
     "historicos_custo_produto",
+    "condicoes_pagamento",
+    "orcamentos",
+    "orcamento_itens",
+    "pedidos_venda",
+    "pedido_venda_itens",
 }
-EXPECTED_MIGRATION = "20260911_0004"
+EXPECTED_MIGRATION = "20260911_0005"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
     "sessoes_autenticacao",
     "usuarios",
     "historicos_custo_produto",
+    "pedido_venda_itens",
+    "pedidos_venda",
+    "orcamento_itens",
+    "orcamentos",
+    "condicoes_pagamento",
     "produtos_fornecedores",
     "categorias_produto",
     "unidades_medida",

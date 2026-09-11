@@ -26,6 +26,7 @@ ROLE_PERMISSIONS: dict[UserRole, frozenset[str]] = {
             "suppliers:write",
             "employees:write",
             "products:write",
+            "commercial:write",
             "sales:create",
             "sales:cancel",
             "settings:write",

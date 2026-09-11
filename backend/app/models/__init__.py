@@ -12,6 +12,13 @@ from app.models.catalog import (
     ProdutoFornecedor,
     UnidadeMedida,
 )
+from app.models.commercial import (
+    CondicaoPagamento,
+    Orcamento,
+    OrcamentoItem,
+    PedidoVenda,
+    PedidoVendaItem,
+)
 from app.models.custom_fields import (
     ClienteCampo,
     ClienteCampoValor,
@@ -45,6 +52,11 @@ __all__ = [
     "CategoriaProduto",
     "ProdutoFornecedor",
     "HistoricoCustoProduto",
+    "CondicaoPagamento",
+    "Orcamento",
+    "OrcamentoItem",
+    "PedidoVenda",
+    "PedidoVendaItem",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

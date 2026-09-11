@@ -80,6 +80,10 @@ expande o catálogo com SKU, código de barras, unidades, categorias estruturada
 produto ativo/inativo, estoque mínimo, múltiplos fornecedores e histórico de
 custos.
 
+A migration `20260911_0005` adiciona condições de pagamento, orçamentos e
+pedidos de venda, com snapshots comerciais, transições de status, conversões
+idempotentes para pedido/venda e saída HTML simples para impressão.
+
 ## Execução local
 
 Backend, em um terminal:
