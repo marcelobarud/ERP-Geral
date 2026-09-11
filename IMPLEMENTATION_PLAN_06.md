@@ -781,7 +781,7 @@ Sem bloqueadores de mobile/acessibilidade nos fluxos principais.
 
 # 10. Fase 5 — Gate de maturidade V1
 
-**Status:** EM ANDAMENTO
+**Status:** CONCLUÍDA em 11/09/2026
 **Commit esperado:** `chore: consolida marco funcional v1 do ERP`
 
 ## Objetivo
@@ -874,6 +874,34 @@ Se aprovado:
 - registrar marco V1.
 
 Não criar tag, release ou deploy sem autorização explícita.
+
+### Evidências do gate final
+
+- Venda: orçamento → pedido → venda → estoque → contas a receber →
+  liquidação validado no ambiente principal;
+- Compra: fornecedor → pedido → recebimentos parcial e final → estoque →
+  contas a pagar validado, com obrigação criada somente na confirmação;
+- Devolução: venda → devolução parcial aprovada → estoque validado;
+- Inventário: contagem → diferença → ajuste de saldo validado;
+- permissões: administrador, gestor e operador cobertos pela suíte de
+  autenticação e autorização;
+- módulos: ativação/desativação, menu, rota e proteção de API validados;
+- ambiente final: frontend em `127.0.0.1:5173`, backend em
+  `127.0.0.1:8000`, banco `erp_geral`, health `ok` e Alembic em
+  `20260911_0012`;
+- suítes finais: backend `120 passed`, frontend `79 passed`, migration,
+  `ruff check app`, lint, typecheck, build e `git diff --check` aprovados;
+  `ruff check .` continua apontando somente 53 linhas longas preexistentes em
+  migrations históricas.
+
+### Classificação V1
+
+> **SIM, COM AJUSTES**
+
+O ERP Geral está funcional para o marco V1 operacional. Permanecem como
+evoluções não bloqueantes os domínios fora do escopo deste plano, como fiscal,
+NF-e, SPED, contabilidade, folha, CRM, BI avançado e integrações bancárias
+automáticas.
 
 ---
 

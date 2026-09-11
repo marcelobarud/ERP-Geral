@@ -1152,3 +1152,22 @@ filtros, tabelas, formulários e modais nos breakpoints previstos.
 Validação da fase: backend PostgreSQL `120 passed`; frontend `79 passed`,
 typecheck e build aprovados; Ruff e `git diff --check` aprovados. O Plano 06
 prossegue pela Fase 5, o gate final de maturidade V1.
+
+## Marco V1 — Plano 06 concluído em 2026-09-11
+
+O gate final confirmou os fluxos principais do ERP Geral no ambiente local:
+venda com estoque e contas a receber, compra com recebimentos parcial e final
+e contas a pagar no momento correto, devolução parcial, inventário com ajuste,
+permissões por papel e ativação ou desativação de módulos.
+
+Ambiente final: frontend em `127.0.0.1:5173`, backend em `127.0.0.1:8000`,
+banco `erp_geral`, health `ok` e Alembic em `20260911_0012`. As suítes finais
+passaram com backend PostgreSQL `120 passed` e frontend `79 passed`; lint,
+`ruff check app`, typecheck, build e `git diff --check` também foram
+aprovados. O `ruff check .` ainda aponta 53 linhas longas preexistentes em
+migrations históricas.
+
+Classificação do marco: **SIM, COM AJUSTES**. Fiscal, NF-e, SPED,
+contabilidade, folha, CRM, BI avançado e integrações bancárias automáticas
+continuam fora do escopo e são evoluções futuras, não bloqueadores da V1
+operacional.

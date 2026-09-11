@@ -149,6 +149,14 @@ O contas a pagar de um recebimento de compra nasce somente na confirmação
 efetiva do recebimento; criar um recebimento em rascunho não gera obrigação
 financeira.
 
+## Marco funcional V1
+
+O ERP Geral foi classificado como **SIM, COM AJUSTES** no Plano 06. Os fluxos
+de venda, compra, estoque, financeiro, devolução, inventário, permissões,
+módulos e relatórios foram validados no ambiente local. Fiscal, NF-e, SPED,
+contabilidade, folha, CRM, BI avançado e integrações bancárias automáticas
+seguem como evoluções futuras.
+
 A interface de estoque agora oferece saldos, movimentações, ajustes,
 inventários e depósitos, mantendo o saldo derivado das movimentações e o
 depósito padrão resolvido explicitamente.
