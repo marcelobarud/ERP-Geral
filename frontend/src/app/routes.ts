@@ -47,6 +47,13 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       ],
     },
     {
+      label: 'Compras',
+      items: [
+        { path: '/purchases', label: 'Pedidos', icon: '▧' },
+        { path: '/purchases/receipts', label: 'Recebimentos', icon: '⇩' },
+      ],
+    },
+    {
       label: 'Configurações',
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
@@ -71,6 +78,8 @@ const routeDescriptions: Record<string, string> = {
   '/commercial/orders': 'Gerencie pedidos de venda e conversões.',
   '/commercial/sales': 'Acesse as vendas originadas do fluxo comercial.',
   '/commercial/returns': 'Registre e aprove devoluções de vendas.',
+  '/purchases': 'Gerencie pedidos de compra e itens pendentes.',
+  '/purchases/receipts': 'Registre recebimentos parciais ou totais.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
   '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',

@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
 import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
 import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
+import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -52,6 +53,10 @@ function PageForRoute({
       return <SalesPage />
     case '/commercial/returns':
       return <ReturnsPage />
+    case '/purchases':
+      return <PurchasesPage />
+    case '/purchases/receipts':
+      return <ReceiptsPage />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':

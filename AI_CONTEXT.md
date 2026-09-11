@@ -961,5 +961,22 @@ filtros comerciais e listagem de devoluções. As conversões continuam
 idempotentes e os snapshots comerciais permanecem preservados.
 
 Validação: PostgreSQL `118 passed`; frontend `77 passed`, lint, typecheck e
-build aprovados; Ruff e `git diff --check` aprovados. A Fase 2 permanece
-pendente.
+build aprovados; Ruff e `git diff --check` aprovados. A Fase 2 foi executada
+na sequência.
+
+## Atualização — Plano 05, Fase 2 concluída em 2026-09-11
+
+A interface de Compras agora expõe Pedidos e Recebimentos. Pedidos podem ser
+listados, pesquisados, filtrados, criados, editados em rascunho, emitidos,
+cancelados e acompanhados por quantidades solicitadas, recebidas e pendentes.
+Recebimentos suportam quantidade real parcial ou total, custo efetivo,
+rascunho, confirmação e histórico por pedido.
+
+A confirmação usa o depósito padrão resolvido pelo serviço, preserva a
+idempotência da entrada no estoque e registra o histórico de custos. O backend
+recebeu busca por número/fornecedor e edição protegida de pedidos sem
+recebimentos. Não houve migration nova na fase.
+
+Validação da fase: PostgreSQL específico de compras `1 passed`; suíte backend
+`118 passed`; frontend `77 passed`, lint, typecheck e build aprovados; Ruff e
+`git diff --check` aprovados. A Fase 3 permanece pendente.

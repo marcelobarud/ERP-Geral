@@ -496,8 +496,8 @@ lint, typecheck, build, Ruff e `git diff --check` aprovados.
 
 ## 8. Fase 2 — Compras e recebimentos completos
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: conclui fluxo de compras e recebimentos`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: conclui fluxo de compras e recebimentos`
 
 ### Objetivo
 
@@ -664,6 +664,24 @@ Não otimizar prematuramente sem medição.
 Se infraestrutura atual permitir com baixo risco, incluir transferência simples entre depósitos.
 
 Caso contrário, registrar para plano posterior.
+
+### Resultado da execução
+
+A Fase 2 foi concluída com navegação para Pedidos de compra e Recebimentos.
+Pedidos permitem listar, pesquisar, filtrar, criar, editar em rascunho, emitir,
+cancelar e visualizar quantidades solicitadas, recebidas e pendentes.
+Recebimentos permitem selecionar o pedido, informar quantidade real parcial ou
+total, registrar custo efetivo, criar rascunho, confirmar e consultar o
+histórico. A confirmação continua usando o depósito padrão explicitamente
+resolvido pelo backend, gera uma única entrada de estoque e atualiza o
+histórico de custos.
+
+O backend recebeu edição segura de pedidos em rascunho e busca por número ou
+fornecedor. Não foi necessária migration nova nesta fase.
+
+Validações da fase: teste PostgreSQL de compras `1 passed`, backend completo
+`118 passed`, frontend `77 passed`, lint, typecheck, build, Ruff e
+`git diff --check` aprovados.
 
 ---
 

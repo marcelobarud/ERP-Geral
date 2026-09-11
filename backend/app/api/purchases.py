@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import PedidoCompra, RecebimentoCompra
+from app.models import Fornecedor, PedidoCompra, RecebimentoCompra
 from app.schemas.purchases import (
     PurchaseCreate,
     PurchaseRead,
     PurchaseStatusUpdate,
+    PurchaseUpdate,
     ReceiptCreate,
     ReceiptRead,
 )
@@ -25,6 +27,7 @@ from app.services.purchases import (
     purchase_to_read,
     receipt_query,
     receipt_to_read,
+    update_purchase,
 )
 
 router = APIRouter(
@@ -36,13 +39,41 @@ router = APIRouter(
 
 @router.get("", response_model=list[PurchaseRead])
 def list_purchases(
+    search: str | None = Query(default=None),
     status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db_session),
 ) -> list[PurchaseRead]:
-    query = purchase_query().order_by(PedidoCompra.created_at.desc())
+    query = purchase_query().join(PedidoCompra.fornecedor).order_by(
+        PedidoCompra.created_at.desc()
+    )
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.where(
+            or_(PedidoCompra.numero.ilike(pattern), Fornecedor.nome.ilike(pattern))
+        )
     if status_filter:
         query = query.where(PedidoCompra.status == status_filter)
     return [purchase_to_read(item) for item in db.scalars(query).all()]
+
+
+@router.patch(
+    "/{purchase_id}",
+    response_model=PurchaseRead,
+    dependencies=[Depends(require_permission("purchases:write"))],
+)
+def update_purchase_endpoint(
+    purchase_id: int,
+    payload: PurchaseUpdate,
+    db: Session = Depends(get_db_session),
+) -> PurchaseRead:
+    try:
+        return purchase_to_read(update_purchase(db, purchase_id, payload))
+    except PurchaseNotFound as exception:
+        raise HTTPException(status_code=404, detail=str(exception)) from None
+    except PurchaseValidationError as exception:
+        raise HTTPException(status_code=422, detail=str(exception)) from None
+    except PurchaseConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
 
 
 @router.post(

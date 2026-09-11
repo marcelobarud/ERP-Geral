@@ -30,6 +30,14 @@ class PurchaseStatusUpdate(APIModel):
     status: PurchaseStatus
 
 
+class PurchaseUpdate(APIModel):
+    numero: str | None = Field(default=None, min_length=1, max_length=40)
+    fornecedor_id: int | None = Field(default=None, gt=0)
+    previsao_entrega: date | None = None
+    observacao: str | None = Field(default=None, max_length=1000)
+    itens: list[PurchaseItemCreate] | None = Field(default=None, min_length=1)
+
+
 class PurchaseItemRead(ReadModel):
     id: int
     produto_id: int

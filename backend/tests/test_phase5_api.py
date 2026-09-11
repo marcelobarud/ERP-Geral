@@ -63,6 +63,14 @@ def test_purchase_partial_receipt_updates_stock_once_and_cost_history(
     )
     assert purchase.status_code == 201
     purchase_id = purchase.json()["id"]
+    edited = client.patch(
+        f"/api/purchases/{purchase_id}",
+        json={"observacao": "Entrega fracionada"},
+    )
+    assert edited.status_code == 200
+    assert edited.json()["observacao"] == "Entrega fracionada"
+    searched = client.get("/api/purchases?search=PC-TESTE-001")
+    assert searched.json()[0]["id"] == purchase_id
     emitted = client.patch(
         f"/api/purchases/{purchase_id}/status", json={"status": "EMITIDO"}
     )

@@ -17,7 +17,7 @@ from app.models import (
     RecebimentoCompraItem,
 )
 from app.schemas.inventory import StockMovementCreate
-from app.schemas.purchases import PurchaseCreate, ReceiptCreate
+from app.schemas.purchases import PurchaseCreate, PurchaseUpdate, ReceiptCreate
 from app.services.inventory import (
     InventoryNotFound,
     create_movement,
@@ -90,6 +90,60 @@ def create_purchase(db: Session, payload: PurchaseCreate) -> PedidoCompra:
         itens=items,
     )
     db.add(purchase)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise PurchaseConflict("Número de pedido de compra já cadastrado.") from None
+    return get_purchase(db, purchase.id)  # type: ignore[return-value]
+
+
+def update_purchase(
+    db: Session, purchase_id: int, payload: PurchaseUpdate
+) -> PedidoCompra:
+    purchase = get_purchase(db, purchase_id)
+    if purchase is None:
+        raise PurchaseNotFound("Pedido de compra não encontrado.")
+    if purchase.status != "RASCUNHO" or any(
+        item.quantidade_recebida > 0 for item in purchase.itens
+    ):
+        raise PurchaseConflict(
+            "Somente pedido em rascunho e sem recebimentos pode ser editado."
+        )
+    data = payload.model_dump(exclude_unset=True)
+    if payload.fornecedor_id is not None:
+        supplier = db.get(Fornecedor, payload.fornecedor_id)
+        if supplier is None:
+            raise PurchaseNotFound("Fornecedor não encontrado.")
+    if payload.itens is not None:
+        product_ids = [item.produto_id for item in payload.itens]
+        if len(product_ids) != len(set(product_ids)):
+            raise PurchaseValidationError(
+                "O mesmo produto não pode aparecer duas vezes."
+            )
+        products = {
+            product.id: product
+            for product in db.scalars(
+                select(Produto).where(Produto.id.in_(product_ids))
+            ).all()
+        }
+        purchase.itens.clear()
+        for item in payload.itens:
+            product = products.get(item.produto_id)
+            if product is None:
+                raise PurchaseNotFound("Produto não encontrado.")
+            purchase.itens.append(
+                PedidoCompraItem(
+                    produto_id=product.id,
+                    produto_nome=product.nome,
+                    sku=product.sku,
+                    quantidade=item.quantidade,
+                    custo_unitario=item.custo_unitario,
+                )
+            )
+        data.pop("itens", None)
+    for field, value in data.items():
+        setattr(purchase, field, value)
     try:
         db.commit()
     except IntegrityError:

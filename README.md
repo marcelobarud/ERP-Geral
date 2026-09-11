@@ -124,6 +124,10 @@ condição de pagamento utilizada. A interface comercial agora oferece
 orçamentos, pedidos, devoluções e condições de pagamento, com conversões
 controladas e impressão HTML dos documentos.
 
+A interface de compras agora oferece pedidos de compra e recebimentos,
+incluindo recebimentos parciais, custo efetivo, confirmação idempotente,
+entrada no estoque e histórico de custos.
+
 ## Execução local
 
 Backend, em um terminal:
