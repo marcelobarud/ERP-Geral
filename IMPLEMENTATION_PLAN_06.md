@@ -577,7 +577,7 @@ Usuário entende por que uma ação falhou e a UI não oferece sistematicamente 
 
 # 8. Fase 3 — Consistência de produto e navegação
 
-**Status:** EM ANDAMENTO  
+**Status:** CONCLUÍDA em 11/09/2026
 **Commit esperado:** `refactor: consolida navegação e consistência do ERP`
 
 ## Objetivo
@@ -676,11 +676,23 @@ Remover:
 
 Navegação e telas equivalentes seguem padrões previsíveis.
 
+### Evidências da execução
+
+- o menu foi consolidado em uma única área `Comercial`, com Nova venda,
+  Vendas, Orçamentos, Pedidos e Devoluções;
+- a entrada duplicada `Vendas comerciais` foi removida do menu, mantendo a
+  rota direta existente para compatibilidade;
+- as listas de Comercial e Compras passaram a exibir nomes de clientes e
+  fornecedores, usando o identificador técnico somente como fallback;
+- cabeçalhos, ações, filtros, tabelas, detalhes e estados vazios foram
+  preservados em um padrão coerente entre telas equivalentes;
+- frontend: `79 passed`, typecheck e build aprovados.
+
 ---
 
 # 9. Fase 4 — Relatórios, responsividade e acessibilidade
 
-**Status:** PENDENTE  
+**Status:** EM ANDAMENTO
 **Commit esperado:** `fix: refina relatórios responsividade e acessibilidade`
 
 ## Objetivo

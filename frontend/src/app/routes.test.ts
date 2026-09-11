@@ -9,11 +9,13 @@ describe('navegação comercial', () => {
     const commercial = groups.find((group) => group.label === 'Comercial')
 
     expect(commercial?.items.map((item) => item.path)).toEqual([
+      '/sales/new',
+      '/sales',
       '/commercial/quotes',
       '/commercial/orders',
-      '/commercial/sales',
       '/commercial/returns',
     ])
+    expect(groups.find((group) => group.label === 'Vendas')).toBeUndefined()
     expect(groups.flatMap((group) => group.items).map((item) => item.path)).toContain(
       '/settings/payment-conditions',
     )

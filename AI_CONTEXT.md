@@ -1121,3 +1121,18 @@ backend.
 Validação da fase: frontend `79 passed`, typecheck e build aprovados; lint
 aprovado com os avisos preexistentes de efeitos React. O Plano 06 prossegue
 pela Fase 3, voltada à consistência de produto e navegação.
+
+## Atualização — Plano 06, Fase 3 concluída em 2026-09-11
+
+A navegação foi consolidada para apresentar uma única área Comercial, com
+Nova venda, Vendas, Orçamentos, Pedidos e Devoluções. A entrada duplicada de
+Vendas comerciais foi removida do menu, sem retirar a rota direta existente.
+
+As listas de Comercial e Compras agora resolvem e exibem nomes de clientes e
+fornecedores, mantendo identificadores técnicos apenas como fallback. A
+organização atual de filtros, cabeçalhos, tabelas, ações e estados vazios foi
+mantida coerente entre telas equivalentes.
+
+Validação da fase: frontend `79 passed`, typecheck e build aprovados. O Plano
+06 prossegue pela Fase 4, voltada a relatórios, responsividade e
+acessibilidade.

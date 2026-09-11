@@ -36,20 +36,13 @@ export function getNavigationGroups(
       ],
     },
     {
-      label: 'Vendas',
+      label: 'Comercial',
       moduleCode: 'commercial',
       items: [
         { path: '/sales/new', label: labels.newSale, icon: '+' },
         { path: '/sales', label: labels.sales, icon: '↗' },
-      ],
-    },
-    {
-      label: 'Comercial',
-      moduleCode: 'commercial',
-      items: [
         { path: '/commercial/quotes', label: 'Orçamentos', icon: '▤' },
         { path: '/commercial/orders', label: 'Pedidos', icon: '▥' },
-        { path: '/commercial/sales', label: 'Vendas comerciais', icon: '↗' },
         { path: '/commercial/returns', label: 'Devoluções', icon: '↩' },
       ],
     },

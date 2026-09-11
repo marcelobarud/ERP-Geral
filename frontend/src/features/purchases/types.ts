@@ -13,6 +13,7 @@ export type Purchase = {
   id: number
   numero: string
   fornecedor_id: number
+  fornecedor_nome?: string
   status: 'RASCUNHO' | 'EMITIDO' | 'PARCIALMENTE_RECEBIDO' | 'RECEBIDO' | 'CANCELADO'
   previsao_entrega: string | null
   observacao: string | null
