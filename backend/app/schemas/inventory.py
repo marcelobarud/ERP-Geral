@@ -21,6 +21,7 @@ InventoryStatus = Literal["RASCUNHO", "CONFIRMADO", "CANCELADO"]
 class DepositCreate(APIModel):
     codigo: str = Field(min_length=1, max_length=40)
     nome: str = Field(min_length=1, max_length=100)
+    padrao: bool = False
 
 
 class DepositRead(ReadModel):
@@ -28,6 +29,7 @@ class DepositRead(ReadModel):
     codigo: str
     nome: str
     ativo: bool
+    padrao: bool
     created_at: datetime
     updated_at: datetime
 

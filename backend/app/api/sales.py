@@ -1,13 +1,22 @@
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import Cliente, Funcionario, Produto, Usuario, Venda, VendaItem
+from app.models import (
+    Cliente,
+    Funcionario,
+    MovimentacaoEstoque,
+    Produto,
+    Usuario,
+    Venda,
+    VendaItem,
+)
 from app.schemas.pagination import PaginationResponse
 from app.schemas.returns import ReturnCreate, ReturnRead
 from app.schemas.sales import VendaCancel, VendaCreate, VendaRead, VendaStatus
@@ -164,6 +173,40 @@ def get_sale_endpoint(
     if sale is None:
         raise HTTPException(status_code=404, detail="Venda não encontrada.")
     return sale_to_read(sale)
+
+
+@router.delete(
+    "/{sale_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("sales:cancel"))],
+)
+def delete_sale(sale_id: int, db: Session = Depends(get_db_session)) -> Response:
+    sale = db.get(Venda, sale_id)
+    if sale is None:
+        raise HTTPException(status_code=404, detail="Venda não encontrada.")
+    if db.scalar(
+        select(MovimentacaoEstoque.id).where(
+            MovimentacaoEstoque.documento_tipo == "VENDA",
+            MovimentacaoEstoque.documento_id == sale_id,
+        )
+    ) is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Venda integrada ao estoque não pode ser excluída.",
+        )
+    db.query(VendaItem).filter(VendaItem.venda_id == sale_id).delete(
+        synchronize_session=False
+    )
+    db.delete(sale)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Venda possui dependências e não pode ser excluída.",
+        ) from None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(

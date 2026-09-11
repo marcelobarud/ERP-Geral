@@ -13,6 +13,7 @@ from app.models import (
     Fornecedor,
     HistoricoCustoProduto,
     Produto,
+    ProdutoCampoValor,
     ProdutoFornecedor,
     UnidadeMedida,
     VendaItem,
@@ -299,6 +300,10 @@ def delete_product(product_id: int, db: Session = Depends(get_db_session)) -> Re
             detail=(
                 "Produto possui itens de venda relacionados e não pode ser excluído."
             ),
+        )
+    for model in (ProdutoCampoValor, HistoricoCustoProduto, ProdutoFornecedor):
+        db.query(model).filter(model.produto_id == product_id).delete(
+            synchronize_session=False
         )
     db.delete(product)
     try:

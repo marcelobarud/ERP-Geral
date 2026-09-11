@@ -56,6 +56,24 @@ REQUIRED_TABLES = {
 }
 EXPECTED_MIGRATION = "20260911_0010"
 
+REFERENCE_DATA_SQL = (
+    "INSERT INTO unidades_medida (codigo, nome) VALUES "
+    "('UN', 'Unidade'), ('KG', 'Quilograma'), ('G', 'Grama'), "
+    "('L', 'Litro'), ('ML', 'Mililitro'), ('M', 'Metro'), "
+    "('M2', 'Metro quadrado'), ('CX', 'Caixa')",
+    "INSERT INTO contas_financeiras (nome) VALUES ('Caixa principal')",
+    "INSERT INTO modulos_erp (codigo, nome, ordem) VALUES "
+    "('commercial', 'Comercial', 10), ('purchases', 'Compras', 20), "
+    "('inventory', 'Estoque', 30), ('finance', 'Financeiro', 40), "
+    "('reports', 'Relatórios', 50)",
+    "INSERT INTO depositos_estoque "
+    "(codigo, nome, ativo, padrao, created_at, updated_at) VALUES "
+    "('PRINCIPAL', 'Depósito principal', TRUE, TRUE, "
+    "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+    "INSERT INTO configuracoes_estoque "
+    "(id, permitir_saldo_negativo, updated_at) VALUES (1, FALSE, CURRENT_TIMESTAMP)",
+)
+
 TEST_DATA_TABLES = (
     "logs_auditoria",
     "sessoes_autenticacao",
@@ -161,11 +179,15 @@ def clean_test_database(test_engine):
 
     with test_engine.begin() as connection:
         connection.execute(cleanup_statement)
+        for statement in REFERENCE_DATA_SQL:
+            connection.execute(text(statement))
 
     yield
 
     with test_engine.begin() as connection:
         connection.execute(cleanup_statement)
+        for statement in REFERENCE_DATA_SQL:
+            connection.execute(text(statement))
 
 
 @pytest.fixture
@@ -174,9 +196,9 @@ def session(test_engine, clean_test_database):
     transaction = connection.begin()
     database_session = Session(
         bind=connection,
-        # The fixture owns the outer transaction. Application commits must
-        # never be allowed to commit it during an integration test.
-        join_transaction_mode="rollback_only",
+        # Application commits and rollbacks stay inside a savepoint. The
+        # fixture-owned outer transaction is rolled back after each test.
+        join_transaction_mode="create_savepoint",
     )
     try:
         yield database_session

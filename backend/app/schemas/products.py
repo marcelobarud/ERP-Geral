@@ -1,13 +1,19 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from app.schemas.base import APIModel, ReadModel
 from app.schemas.custom_fields import CustomFieldValueRead
 
 
 class ProdutoCreate(APIModel):
+    # Allow duplication of a read response while ignoring server-generated
+    # fields such as id, timestamps and custom-field projections.
+    model_config = ConfigDict(
+        extra="ignore",
+        str_strip_whitespace=True,
+    )
     nome: str = Field(min_length=1, max_length=255)
     sku: str | None = Field(default=None, min_length=1, max_length=80)
     codigo_barras: str | None = Field(default=None, min_length=1, max_length=80)

@@ -1,7 +1,7 @@
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,7 @@ from app.models import (
     VendaItem,
 )
 from app.services.finance import cashflow_summary
-from app.services.inventory import list_balances
+from app.services.inventory import InventoryNotFound, get_default_deposit, list_balances
 
 router = APIRouter(
     prefix="/api/reports",
@@ -129,9 +129,14 @@ def purchases_report(db: Session = Depends(get_db_session)):
 
 @router.get("/stock")
 def stock_report(
-    deposit_id: int = Query(default=1, gt=0),
+    deposit_id: int | None = Query(default=None, gt=0),
     db: Session = Depends(get_db_session),
 ):
+    if deposit_id is None:
+        try:
+            deposit_id = get_default_deposit(db).id
+        except InventoryNotFound as exception:
+            raise HTTPException(status_code=409, detail=str(exception)) from None
     balances = list_balances(db, deposit_id)
     return {
         "balances": balances,
@@ -169,7 +174,10 @@ def finance_report(db: Session = Depends(get_db_session)):
 @router.get("/dashboard")
 def erp_dashboard(db: Session = Depends(get_db_session)):
     cashflow = cashflow_summary(db)
-    balances = list_balances(db, 1)
+    try:
+        balances = list_balances(db, get_default_deposit(db).id)
+    except InventoryNotFound as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
     completed_sales = (
         db.scalar(select(func.count(Venda.id)).where(Venda.status == "CONCLUIDA")) or 0
     )

@@ -19,18 +19,26 @@ def upgrade() -> None:
         sa.Column("codigo", sa.String(40), nullable=False),
         sa.Column("nome", sa.String(100), nullable=False),
         sa.Column("ativo", sa.Boolean(), server_default=sa.true(), nullable=False),
+        sa.Column("padrao", sa.Boolean(), server_default=sa.false(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("codigo"),
     )
-    deposits = sa.table(
+    op.create_index(
+        "uq_depositos_estoque_padrao",
         "depositos_estoque",
-        sa.column("codigo", sa.String()),
-        sa.column("nome", sa.String()),
+        ["padrao"],
+        unique=True,
+        postgresql_where=sa.text("padrao = true"),
     )
-    op.bulk_insert(
-        deposits, [{"codigo": "PRINCIPAL", "nome": "Depósito principal"}]
+    op.execute(
+        sa.text(
+            "INSERT INTO depositos_estoque "
+            "(codigo, nome, padrao, created_at, updated_at) "
+            "VALUES ('PRINCIPAL', 'Depósito principal', TRUE, "
+            "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+        )
     )
 
     op.create_table(
@@ -170,4 +178,5 @@ def downgrade() -> None:
     )
     op.drop_table("movimentacoes_estoque")
     op.drop_table("configuracoes_estoque")
+    op.drop_index("uq_depositos_estoque_padrao", table_name="depositos_estoque")
     op.drop_table("depositos_estoque")

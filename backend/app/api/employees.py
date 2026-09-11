@@ -193,20 +193,28 @@ def delete_employee(
     if employee is None:
         raise HTTPException(status_code=404, detail="Funcionário não encontrado.")
     if (
-        db.scalar(select(Venda.id).where(Venda.funcionario_id == employee_id))
+        db.scalar(
+            select(Venda.id).where(
+                Venda.funcionario_id == employee_id,
+                Venda.status != "CANCELADA",
+            )
+        )
         is not None
     ):
         raise HTTPException(
             status_code=409,
             detail="Funcionário possui vendas relacionadas e não pode ser excluído.",
         )
-    db.delete(employee)
+    # Keep cancelled sales and their historical employee reference intact.
+    # Once no active sale depends on the employee, deletion is represented by
+    # deactivation because the employee foreign key is intentionally required.
+    employee.ativo = False
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
             status_code=409,
-            detail="Funcionário possui vendas relacionadas e não pode ser excluído.",
+            detail="Funcionário não pode ser excluído.",
         ) from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

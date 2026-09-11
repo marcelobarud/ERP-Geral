@@ -221,6 +221,7 @@ EXPECTED_COLUMNS = {
         "codigo",
         "nome",
         "ativo",
+        "padrao",
         "created_at",
         "updated_at",
     },

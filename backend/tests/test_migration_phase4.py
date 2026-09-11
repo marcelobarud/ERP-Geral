@@ -34,6 +34,14 @@ def test_phase4_migration_creates_inventory_foundation() -> None:
         "inventarios_estoque",
         "inventarios_estoque_itens",
     ]
+    deposit_seed_calls = [
+        call
+        for call in migration.op.execute.call_args_list
+        if "INSERT INTO depositos_estoque" in str(call.args[0])
+    ]
+    assert len(deposit_seed_calls) == 1
+    assert "TRUE" in str(deposit_seed_calls[0].args[0])
+    assert "CURRENT_TIMESTAMP" in str(deposit_seed_calls[0].args[0])
 
 
 def test_phase4_migration_downgrade_removes_inventory_foundation() -> None:

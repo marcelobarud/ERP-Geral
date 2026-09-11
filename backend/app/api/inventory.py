@@ -1,6 +1,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -60,6 +60,8 @@ def list_deposits(db: Session = Depends(get_db_session)) -> list[DepositRead]:
 def create_deposit(
     payload: DepositCreate, db: Session = Depends(get_db_session)
 ) -> DepositRead:
+    if payload.padrao:
+        db.execute(update(DepositoEstoque).values(padrao=False))
     deposit = DepositoEstoque(**payload.model_dump())
     db.add(deposit)
     try:

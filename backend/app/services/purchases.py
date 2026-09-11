@@ -18,7 +18,11 @@ from app.models import (
 )
 from app.schemas.inventory import StockMovementCreate
 from app.schemas.purchases import PurchaseCreate, ReceiptCreate
-from app.services.inventory import create_movement
+from app.services.inventory import (
+    InventoryNotFound,
+    create_movement,
+    get_default_deposit,
+)
 
 
 class PurchaseNotFound(Exception):
@@ -177,13 +181,17 @@ def confirm_receipt(
     if purchase is None:
         raise PurchaseNotFound("Pedido de compra não encontrado.")
     try:
+        default_deposit = get_default_deposit(db)
+    except InventoryNotFound as exception:
+        raise PurchaseConflict(str(exception)) from None
+    try:
         for item in receipt.itens:
             purchase_item = db.get(PedidoCompraItem, item.pedido_item_id)
             if purchase_item is None:
                 raise PurchaseNotFound("Item do pedido de compra não encontrado.")
             movement = StockMovementCreate(
                 produto_id=item.produto_id,
-                deposito_id=1,
+                deposito_id=default_deposit.id,
                 tipo="ENTRADA",
                 quantidade=item.quantidade,
                 data_movimentacao=datetime.combine(
@@ -207,18 +215,11 @@ def confirm_receipt(
                 )
             )
         receipt.status = "CONFIRMADO"
-        quantities = [
-            item.quantidade_recebida + item.quantidade
-            if item.id
-            in {receipt_item.pedido_item_id for receipt_item in receipt.itens}
-            else item.quantidade_recebida
-            for item in purchase.itens
-        ]
         purchase.status = (
             "RECEBIDO"
             if all(
-                quantity >= item.quantidade
-                for quantity, item in zip(quantities, purchase.itens, strict=True)
+                item.quantidade_recebida >= item.quantidade
+                for item in purchase.itens
             )
             else "PARCIALMENTE_RECEBIDO"
         )

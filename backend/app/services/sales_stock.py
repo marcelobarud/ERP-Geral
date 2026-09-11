@@ -13,7 +13,12 @@ from app.models import (
 )
 from app.schemas.inventory import StockMovementCreate
 from app.schemas.returns import ReturnCreate
-from app.services.inventory import InventoryConflict, create_movement
+from app.services.inventory import (
+    InventoryConflict,
+    InventoryNotFound,
+    create_movement,
+    get_default_deposit,
+)
 from app.services.sales import get_sale
 
 
@@ -37,12 +42,16 @@ def post_sale_to_stock(db: Session, sale_id: int, user_id: int | None = None):
     if sale.status != "CONCLUIDA":
         raise SalesStockConflict("Somente venda concluída pode movimentar estoque.")
     try:
+        default_deposit = get_default_deposit(db)
+    except InventoryNotFound as exception:
+        raise SalesStockConflict(str(exception)) from None
+    try:
         for item in sale.itens:
             create_movement(
                 db,
                 StockMovementCreate(
                     produto_id=item.produto_id,
-                    deposito_id=1,
+                    deposito_id=default_deposit.id,
                     tipo="SAIDA",
                     quantidade=item.quantidade,
                     data_movimentacao=sale.data_venda,
@@ -152,6 +161,10 @@ def approve_return(
     if sale is None:
         raise SalesStockConflict("Venda da devolução não encontrada.")
     try:
+        try:
+            default_deposit = get_default_deposit(db)
+        except InventoryNotFound as exception:
+            raise SalesStockConflict(str(exception)) from None
         for item in record.itens:
             sale_item = db.get(VendaItem, item.venda_item_id)
             if sale_item is None:
@@ -173,7 +186,7 @@ def approve_return(
                 db,
                 StockMovementCreate(
                     produto_id=item.produto_id,
-                    deposito_id=1,
+                    deposito_id=default_deposit.id,
                     tipo="ENTRADA",
                     quantidade=item.quantidade,
                     data_movimentacao=datetime.now(timezone.utc),

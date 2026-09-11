@@ -53,6 +53,20 @@ def get_inventory_config(db: Session) -> ConfiguracaoEstoque:
     return config
 
 
+def get_default_deposit(db: Session) -> DepositoEstoque:
+    deposit = db.scalar(
+        select(DepositoEstoque)
+        .where(
+            DepositoEstoque.ativo.is_(True),
+            DepositoEstoque.padrao.is_(True),
+        )
+        .order_by(DepositoEstoque.id)
+    )
+    if deposit is None:
+        raise InventoryNotFound("Depósito padrão não configurado.")
+    return deposit
+
+
 def movement_effect(
     movement: MovimentacaoEstoque,
     movements: dict[int, MovimentacaoEstoque],

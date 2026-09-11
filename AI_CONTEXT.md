@@ -906,3 +906,37 @@ Data: 2026-09-11
   normalização raster, além de `python-multipart` para o contrato de upload.
   Campos Personalizados e o Editor Visual não foram alterados além da
   continuação da exibição correta da logo; nenhum commit ou push foi feito.
+
+## Atualização — Plano 05, Fase 0 concluída em 2026-09-11
+
+A Fase 0 foi estabilizada antes do início da Fase 1. A migration
+`20260911_0006` foi corrigida preservando `revision` e `down_revision`: o seed
+do depósito agora usa `INSERT` SQL com `CURRENT_TIMESTAMP`, inclui timestamps
+obrigatórios e define um único depósito padrão por índice parcial PostgreSQL.
+
+O recebimento de compras agora acumula somente a quantidade efetivamente
+recebida em cada confirmação. Foram cobertos recebimento parcial, excesso,
+recebimento final e confirmação idempotente. A lógica operacional de compras,
+vendas, devoluções e relatórios resolve o depósito padrão por serviço; não há
+dependência crítica de `deposito_id = 1`.
+
+A fixture PostgreSQL foi ajustada para usar savepoints por teste e repor os
+dados de referência das migrations após a limpeza. Isso mantém unidades,
+conta de caixa, módulos, depósito padrão e configuração de estoque disponíveis
+sem contaminar o banco de desenvolvimento.
+
+Validações realizadas:
+
+- PostgreSQL existente em revisão anterior: upgrade até `20260911_0010`;
+- PostgreSQL vazio descartável: upgrade completo até `head`;
+- PostgreSQL descartável: downgrade até `base` e re-upgrade completo;
+- backend PostgreSQL: `118 passed`;
+- backend sem `TEST_DATABASE_URL`: `53 passed`, `65 skipped` por ausência
+  intencional da conexão;
+- Ruff: aprovado;
+- frontend: `75 passed`, lint, typecheck e build aprovados;
+- `git diff --check`: aprovado.
+
+Os bancos descartáveis foram removidos após a validação. Nenhuma credencial
+foi persistida em arquivo, código ou documentação. A Fase 1 do Plano 05 não
+foi iniciada.

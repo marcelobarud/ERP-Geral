@@ -98,3 +98,43 @@ def test_purchase_partial_receipt_updates_stock_once_and_cost_history(
     assert Decimal(str(updated.json()["itens"][0]["quantidade_recebida"])) == Decimal(
         "4.000"
     )
+
+    too_much = client.post(
+        f"/api/purchases/{purchase_id}/receipts",
+        json={
+            "data_recebimento": date.today().isoformat(),
+            "itens": [
+                {
+                    "pedido_item_id": item_id,
+                    "quantidade": "7.000",
+                    "custo_efetivo": "8.25",
+                }
+            ],
+        },
+    )
+    assert too_much.status_code == 422
+
+    final_receipt = client.post(
+        f"/api/purchases/{purchase_id}/receipts",
+        json={
+            "data_recebimento": date.today().isoformat(),
+            "itens": [
+                {
+                    "pedido_item_id": item_id,
+                    "quantidade": "6.000",
+                    "custo_efetivo": "8.10",
+                }
+            ],
+        },
+    )
+    assert final_receipt.status_code == 201
+    final_confirmation = client.post(
+        f"/api/purchases/receipts/{final_receipt.json()['id']}/confirm"
+    )
+    assert final_confirmation.status_code == 200
+    assert final_confirmation.json()["status"] == "CONFIRMADO"
+    completed = client.get(f"/api/purchases/{purchase_id}")
+    assert completed.json()["status"] == "RECEBIDO"
+    assert Decimal(str(completed.json()["itens"][0]["quantidade_recebida"])) == Decimal(
+        "10.000"
+    )

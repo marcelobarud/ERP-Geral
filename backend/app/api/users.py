@@ -55,6 +55,14 @@ def create_user(
             entity_id=user.id,
             metadata={"role": user.role},
         )
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="role_changed",
+            entity="usuario",
+            entity_id=user.id,
+            metadata={"role": user.role, "origem": "criacao"},
+        )
         db.commit()
         db.refresh(user)
     except IntegrityError:
