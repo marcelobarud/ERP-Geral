@@ -168,6 +168,12 @@ operações críticas de autenticação, usuários, configuração, compras,
 recebimentos, estoque, vendas e financeiro. O rate limiting local deve ser
 complementado por um proxy compartilhado quando houver múltiplas instâncias.
 
+Com a autenticação ativa, a área Configurações → Usuários fica disponível para
+administradores e permite administrar papéis, vínculos com funcionários e
+status de acesso. A interface trata separadamente indisponibilidade, sessão
+expirada, falta de permissão, validação, conflito e falhas do servidor sem
+expor detalhes técnicos.
+
 ## Execução local
 
 Backend, em um terminal:

@@ -470,7 +470,7 @@ principal; nenhum dado existente foi removido.
 
 # 7. Fase 2 — Erros, autenticação e permissões
 
-**Status:** EM ANDAMENTO  
+**Status:** CONCLUÍDA em 11/09/2026  
 **Commit esperado:** `feat: melhora permissões e tratamento de erros do ERP`
 
 ## Objetivo
@@ -554,11 +554,30 @@ Validar:
 
 Usuário entende por que uma ação falhou e a UI não oferece sistematicamente ações incompatíveis.
 
+## Evidências da execução
+
+- mensagens HTTP foram diferenciadas por indisponibilidade, sessão inválida,
+  falta de permissão, entidade inexistente, conflito, validação e falha do
+  servidor;
+- detalhes técnicos de banco, SQL, stack trace e violações de constraint são
+  substituídos por mensagens seguras;
+- 401 com token existente limpa a sessão local, emite o evento de expiração e
+  devolve a aplicação à tela de login;
+- Configurações → Usuários foi implementado sobre as APIs existentes, com
+  listagem, criação, edição de papel, vínculo com funcionário e ativação ou
+  inativação;
+- a navegação de Usuários é sensível ao papel atual, mantendo o backend como
+  autoridade para autorização;
+- a suíte de autenticação validou administrador, operador, login inválido,
+  usuário inativo, logout, acesso sem token e acesso negado;
+- frontend: `79 passed`, typecheck, build e lint aprovados (lint mantém apenas
+  avisos preexistentes de efeitos React).
+
 ---
 
 # 8. Fase 3 — Consistência de produto e navegação
 
-**Status:** PENDENTE  
+**Status:** EM ANDAMENTO  
 **Commit esperado:** `refactor: consolida navegação e consistência do ERP`
 
 ## Objetivo

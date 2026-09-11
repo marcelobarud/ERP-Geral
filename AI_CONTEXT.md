@@ -1104,3 +1104,20 @@ Validação da fase: backend PostgreSQL `118 passed`; frontend `77 passed`,
 lint, typecheck e build aprovados; `ruff check app` e `git diff --check`
 aprovados. O Plano 06 prossegue pela Fase 2, voltada a erros, autenticação e
 permissões na experiência do usuário.
+
+## Atualização — Plano 06, Fase 2 concluída em 2026-09-11
+
+A Fase 2 alinhou a experiência do frontend às regras de autenticação e
+autorização. O cliente HTTP agora diferencia indisponibilidade, 401, 403,
+404, 409, 422 e 5xx, limpa token e sinaliza a sessão expirada, preservando
+mensagens de domínio e substituindo detalhes técnicos por mensagens seguras.
+
+Foi adicionada a área Configurações → Usuários, baseada nas APIs existentes,
+com listagem, criação, edição de papel, vínculo com funcionário e ativação ou
+inativação. A navegação oculta essa área para papéis que não podem administrar
+usuários quando a autenticação está ativa; a autorização final continua no
+backend.
+
+Validação da fase: frontend `79 passed`, typecheck e build aprovados; lint
+aprovado com os avisos preexistentes de efeitos React. O Plano 06 prossegue
+pela Fase 3, voltada à consistência de produto e navegação.

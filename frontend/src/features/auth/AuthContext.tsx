@@ -44,6 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      setUser(null)
+      setError('Sua sessão expirou. Entre novamente no ERP.')
+    }
+    window.addEventListener('erp-auth-expired', handleExpiredSession)
+    return () => window.removeEventListener('erp-auth-expired', handleExpiredSession)
+  }, [])
+
   const login = useCallback(async (email: string, senha: string) => {
     setError(null)
     try {

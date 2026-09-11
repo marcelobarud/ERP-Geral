@@ -18,6 +18,7 @@ type AppLayoutProps = {
   children: ReactNode
   pageTheme?: PageAppearanceTheme
   activeModules?: ReadonlySet<string>
+  canManageUsers?: boolean
 }
 
 function HealthIndicator() {
@@ -68,7 +69,7 @@ function HealthIndicator() {
   )
 }
 
-export function AppLayout({ route, onNavigate, children, pageTheme, activeModules }: AppLayoutProps) {
+export function AppLayout({ route, onNavigate, children, pageTheme, activeModules, canManageUsers = true }: AppLayoutProps) {
   const { preview } = useAppearance()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -87,7 +88,7 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
   return (
     <div className="app-frame">
       <Sidebar
-        groups={getNavigationGroups(appearanceLabels(preview), activeModules)}
+        groups={getNavigationGroups(appearanceLabels(preview), activeModules, canManageUsers)}
         brandName={preview.nome_sistema}
         logoUrl={resolveBackendAssetUrl(preview.logo_url)}
         currentPath={route.path === '/not-found' ? '' : route.path}

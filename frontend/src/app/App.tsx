@@ -18,6 +18,7 @@ import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, Movements
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
 import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
 import { ModulesPage } from '../features/settings/ModulesPage'
+import { UsersPage } from '../features/settings/UsersPage'
 import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
@@ -96,6 +97,8 @@ function PageForRoute({
       return <PaymentConditionsPage />
     case '/settings/modules':
       return <ModulesPage />
+    case '/settings/users':
+      return <UsersPage />
     case '/module-disabled':
       return <ModuleDisabledPage />
     default:
@@ -105,6 +108,7 @@ function PageForRoute({
 
 function AppContent() {
   const { preview, pageAppearances, loadPageAppearance } = useAppearance()
+  const { authRequired, user } = useAuth()
   const [pathname, setPathname] = useState(currentPathname)
   const [modules, setModules] = useState<ErpModule[]>([])
   const activeModules = useMemo(() => new Set(modules.filter((module) => module.ativo).map((module) => module.codigo)), [modules])
@@ -144,7 +148,7 @@ function AppContent() {
   }, [loadPageAppearance, pageId])
 
   return (
-    <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} pageTheme={pageAppearances[pageId]?.resolved}>
+      <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={!authRequired || user?.role === 'ADMIN'} pageTheme={pageAppearances[pageId]?.resolved}>
       <PageForRoute route={route} onNavigate={navigate} />
     </AppLayout>
   )

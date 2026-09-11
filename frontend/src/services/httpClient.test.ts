@@ -46,6 +46,15 @@ describe('cliente HTTP', () => {
       'Não foi possível conectar ao backend.',
     )
   })
+
+  it('não expõe detalhes técnicos de banco ao usuário', () => {
+    expect(getApiErrorMessage(new ApiError(500, 'IntegrityError: foreign key violation'), 'Falha segura.')).toBe('Falha segura.')
+  })
+
+  it('distingue uma sessão inválida de uma falha de validação', () => {
+    expect(getApiErrorMessage(new ApiError(401, 'Autenticação necessária.'), 'fallback')).toContain('sessão')
+    expect(getApiErrorMessage(new ApiError(422, 'Quantidade inválida.'), 'fallback')).toBe('Quantidade inválida.')
+  })
 })
 
 describe('recursos públicos do backend', () => {

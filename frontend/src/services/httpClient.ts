@@ -55,9 +55,9 @@ export async function request<T>(
   init?: RequestInit,
 ): Promise<T> {
   let response: Response
+  const token = getAuthToken()
 
   try {
-    const token = getAuthToken()
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       headers: {
@@ -76,6 +76,10 @@ export async function request<T>(
     const payload = body as ApiErrorPayload | null
     const message =
       payload?.detail || 'Não foi possível concluir a solicitação.'
+    if (response.status === 401 && token && typeof window !== 'undefined') {
+      clearAuthToken()
+      window.dispatchEvent(new Event('erp-auth-expired'))
+    }
     throw new ApiError(response.status, message)
   }
 
@@ -98,8 +102,21 @@ export function getApiErrorMessage(
   error: unknown,
   fallback: string,
 ): string {
-  if (error instanceof ApiError) return error.message
-  return fallback
+  if (!(error instanceof ApiError)) return fallback
+
+  const technicalDetail = /integrityerror|foreign key|sqlalchemy|psycopg|traceback|stack trace|constraint|syntax error/i.test(error.message)
+  if (technicalDetail) return fallback
+
+  if (error.status === 0) return 'Não foi possível conectar ao backend.'
+  if (error.status === 401 && !error.message.toLowerCase().includes('senha') && !error.message.toLowerCase().includes('credenciais')) {
+    return 'Sua sessão não está mais válida. Entre novamente no ERP.'
+  }
+  if (error.status === 403) return error.message || 'Você não tem permissão para realizar esta ação.'
+  if (error.status >= 500) return error.message || 'O backend não conseguiu concluir a solicitação. Tente novamente.'
+  if (error.status === 404 && !error.message) return 'Registro não encontrado.'
+  if (error.status === 409 && !error.message) return 'A operação entra em conflito com dados existentes.'
+  if (error.status === 422 && !error.message) return 'Revise os dados informados.'
+  return error.message || fallback
 }
 
 export function getHealth(): Promise<HealthResponse> {
