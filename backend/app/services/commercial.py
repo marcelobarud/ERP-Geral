@@ -26,9 +26,11 @@ from app.schemas.commercial import (
     OrderCreate,
     OrderRead,
     OrderStatus,
+    OrderUpdate,
     QuoteCreate,
     QuoteRead,
     QuoteStatus,
+    QuoteUpdate,
 )
 from app.schemas.sales import VendaRead
 from app.services.sales import get_sale, sale_to_read
@@ -280,6 +282,71 @@ def create_order(db: Session, payload: OrderCreate) -> PedidoVenda:
     return get_order(db, order.id)  # type: ignore[return-value]
 
 
+def _replace_document_items(
+    document, item_class, snapshots: list[dict[str, object]]
+) -> None:
+    document.itens.clear()
+    document.itens.extend(item_class(**snapshot) for snapshot in snapshots)
+
+
+def update_quote(db: Session, quote_id: int, payload: QuoteUpdate) -> Orcamento:
+    quote = get_quote(db, quote_id)
+    if quote is None:
+        raise CommercialNotFound("Orçamento não encontrado.")
+    if quote.status != "RASCUNHO" or quote.pedido is not None:
+        raise CommercialConflict(
+            "Somente orçamento em rascunho e sem pedido pode ser editado."
+        )
+    data = payload.model_dump(exclude_unset=True)
+    if payload.itens is not None:
+        snapshots = snapshot_products(db, payload.itens)
+        _replace_document_items(quote, OrcamentoItem, snapshots)
+        data.pop("itens", None)
+    ensure_references(
+        db,
+        data.get("cliente_id", quote.cliente_id),
+        data.get("funcionario_id", quote.funcionario_id),
+        data.get("condicao_pagamento_id", quote.condicao_pagamento_id),
+    )
+    for field, value in data.items():
+        setattr(quote, field, value)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise CommercialConflict("Número de orçamento já cadastrado.") from None
+    return get_quote(db, quote.id)  # type: ignore[return-value]
+
+
+def update_order(db: Session, order_id: int, payload: OrderUpdate) -> PedidoVenda:
+    order = get_order(db, order_id)
+    if order is None:
+        raise CommercialNotFound("Pedido não encontrado.")
+    if order.status != "RASCUNHO" or order.venda_id is not None:
+        raise CommercialConflict(
+            "Somente pedido em rascunho e sem venda pode ser editado."
+        )
+    data = payload.model_dump(exclude_unset=True)
+    if payload.itens is not None:
+        snapshots = snapshot_products(db, payload.itens)
+        _replace_document_items(order, PedidoVendaItem, snapshots)
+        data.pop("itens", None)
+    ensure_references(
+        db,
+        data.get("cliente_id", order.cliente_id),
+        data.get("funcionario_id", order.funcionario_id),
+        data.get("condicao_pagamento_id", order.condicao_pagamento_id),
+    )
+    for field, value in data.items():
+        setattr(order, field, value)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise CommercialConflict("Número de pedido já cadastrado.") from None
+    return get_order(db, order.id)  # type: ignore[return-value]
+
+
 def get_quote(db: Session, quote_id: int) -> Orcamento | None:
     return db.scalar(quote_query().where(Orcamento.id == quote_id))
 
@@ -369,6 +436,8 @@ def convert_order_to_sale(db: Session, order_id: int) -> VendaRead:
         cliente_id=order.cliente_id,
         funcionario_id=order.funcionario_id,
         data_venda=order.created_at,
+        pedido_venda_id=order.id,
+        condicao_pagamento_id=order.condicao_pagamento_id,
         observacao=order.observacao,
         itens=[
             VendaItem(

@@ -5,7 +5,7 @@ type PageHeaderProps = {
   eyebrow: string
   title: string
   description: string
-  pageId?: AppearancePageId
+  pageId?: AppearancePageId | string
 }
 
 export function PageHeader({
@@ -18,7 +18,7 @@ export function PageHeader({
     key: `${pageId ?? 'settings'}.title`,
     type: 'TEXT',
     group: 'page-title',
-    page: pageId,
+    page: pageId as AppearancePageId | undefined,
     label: title,
   })
 

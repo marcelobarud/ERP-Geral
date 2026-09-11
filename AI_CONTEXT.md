@@ -938,5 +938,28 @@ Validações realizadas:
 - `git diff --check`: aprovado.
 
 Os bancos descartáveis foram removidos após a validação. Nenhuma credencial
-foi persistida em arquivo, código ou documentação. A Fase 1 do Plano 05 não
-foi iniciada.
+foi persistida em arquivo, código ou documentação. A Fase 1 do Plano 05 foi
+executada na sequência.
+
+## Atualização — Plano 05, Fase 1 concluída em 2026-09-11
+
+A Fase 1 transformou o backend comercial em uma fatia vertical operável. A
+navegação agora expõe Orçamentos, Pedidos, Vendas comerciais e Devoluções, e
+Configurações expõe as condições de pagamento com listagem, criação, edição e
+ativação/inativação.
+
+Orçamentos e pedidos possuem telas para listagem, busca, filtro, criação,
+edição em rascunho, detalhes, transições controladas, conversão e impressão
+HTML. Devoluções permitem quantidades totais ou parciais, motivo e aprovação
+com entrada no estoque. A venda exibe origem do pedido, condição de pagamento,
+observações e status/cancelamento.
+
+A migration `20260911_0011` adiciona `vendas.pedido_venda_id` e
+`vendas.condicao_pagamento_id`, com foreign keys e índice único para manter a
+origem sem duplicação. A API recebeu atualização de condições, documentos,
+filtros comerciais e listagem de devoluções. As conversões continuam
+idempotentes e os snapshots comerciais permanecem preservados.
+
+Validação: PostgreSQL `118 passed`; frontend `77 passed`, lint, typecheck e
+build aprovados; Ruff e `git diff --check` aprovados. A Fase 2 permanece
+pendente.

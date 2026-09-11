@@ -6,16 +6,19 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import CondicaoPagamento, Orcamento, PedidoVenda
+from app.models import Cliente, CondicaoPagamento, Orcamento, PedidoVenda
 from app.schemas.commercial import (
     OrderCreate,
     OrderRead,
     OrderStatusUpdate,
+    OrderUpdate,
     PaymentConditionCreate,
     PaymentConditionRead,
+    PaymentConditionUpdate,
     QuoteCreate,
     QuoteRead,
     QuoteStatusUpdate,
+    QuoteUpdate,
 )
 from app.services.commercial import (
     CommercialConflict,
@@ -34,6 +37,8 @@ from app.services.commercial import (
     order_to_read,
     quote_query,
     quote_to_read,
+    update_order,
+    update_quote,
 )
 
 router = APIRouter(
@@ -45,13 +50,13 @@ router = APIRouter(
 
 @router.get("/payment-conditions", response_model=list[PaymentConditionRead])
 def list_payment_conditions(
+    include_inactive: bool = Query(default=False),
     db: Session = Depends(get_db_session),
 ) -> list[PaymentConditionRead]:
-    conditions = db.scalars(
-        select(CondicaoPagamento)
-        .where(CondicaoPagamento.ativo.is_(True))
-        .order_by(CondicaoPagamento.nome)
-    ).all()
+    query = select(CondicaoPagamento).order_by(CondicaoPagamento.nome)
+    if not include_inactive:
+        query = query.where(CondicaoPagamento.ativo.is_(True))
+    conditions = db.scalars(query).all()
     return [PaymentConditionRead.model_validate(condition) for condition in conditions]
 
 
@@ -76,12 +81,46 @@ def create_payment_condition(
     return PaymentConditionRead.model_validate(condition)
 
 
+@router.patch(
+    "/payment-conditions/{condition_id}",
+    response_model=PaymentConditionRead,
+    dependencies=[Depends(require_permission("commercial:write"))],
+)
+def update_payment_condition(
+    condition_id: int,
+    payload: PaymentConditionUpdate,
+    db: Session = Depends(get_db_session),
+) -> PaymentConditionRead:
+    condition = db.get(CondicaoPagamento, condition_id)
+    if condition is None:
+        raise HTTPException(
+            status_code=404, detail="Condição de pagamento não encontrada."
+        )
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(condition, field, value)
+    try:
+        db.commit()
+        db.refresh(condition)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Código já cadastrado.") from None
+    return PaymentConditionRead.model_validate(condition)
+
+
 @router.get("/quotes", response_model=list[QuoteRead])
 def list_quotes(
+    search: str | None = Query(default=None),
     status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db_session),
 ) -> list[QuoteRead]:
-    query = quote_query().order_by(Orcamento.created_at.desc(), Orcamento.id.desc())
+    query = quote_query().join(Orcamento.cliente).order_by(
+        Orcamento.created_at.desc(), Orcamento.id.desc()
+    )
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.where(
+            (Orcamento.numero.ilike(pattern)) | (Cliente.nome.ilike(pattern))
+        )
     if status_filter:
         query = query.where(Orcamento.status == status_filter)
     return [quote_to_read(quote) for quote in db.scalars(query).all()]
@@ -115,6 +154,26 @@ def get_quote_endpoint(
     if quote is None:
         raise HTTPException(status_code=404, detail="Orçamento não encontrado.")
     return quote_to_read(quote)
+
+
+@router.patch(
+    "/quotes/{quote_id}",
+    response_model=QuoteRead,
+    dependencies=[Depends(require_permission("commercial:write"))],
+)
+def update_quote_endpoint(
+    quote_id: int,
+    payload: QuoteUpdate,
+    db: Session = Depends(get_db_session),
+) -> QuoteRead:
+    try:
+        return quote_to_read(update_quote(db, quote_id, payload))
+    except CommercialNotFound as exception:
+        raise HTTPException(status_code=404, detail=str(exception)) from None
+    except CommercialValidationError as exception:
+        raise HTTPException(status_code=422, detail=str(exception)) from None
+    except CommercialConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
 
 
 @router.patch(
@@ -161,10 +220,18 @@ def print_quote(quote_id: int, db: Session = Depends(get_db_session)) -> HTMLRes
 
 @router.get("/orders", response_model=list[OrderRead])
 def list_orders(
+    search: str | None = Query(default=None),
     status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db_session),
 ) -> list[OrderRead]:
-    query = order_query().order_by(PedidoVenda.created_at.desc(), PedidoVenda.id.desc())
+    query = order_query().join(PedidoVenda.cliente).order_by(
+        PedidoVenda.created_at.desc(), PedidoVenda.id.desc()
+    )
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.where(
+            (PedidoVenda.numero.ilike(pattern)) | (Cliente.nome.ilike(pattern))
+        )
     if status_filter:
         query = query.where(PedidoVenda.status == status_filter)
     return [order_to_read(order) for order in db.scalars(query).all()]
@@ -198,6 +265,26 @@ def get_order_endpoint(
     if order is None:
         raise HTTPException(status_code=404, detail="Pedido não encontrado.")
     return order_to_read(order)
+
+
+@router.patch(
+    "/orders/{order_id}",
+    response_model=OrderRead,
+    dependencies=[Depends(require_permission("commercial:write"))],
+)
+def update_order_endpoint(
+    order_id: int,
+    payload: OrderUpdate,
+    db: Session = Depends(get_db_session),
+) -> OrderRead:
+    try:
+        return order_to_read(update_order(db, order_id, payload))
+    except CommercialNotFound as exception:
+        raise HTTPException(status_code=404, detail=str(exception)) from None
+    except CommercialValidationError as exception:
+        raise HTTPException(status_code=422, detail=str(exception)) from None
+    except CommercialConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
 
 
 @router.patch(

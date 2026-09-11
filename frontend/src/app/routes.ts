@@ -38,10 +38,20 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       ],
     },
     {
+      label: 'Comercial',
+      items: [
+        { path: '/commercial/quotes', label: 'Orçamentos', icon: '▤' },
+        { path: '/commercial/orders', label: 'Pedidos', icon: '▥' },
+        { path: '/commercial/sales', label: 'Vendas comerciais', icon: '↗' },
+        { path: '/commercial/returns', label: 'Devoluções', icon: '↩' },
+      ],
+    },
+    {
       label: 'Configurações',
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
         { path: '/settings/custom-fields', label: 'Campos personalizados', icon: '✦' },
+        { path: '/settings/payment-conditions', label: 'Condições de pagamento', icon: '◫' },
       ],
     },
   ]
@@ -57,8 +67,13 @@ const routeDescriptions: Record<string, string> = {
   '/employees': 'A equipe responsável pela operação será organizada aqui.',
   '/sales/new': 'Registre uma venda com múltiplos itens e preços históricos.',
   '/sales': 'Consulte o histórico de vendas e seus totais.',
+  '/commercial/quotes': 'Crie e acompanhe orçamentos comerciais.',
+  '/commercial/orders': 'Gerencie pedidos de venda e conversões.',
+  '/commercial/sales': 'Acesse as vendas originadas do fluxo comercial.',
+  '/commercial/returns': 'Registre e aprove devoluções de vendas.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
+  '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',
 }
 
 export const notFoundRoute: RouteDefinition = {

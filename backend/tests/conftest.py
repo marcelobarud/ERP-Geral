@@ -54,7 +54,7 @@ REQUIRED_TABLES = {
     "liquidacoes_financeiras",
     "modulos_erp",
 }
-EXPECTED_MIGRATION = "20260911_0010"
+EXPECTED_MIGRATION = "20260911_0011"
 
 REFERENCE_DATA_SQL = (
     "INSERT INTO unidades_medida (codigo, nome) VALUES "

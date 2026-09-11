@@ -12,6 +12,7 @@ import { AppearanceProvider, useAppearance } from '../features/settings/Appearan
 import { AuthProvider, useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
 import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
+import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -43,10 +44,20 @@ function PageForRoute({
       return <NewSalePage />
     case '/sales':
       return <SalesPage />
+    case '/commercial/quotes':
+      return <QuotesPage />
+    case '/commercial/orders':
+      return <OrdersPage />
+    case '/commercial/sales':
+      return <SalesPage />
+    case '/commercial/returns':
+      return <ReturnsPage />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':
       return <CustomFieldsPage />
+    case '/settings/payment-conditions':
+      return <PaymentConditionsPage />
     default:
       return <NotFoundPage />
   }

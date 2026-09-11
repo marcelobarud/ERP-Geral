@@ -31,6 +31,13 @@ class PaymentConditionRead(ReadModel):
     ativo: bool
 
 
+class PaymentConditionUpdate(APIModel):
+    codigo: str | None = Field(default=None, min_length=1, max_length=40)
+    nome: str | None = Field(default=None, min_length=1, max_length=100)
+    descricao: str | None = Field(default=None, max_length=255)
+    ativo: bool | None = None
+
+
 class CommercialItemCreate(APIModel):
     produto_id: int = Field(gt=0)
     quantidade: Decimal = Field(gt=0, max_digits=12, decimal_places=3)
@@ -82,6 +89,25 @@ class QuoteStatusUpdate(APIModel):
     status: QuoteStatus
 
 
+class QuoteUpdate(APIModel):
+    numero: str | None = Field(default=None, min_length=1, max_length=40)
+    cliente_id: int | None = Field(default=None, gt=0)
+    funcionario_id: int | None = Field(default=None, gt=0)
+    condicao_pagamento_id: int | None = Field(default=None, gt=0)
+    validade: date | None = None
+    desconto: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    acrescimo: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    frete: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    observacao: str | None = Field(default=None, max_length=1000)
+    itens: list[CommercialItemCreate] | None = Field(default=None, min_length=1)
+
+
 class QuoteRead(ReadModel):
     id: int
     numero: str
@@ -123,6 +149,24 @@ class OrderCreate(APIModel):
 
 class OrderStatusUpdate(APIModel):
     status: OrderStatus
+
+
+class OrderUpdate(APIModel):
+    numero: str | None = Field(default=None, min_length=1, max_length=40)
+    cliente_id: int | None = Field(default=None, gt=0)
+    funcionario_id: int | None = Field(default=None, gt=0)
+    condicao_pagamento_id: int | None = Field(default=None, gt=0)
+    desconto: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    acrescimo: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    frete: Decimal | None = Field(
+        default=None, ge=0, max_digits=12, decimal_places=2
+    )
+    observacao: str | None = Field(default=None, max_length=1000)
+    itens: list[CommercialItemCreate] | None = Field(default=None, min_length=1)
 
 
 class OrderRead(ReadModel):

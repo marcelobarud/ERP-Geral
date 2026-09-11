@@ -233,6 +233,12 @@ class Venda(Base):
     motivo_cancelamento: Mapped[str | None] = mapped_column(
         String(500), nullable=True
     )
+    pedido_venda_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pedidos_venda.id"), nullable=True, unique=True, index=True
+    )
+    condicao_pagamento_id: Mapped[int | None] = mapped_column(
+        ForeignKey("condicoes_pagamento.id"), nullable=True, index=True
+    )
     observacao: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now

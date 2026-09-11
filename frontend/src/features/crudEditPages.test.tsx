@@ -113,7 +113,7 @@ describe('edição dos cadastros', () => {
 
     await waitFor(() => expect(customerApi.updateCustomer).toHaveBeenCalled())
     expect(customerApi.updateCustomer).toHaveBeenCalledWith(1, expect.not.objectContaining({ id: 1 }))
-    expect(screen.getByText('Ana Atualizada')).toBeTruthy()
+    expect(await screen.findByText('Ana Atualizada')).toBeTruthy()
   })
 
   it('edita fornecedor preservando o CNPJ', async () => {

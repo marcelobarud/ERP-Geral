@@ -194,7 +194,9 @@ class PedidoVenda(Base):
     cliente: Mapped[Cliente] = relationship()
     funcionario: Mapped[Funcionario | None] = relationship()
     orcamento: Mapped[Orcamento | None] = relationship(back_populates="pedido")
-    venda: Mapped[Venda | None] = relationship()
+    venda: Mapped[Venda | None] = relationship(
+        foreign_keys="PedidoVenda.venda_id"
+    )
     condicao_pagamento: Mapped[CondicaoPagamento | None] = relationship()
     itens: Mapped[list["PedidoVendaItem"]] = relationship(
         back_populates="pedido", cascade="all, delete-orphan"

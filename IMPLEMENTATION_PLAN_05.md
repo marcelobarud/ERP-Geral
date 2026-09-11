@@ -357,14 +357,14 @@ frontend passou com `75 passed`, lint, typecheck e build; Ruff e
 
 O upgrade foi validado desde banco vazio e desde revisão anterior. Em banco
 descartável, o downgrade até `base` e o re-upgrade até `20260911_0010` também
-foram aprovados. A Fase 1 permanece pendente e não foi iniciada.
+foram aprovados. A Fase 1 foi executada na sequência e está registrada abaixo.
 
 ---
 
 ## 7. Fase 1 — Comercial completo
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: conclui fluxo comercial do ERP`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: conclui fluxo comercial do ERP`
 
 ### Objetivo
 
@@ -475,6 +475,22 @@ Orçamento
 ```
 
 sem usar API manualmente.
+
+### Resultado da execução
+
+A Fase 1 foi concluída com navegação comercial para Orçamentos, Pedidos,
+Vendas e Devoluções, além da administração de condições de pagamento. Foram
+adicionadas telas para criar, editar enquanto permitido, pesquisar, filtrar,
+visualizar, alterar status, converter e imprimir orçamentos e pedidos. A tela
+de devoluções permite registrar devoluções totais ou parciais, informar o
+motivo e aprovar o efeito de entrada no estoque.
+
+O vínculo pedido→venda e a condição de pagamento passaram a ser persistidos
+na venda pela migration `20260911_0011`. As conversões continuam idempotentes,
+preservam snapshots e bloqueiam transições inválidas no backend.
+
+Validações da fase: backend PostgreSQL `118 passed`, frontend `77 passed`,
+lint, typecheck, build, Ruff e `git diff --check` aprovados.
 
 ---
 

@@ -424,7 +424,7 @@ function SaleDetails({ sale, onCancel }: { sale: Sale; onCancel: () => void }) {
   return (
     <div className="sale-details">
       <dl className="detail-grid sale-detail-meta">
-        <div><dt>ID</dt><dd>#{sale.id}</dd></div><div><dt>Data</dt><dd>{formatDate(sale.data_venda)}</dd></div><div><dt>Status</dt><dd><span className={`status-badge ${saleStatus === 'CANCELADA' ? 'status-badge-inactive' : 'status-badge-active'}`}>{saleStatus === 'CANCELADA' ? 'Cancelada' : 'Concluída'}</span></dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div>
+        <div><dt>ID</dt><dd>#{sale.id}</dd></div><div><dt>Data</dt><dd>{formatDate(sale.data_venda)}</dd></div><div><dt>Status</dt><dd><span className={`status-badge ${saleStatus === 'CANCELADA' ? 'status-badge-inactive' : 'status-badge-active'}`}>{saleStatus === 'CANCELADA' ? 'Cancelada' : 'Concluída'}</span></dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div><div><dt>Origem</dt><dd>{sale.pedido_id ? `Pedido #${sale.pedido_id}` : 'Venda direta'}</dd></div><div><dt>Condição de pagamento</dt><dd>{sale.condicao_pagamento_id ? `#${sale.condicao_pagamento_id}` : 'Não informada'}</dd></div>
       </dl>
       {sale.observacao ? <p className="sale-observation"><strong>Observação:</strong> {sale.observacao}</p> : null}
       {sale.motivo_cancelamento ? <p className="sale-observation"><strong>Motivo do cancelamento:</strong> {sale.motivo_cancelamento}</p> : null}

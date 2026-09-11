@@ -10,6 +10,7 @@ export type SaleCreatePayload = {
   funcionario_id: number
   data_venda: string
   observacao?: string | null
+  condicao_pagamento_id?: number | null
   itens: SaleItemCreate[]
 }
 
@@ -53,6 +54,8 @@ export type Sale = {
   status?: SaleStatus
   cancelada_em?: string | null
   motivo_cancelamento?: string | null
+  pedido_id?: number | null
+  condicao_pagamento_id?: number | null
   observacao?: string | null
   created_at?: string
   updated_at?: string

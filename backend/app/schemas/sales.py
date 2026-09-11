@@ -18,6 +18,7 @@ class VendaCreate(APIModel):
     cliente_id: int = Field(gt=0)
     funcionario_id: int = Field(gt=0)
     data_venda: datetime
+    condicao_pagamento_id: int | None = Field(default=None, gt=0)
     observacao: str | None = Field(default=None, max_length=1000)
     itens: list[VendaItemCreate] = Field(min_length=1)
 
@@ -71,6 +72,8 @@ class VendaRead(ReadModel):
     status: VendaStatus
     cancelada_em: datetime | None
     motivo_cancelamento: str | None
+    pedido_id: int | None
+    condicao_pagamento_id: int | None
     observacao: str | None
     created_at: datetime
     updated_at: datetime

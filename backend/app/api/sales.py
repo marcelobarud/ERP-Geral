@@ -4,12 +4,13 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import (
     Cliente,
+    DevolucaoVenda,
     Funcionario,
     MovimentacaoEstoque,
     Produto,
@@ -277,6 +278,19 @@ def get_sale_return_endpoint(
     if record is None:
         raise HTTPException(status_code=404, detail="Devolução não encontrada.")
     return return_to_read(record)
+
+
+@router.get("/returns", response_model=list[ReturnRead])
+def list_sale_returns(
+    status_filter: str | None = Query(default=None, alias="status"),
+    db: Session = Depends(get_db_session),
+) -> list[ReturnRead]:
+    query = select(DevolucaoVenda).options(
+        selectinload(DevolucaoVenda.itens)
+    ).order_by(DevolucaoVenda.created_at.desc(), DevolucaoVenda.id.desc())
+    if status_filter:
+        query = query.where(DevolucaoVenda.status == status_filter)
+    return [return_to_read(record) for record in db.scalars(query).all()]
 
 
 @router.post(

@@ -119,6 +119,11 @@ e financeiro, além do dashboard ERP, sempre calculados no backend.
 A migration `20260911_0010` adiciona a configuração central dos módulos
 Comercial, Compras, Estoque, Financeiro e Relatórios.
 
+A migration `20260911_0011` preserva na venda a origem do pedido comercial e a
+condição de pagamento utilizada. A interface comercial agora oferece
+orçamentos, pedidos, devoluções e condições de pagamento, com conversões
+controladas e impressão HTML dos documentos.
+
 ## Execução local
 
 Backend, em um terminal:

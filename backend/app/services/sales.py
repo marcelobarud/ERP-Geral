@@ -132,6 +132,7 @@ def create_sale(db: Session, payload: VendaCreate) -> Venda:
         cliente_id=customer.id,
         funcionario_id=employee.id,
         data_venda=payload.data_venda,
+        condicao_pagamento_id=payload.condicao_pagamento_id,
         observacao=payload.observacao,
     )
     for item_payload in payload.itens:
@@ -188,6 +189,8 @@ def sale_to_read(sale: Venda) -> VendaRead:
         status=sale.status,
         cancelada_em=sale.cancelada_em,
         motivo_cancelamento=sale.motivo_cancelamento,
+        pedido_id=sale.pedido_venda_id,
+        condicao_pagamento_id=sale.condicao_pagamento_id,
         observacao=sale.observacao,
         created_at=sale.created_at,
         updated_at=sale.updated_at,

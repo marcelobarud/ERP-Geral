@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.db.session import get_db_session
 from app.main import app
-from app.models import Cliente, Fornecedor, Funcionario, Produto
+from app.models import Cliente, CondicaoPagamento, Fornecedor, Funcionario, Produto
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("TEST_DATABASE_URL"),
@@ -58,7 +58,10 @@ def test_quote_order_and_sale_conversion_are_controlled(client, session) -> None
         preco_venda=Decimal("15.00"),
         fornecedor=supplier,
     )
-    session.add_all([supplier, customer, employee, product])
+    payment_condition = CondicaoPagamento(
+        codigo="PIX-TESTE", nome="Pix à vista", descricao="Pagamento imediato"
+    )
+    session.add_all([supplier, customer, employee, product, payment_condition])
     session.flush()
 
     quote = client.post(
@@ -67,6 +70,7 @@ def test_quote_order_and_sale_conversion_are_controlled(client, session) -> None
             "numero": "ORC-TESTE-001",
             "cliente_id": customer.id,
             "funcionario_id": employee.id,
+            "condicao_pagamento_id": payment_condition.id,
             "desconto": "1.00",
             "frete": "5.00",
             "itens": [{"produto_id": product.id, "quantidade": "2.000"}],
@@ -111,6 +115,8 @@ def test_quote_order_and_sale_conversion_are_controlled(client, session) -> None
     )
     assert sale.status_code == 200
     assert Decimal(str(sale.json()["itens"][0]["preco_unitario"])) == Decimal("15.00")
+    assert sale.json()["pedido_id"] == order.json()["id"]
+    assert sale.json()["condicao_pagamento_id"] == payment_condition.id
 
     repeated_sale = client.post(
         f"/api/commercial/orders/{order.json()['id']}/convert-to-sale"
