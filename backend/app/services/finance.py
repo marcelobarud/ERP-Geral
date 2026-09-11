@@ -78,7 +78,9 @@ def ensure_sale_receivable(db: Session, sale_id: int) -> TituloFinanceiro | None
     return get_title(db, title.id)
 
 
-def ensure_receipt_payable(db: Session, receipt_id: int) -> TituloFinanceiro | None:
+def ensure_receipt_payable(
+    db: Session, receipt_id: int, *, commit: bool = True
+) -> TituloFinanceiro | None:
     receipt = db.get(RecebimentoCompra, receipt_id)
     if receipt is None:
         return None
@@ -114,7 +116,10 @@ def ensure_receipt_payable(db: Session, receipt_id: int) -> TituloFinanceiro | N
         ],
     )
     db.add(title)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     return get_title(db, title.id)
 
 

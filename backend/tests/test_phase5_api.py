@@ -90,6 +90,7 @@ def test_purchase_partial_receipt_updates_stock_once_and_cost_history(
         },
     )
     assert receipt.status_code == 201
+    assert client.get("/api/finance/titles?tipo=PAGAR").json() == []
     confirmed = client.post(
         f"/api/purchases/receipts/{receipt.json()['id']}/confirm"
     )

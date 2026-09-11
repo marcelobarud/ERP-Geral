@@ -290,7 +290,7 @@ Atualizar:
 
 # 6. Fase 1 — Smoke tests e correções de fluxo
 
-**Status:** EM ANDAMENTO  
+**Status:** CONCLUÍDA em 11/09/2026  
 **Commit esperado:** `fix: valida e corrige fluxos ponta a ponta do ERP`
 
 ## Objetivo
@@ -442,11 +442,35 @@ Criar testes automatizados para bugs encontrados.
 
 Cenários A–F concluídos sem inconsistência de dados.
 
+## Evidências da execução
+
+- cenário A executado com orçamento, pedido, venda, conta a receber, saída de
+  estoque e liquidação;
+- cenário B executado com recebimentos parcial e final, entradas de estoque,
+  histórico de custo e títulos a pagar criados somente na confirmação;
+- confirmação repetida de recebimento permaneceu idempotente, sem duplicar
+  movimento ou obrigação financeira;
+- cenário C executado com devolução parcial aprovada e entrada compensatória no
+  estoque;
+- cenário D executado com inventário confirmado e ajuste de saldo;
+- cenário E validado com desativação temporária de Relatórios, bloqueio visual
+  da rota direta, API preservada sob autenticação/permissões e restauração do
+  módulo;
+- cenário F coberto pela suíte de autenticação e autorização, incluindo
+  administrador, operador, usuário inativo, login inválido, logout e acesso
+  negado;
+- backend PostgreSQL: `118 passed`;
+- frontend: `77 passed`, lint, typecheck e build aprovados;
+- `ruff check app` e `git diff --check` aprovados.
+
+O produto ficou com dados artificiais de validação identificáveis no banco
+principal; nenhum dado existente foi removido.
+
 ---
 
 # 7. Fase 2 — Erros, autenticação e permissões
 
-**Status:** PENDENTE  
+**Status:** EM ANDAMENTO  
 **Commit esperado:** `feat: melhora permissões e tratamento de erros do ERP`
 
 ## Objetivo

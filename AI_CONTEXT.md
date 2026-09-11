@@ -1084,3 +1084,23 @@ passed`, typecheck e lint aprovados; `ruff check app` aprovado. O comando
 abrangente `ruff check .` ainda aponta 53 linhas longas preexistentes em
 migrations históricas e não foi usado como justificativa para reformatá-las.
 O Plano 06 prossegue pela Fase 1, com foco nos smoke tests ponta a ponta.
+
+## Atualização — Plano 06, Fase 1 concluída em 2026-09-11
+
+A Fase 1 foi executada no ambiente principal local com dados artificiais
+identificáveis. Foram validados os fluxos de orçamento → pedido → venda →
+estoque → contas a receber → liquidação; pedido de compra → recebimentos
+parcial e final → estoque → contas a pagar; devolução parcial e inventário
+com ajuste de saldo. A desativação temporária de Relatórios bloqueou a rota
+direta na interface e o módulo foi reativado ao final.
+
+Foi corrigida a regra financeira de compras: `create_receipt` não cria mais
+obrigação; `confirm_receipt` cria o título a pagar na mesma transação da
+entrada de estoque, com confirmação repetida idempotente. Nenhum dado
+existente foi removido; os registros artificiais de validação permanecem
+identificados no banco principal.
+
+Validação da fase: backend PostgreSQL `118 passed`; frontend `77 passed`,
+lint, typecheck e build aprovados; `ruff check app` e `git diff --check`
+aprovados. O Plano 06 prossegue pela Fase 2, voltada a erros, autenticação e
+permissões na experiência do usuário.
