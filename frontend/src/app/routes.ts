@@ -72,6 +72,16 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       ],
     },
     {
+      label: 'Relatórios',
+      items: [
+        { path: '/reports/dashboard', label: 'Dashboard ERP', icon: '▥' },
+        { path: '/reports/commercial', label: 'Comercial', icon: '↗' },
+        { path: '/reports/purchases', label: 'Compras', icon: '▧' },
+        { path: '/reports/stock', label: 'Estoque', icon: '▦' },
+        { path: '/reports/finance', label: 'Financeiro', icon: '◫' },
+      ],
+    },
+    {
       label: 'Configurações',
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
@@ -106,6 +116,11 @@ const routeDescriptions: Record<string, string> = {
   '/finance/receivables': 'Acompanhe contas a receber e liquidações.',
   '/finance/payables': 'Acompanhe contas a pagar e liquidações.',
   '/finance/cashflow': 'Consulte o fluxo previsto e realizado.',
+  '/reports/dashboard': 'Acompanhe os principais indicadores do ERP.',
+  '/reports/commercial': 'Analise vendas, cancelamentos e devoluções.',
+  '/reports/purchases': 'Acompanhe pedidos e recebimentos pendentes.',
+  '/reports/stock': 'Analise saldos e produtos abaixo do mínimo.',
+  '/reports/finance': 'Analise títulos, vencimentos e fluxo financeiro.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
   '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',

@@ -33,6 +33,13 @@ describe('navegação comercial', () => {
       '/finance/payables',
       '/finance/cashflow',
     ])
+    expect(groups.find((group) => group.label === 'Relatórios')?.items.map((item) => item.path)).toEqual([
+      '/reports/dashboard',
+      '/reports/commercial',
+      '/reports/purchases',
+      '/reports/stock',
+      '/reports/finance',
+    ])
   })
 
   it('resolve as rotas comerciais com descrição própria', () => {
@@ -42,5 +49,6 @@ describe('navegação comercial', () => {
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
     expect(getRoute('/inventory/balances').label).toBe('Saldos')
     expect(getRoute('/finance/receivables').label).toBe('Contas a receber')
+    expect(getRoute('/reports/dashboard').label).toBe('Dashboard ERP')
   })
 })

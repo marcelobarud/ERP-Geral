@@ -1015,3 +1015,19 @@ fundação da migration `20260911_0009` foi reutilizada sem migration nova.
 Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
 passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
 aprovados. A Fase 5 será executada na sequência.
+
+## Atualização — Plano 05, Fase 5 concluída em 2026-09-11
+
+A área de Relatórios agora expõe Dashboard ERP, Comercial, Compras, Estoque e
+Financeiro. O dashboard apresenta clientes, produtos ativos, vendas
+concluídas, baixo estoque, valores em aberto e valores realizados. Os
+relatórios reutilizam as agregações backend existentes e oferecem filtro de
+período no comercial e exportação CSV dos dados carregados.
+
+Também foram expostos indicadores de pedidos e recebimentos pendentes,
+saldos e movimentações, títulos vencidos e fluxo previsto versus realizado.
+Não foi necessária migration nova nesta fase.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados. A Fase 6 será executada na sequência.

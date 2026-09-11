@@ -16,6 +16,7 @@ import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../f
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
+import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -75,6 +76,16 @@ function PageForRoute({
       return <FinancialTitlesPage kind="PAGAR" />
     case '/finance/cashflow':
       return <CashflowPage />
+    case '/reports/dashboard':
+      return <ErpDashboardPage />
+    case '/reports/commercial':
+      return <CommercialReportPage />
+    case '/reports/purchases':
+      return <PurchasesReportPage />
+    case '/reports/stock':
+      return <StockReportPage />
+    case '/reports/finance':
+      return <FinanceReportPage />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':

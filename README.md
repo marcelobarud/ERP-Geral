@@ -137,6 +137,10 @@ liquidações, reversões e fluxo de caixa previsto versus realizado. Vendas e
 recebimentos confirmados integram automaticamente seus títulos financeiros,
 com vínculo de origem idempotente.
 
+A área de Relatórios oferece Dashboard ERP e visões agregadas de Comercial,
+Compras, Estoque e Financeiro, com filtro comercial por período e exportação
+CSV dos dados carregados.
+
 ## Execução local
 
 Backend, em um terminal:

@@ -820,8 +820,8 @@ aprovados.
 
 ## 11. Fase 5 — Relatórios e Dashboard ERP
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: conclui relatórios e dashboard do ERP`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: conclui relatórios e dashboard do ERP`
 
 ### Objetivo
 
@@ -892,6 +892,23 @@ Priorizar:
 - XLSX.
 
 PDF apenas onde agregar valor real.
+
+### Resultado da execução
+
+O frontend agora expõe a área de Relatórios com Dashboard ERP, relatórios
+Comercial, Compras, Estoque e Financeiro. O dashboard apresenta clientes,
+produtos ativos, vendas concluídas, baixo estoque, contas em aberto e valores
+realizados. As telas de relatório consomem as agregações backend existentes,
+com filtros de período no comercial e exportação CSV dos dados carregados.
+
+Foram incluídos indicadores de pedidos e recebimentos pendentes, saldos e
+movimentações de estoque, títulos vencidos e fluxo previsto versus realizado.
+Não foi necessária migration nova, pois a fase reutilizou os contratos de
+relatórios já existentes.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados.
 
 ---
 
