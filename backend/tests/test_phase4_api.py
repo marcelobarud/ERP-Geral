@@ -136,3 +136,11 @@ def test_stock_movements_balance_negative_protection_reversal_and_inventory(
         f"/api/inventory/balances?deposit_id={deposit_id}&product_id={product.id}"
     )
     assert Decimal(str(final_balance.json()[0]["saldo"])) == Decimal("3.000")
+    audit = client.get("/api/audit-logs")
+    actions = {entry["acao"] for entry in audit.json()}
+    assert {
+        "deposit_updated",
+        "stock_movement_created",
+        "inventory_created",
+        "inventory_confirmed",
+    } <= actions

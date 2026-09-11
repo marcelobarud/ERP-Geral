@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import CategoriaFinanceira, ContaFinanceira, TituloFinanceiro
+from app.models import CategoriaFinanceira, ContaFinanceira, TituloFinanceiro, Usuario
 from app.schemas.finance import (
     CashflowRead,
     FinancialAccountCreate,
@@ -17,6 +17,7 @@ from app.schemas.finance import (
     FinancialTitleCreate,
     FinancialTitleRead,
 )
+from app.services.auth import add_audit_log
 from app.services.finance import (
     FinanceConflict,
     FinanceNotFound,
@@ -36,6 +37,23 @@ router = APIRouter(
 )
 
 
+def _audit(
+    db: Session,
+    actor: Usuario | None,
+    action: str,
+    entity: str,
+    entity_id: int | None = None,
+) -> None:
+    add_audit_log(
+        db,
+        user_id=actor.id if actor else None,
+        action=action,
+        entity=entity,
+        entity_id=entity_id,
+    )
+    db.commit()
+
+
 @router.get("/categories", response_model=list[FinancialCategoryRead])
 def list_categories(db: Session = Depends(get_db_session)):
     return [
@@ -53,13 +71,16 @@ def list_categories(db: Session = Depends(get_db_session)):
     dependencies=[Depends(require_permission("finance:write"))],
 )
 def create_category(
-    payload: FinancialCategoryCreate, db: Session = Depends(get_db_session)
+    payload: FinancialCategoryCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
 ):
     item = CategoriaFinanceira(**payload.model_dump())
     db.add(item)
     try:
         db.commit()
         db.refresh(item)
+        _audit(db, actor, "finance_category_created", "categoria_financeira", item.id)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -85,22 +106,32 @@ def list_accounts(db: Session = Depends(get_db_session)):
     dependencies=[Depends(require_permission("finance:write"))],
 )
 def create_account(
-    payload: FinancialAccountCreate, db: Session = Depends(get_db_session)
+    payload: FinancialAccountCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
 ):
     account = ContaFinanceira(**payload.model_dump())
     db.add(account)
     try:
         db.commit()
         db.refresh(account)
+        _audit(db, actor, "finance_account_created", "conta_financeira", account.id)
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="Conta já cadastrada.") from None
     return FinancialAccountRead.model_validate(account)
 
 
-def create_title_endpoint(title_type: str, payload: FinancialTitleCreate, db: Session):
+def create_title_endpoint(
+    title_type: str,
+    payload: FinancialTitleCreate,
+    db: Session,
+    actor: Usuario | None,
+):
     try:
-        return title_to_read(create_title(db, title_type, payload))
+        title = create_title(db, title_type, payload)
+        _audit(db, actor, "financial_title_created", "titulo_financeiro", title.id)
+        return title_to_read(title)
     except FinanceNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except FinanceConflict as exception:
@@ -114,9 +145,11 @@ def create_title_endpoint(title_type: str, payload: FinancialTitleCreate, db: Se
     dependencies=[Depends(require_permission("finance:write"))],
 )
 def create_receivable(
-    payload: FinancialTitleCreate, db: Session = Depends(get_db_session)
+    payload: FinancialTitleCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
 ):
-    return create_title_endpoint("RECEBER", payload, db)
+    return create_title_endpoint("RECEBER", payload, db, actor)
 
 
 @router.post(
@@ -126,9 +159,11 @@ def create_receivable(
     dependencies=[Depends(require_permission("finance:write"))],
 )
 def create_payable(
-    payload: FinancialTitleCreate, db: Session = Depends(get_db_session)
+    payload: FinancialTitleCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
 ):
-    return create_title_endpoint("PAGAR", payload, db)
+    return create_title_endpoint("PAGAR", payload, db, actor)
 
 
 @router.get("/titles", response_model=list[FinancialTitleRead])
@@ -164,18 +199,25 @@ def settle_endpoint(
     installment_id: int,
     payload: FinancialSettlementCreate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
 ):
     try:
-        return FinancialSettlementRead.model_validate(
-            settle_installment(
-                db,
-                installment_id,
-                payload.conta_id,
-                payload.valor,
-                payload.data_liquidacao,
-                payload.observacao,
-            )
+        settlement = settle_installment(
+            db,
+            installment_id,
+            payload.conta_id,
+            payload.valor,
+            payload.data_liquidacao,
+            payload.observacao,
         )
+        _audit(
+            db,
+            actor,
+            "financial_settlement_created",
+            "liquidacao_financeira",
+            settlement.id,
+        )
+        return FinancialSettlementRead.model_validate(settlement)
     except FinanceNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except FinanceConflict as exception:
@@ -187,11 +229,21 @@ def settle_endpoint(
     response_model=FinancialSettlementRead,
     dependencies=[Depends(require_permission("finance:write"))],
 )
-def reverse_endpoint(settlement_id: int, db: Session = Depends(get_db_session)):
+def reverse_endpoint(
+    settlement_id: int,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("finance:write")),
+):
     try:
-        return FinancialSettlementRead.model_validate(
-            reverse_settlement(db, settlement_id)
+        settlement = reverse_settlement(db, settlement_id)
+        _audit(
+            db,
+            actor,
+            "financial_settlement_reversed",
+            "liquidacao_financeira",
+            settlement.id,
         )
+        return FinancialSettlementRead.model_validate(settlement)
     except FinanceNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
 

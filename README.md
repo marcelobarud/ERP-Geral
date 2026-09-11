@@ -148,8 +148,9 @@ mantendo autenticação e permissões na API.
 
 O backend aplica headers de segurança, limites de tentativa por IP para login,
 bootstrap e upload de logo, expiração/revogação de sessões e auditoria das
-alterações de configuração. O rate limiting local deve ser complementado por
-um proxy compartilhado quando houver múltiplas instâncias.
+operações críticas de autenticação, usuários, configuração, compras,
+recebimentos, estoque, vendas e financeiro. O rate limiting local deve ser
+complementado por um proxy compartilhado quando houver múltiplas instâncias.
 
 ## Execução local
 

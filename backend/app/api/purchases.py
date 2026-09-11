@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import Fornecedor, PedidoCompra, RecebimentoCompra
+from app.models import Fornecedor, PedidoCompra, RecebimentoCompra, Usuario
 from app.schemas.purchases import (
     PurchaseCreate,
     PurchaseRead,
@@ -13,6 +13,7 @@ from app.schemas.purchases import (
     ReceiptCreate,
     ReceiptRead,
 )
+from app.services.auth import add_audit_log
 from app.services.purchases import (
     PurchaseConflict,
     PurchaseNotFound,
@@ -65,9 +66,19 @@ def update_purchase_endpoint(
     purchase_id: int,
     payload: PurchaseUpdate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("purchases:write")),
 ) -> PurchaseRead:
     try:
-        return purchase_to_read(update_purchase(db, purchase_id, payload))
+        result = purchase_to_read(update_purchase(db, purchase_id, payload))
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="purchase_updated",
+            entity="pedido_compra",
+            entity_id=purchase_id,
+        )
+        db.commit()
+        return result
     except PurchaseNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except PurchaseValidationError as exception:
@@ -83,10 +94,21 @@ def update_purchase_endpoint(
     dependencies=[Depends(require_permission("purchases:write"))],
 )
 def create_purchase_endpoint(
-    payload: PurchaseCreate, db: Session = Depends(get_db_session)
+    payload: PurchaseCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("purchases:write")),
 ) -> PurchaseRead:
     try:
-        return purchase_to_read(create_purchase(db, payload))
+        purchase = create_purchase(db, payload)
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="purchase_created",
+            entity="pedido_compra",
+            entity_id=purchase.id,
+        )
+        db.commit()
+        return purchase_to_read(purchase)
     except PurchaseNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except PurchaseValidationError as exception:
@@ -114,9 +136,20 @@ def change_purchase_status_endpoint(
     purchase_id: int,
     payload: PurchaseStatusUpdate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("purchases:write")),
 ) -> PurchaseRead:
     try:
-        return purchase_to_read(change_purchase_status(db, purchase_id, payload.status))
+        purchase = change_purchase_status(db, purchase_id, payload.status)
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="purchase_status_changed",
+            entity="pedido_compra",
+            entity_id=purchase_id,
+            metadata={"status": payload.status},
+        )
+        db.commit()
+        return purchase_to_read(purchase)
     except PurchaseNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except PurchaseConflict as exception:
@@ -147,9 +180,21 @@ def create_receipt_endpoint(
     purchase_id: int,
     payload: ReceiptCreate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("purchases:write")),
 ) -> ReceiptRead:
     try:
-        return receipt_to_read(create_receipt(db, purchase_id, payload))
+        receipt = create_receipt(
+            db, purchase_id, payload, user_id=actor.id if actor else None
+        )
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="receipt_created",
+            entity="recebimento_compra",
+            entity_id=receipt.id,
+        )
+        db.commit()
+        return receipt_to_read(receipt)
     except PurchaseNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except PurchaseValidationError as exception:
@@ -164,10 +209,23 @@ def create_receipt_endpoint(
     dependencies=[Depends(require_permission("purchases:write"))],
 )
 def confirm_receipt_endpoint(
-    receipt_id: int, db: Session = Depends(get_db_session)
+    receipt_id: int,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("purchases:write")),
 ) -> ReceiptRead:
     try:
-        return receipt_to_read(confirm_receipt(db, receipt_id))
+        receipt = confirm_receipt(
+            db, receipt_id, user_id=actor.id if actor else None
+        )
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="receipt_confirmed",
+            entity="recebimento_compra",
+            entity_id=receipt_id,
+        )
+        db.commit()
+        return receipt_to_read(receipt)
     except PurchaseNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except PurchaseConflict as exception:

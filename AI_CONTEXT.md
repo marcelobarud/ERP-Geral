@@ -1054,12 +1054,13 @@ tentativa por IP com resposta `429` e `Retry-After`.
 
 Sessões continuam com expiração, revogação no logout e bloqueio de usuários
 inativos. O upload mantém validação de conteúdo, tipo, tamanho e dimensões,
-normalização e remoção do arquivo anterior. A alteração de módulos agora é
-auditada; a cobertura existente de autenticação, usuários, aparência e vendas
-foi preservada. A revisão de índices não encontrou necessidade de migration
-adicional. Em múltiplas instâncias, o rate limiting deve ser aplicado também
-no proxy/gateway compartilhado.
+normalização e remoção do arquivo anterior. A auditoria agora cobre também
+compras, recebimentos, estoque, inventários e operações financeiras, além de
+autenticação, usuários, aparência, módulos e vendas. A revisão de índices não
+encontrou necessidade de migration adicional. Em múltiplas instâncias, o rate
+limiting deve ser aplicado também no proxy/gateway compartilhado.
 
 Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
 passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
-aprovados. O Plano 05 foi concluído.
+aprovados. Os testes direcionados de auditoria passaram (`3 passed`). O Plano
+05 foi concluído.

@@ -1062,11 +1062,11 @@ excedidos.
 
 As sessões mantêm expiração, revogação no logout e bloqueio de usuários
 inativos. O upload da logo já valida conteúdo real, tipo, tamanho e dimensões,
-normaliza a imagem e remove o arquivo anterior. A configuração de módulos
-passou a gerar auditoria; os fluxos de autenticação, usuários, aparência e
-vendas já possuíam registros de auditoria. A revisão do modelo confirmou
-índices nas chaves estrangeiras e colunas usadas nas consultas principais,
-sem justificar migration adicional nesta fase.
+normaliza a imagem e remove o arquivo anterior. A auditoria cobre autenticação,
+usuários, aparência, módulos, compras, recebimentos, estoque, inventários,
+vendas e operações financeiras. A revisão do modelo confirmou índices nas
+chaves estrangeiras e colunas usadas nas consultas principais, sem justificar
+migration adicional nesta fase.
 
 O limite por IP é local ao processo; instalações com múltiplas instâncias
 devem aplicar rate limiting compartilhado no proxy ou gateway.

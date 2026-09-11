@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import DepositoEstoque
+from app.models import DepositoEstoque, Usuario
 from app.schemas.inventory import (
     DepositCreate,
     DepositRead,
@@ -19,6 +19,7 @@ from app.schemas.inventory import (
     StockMovementCreate,
     StockMovementRead,
 )
+from app.services.auth import add_audit_log
 from app.services.inventory import (
     InventoryConflict,
     InventoryNotFound,
@@ -56,7 +57,9 @@ def list_deposits(db: Session = Depends(get_db_session)) -> list[DepositRead]:
     dependencies=[Depends(require_permission("inventory:write"))],
 )
 def create_deposit(
-    payload: DepositCreate, db: Session = Depends(get_db_session)
+    payload: DepositCreate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> DepositRead:
     if payload.padrao:
         db.execute(update(DepositoEstoque).values(padrao=False))
@@ -65,6 +68,14 @@ def create_deposit(
     try:
         db.commit()
         db.refresh(deposit)
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="deposit_created",
+            entity="deposito_estoque",
+            entity_id=deposit.id,
+        )
+        db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -82,6 +93,7 @@ def update_deposit(
     deposit_id: int,
     payload: DepositUpdate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> DepositRead:
     deposit = db.get(DepositoEstoque, deposit_id)
     if deposit is None:
@@ -94,6 +106,14 @@ def update_deposit(
     try:
         db.commit()
         db.refresh(deposit)
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="deposit_updated",
+            entity="deposito_estoque",
+            entity_id=deposit.id,
+        )
+        db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -117,12 +137,22 @@ def read_inventory_config(
     dependencies=[Depends(require_permission("inventory:write"))],
 )
 def update_inventory_config(
-    payload: InventoryConfigUpdate, db: Session = Depends(get_db_session)
+    payload: InventoryConfigUpdate,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> InventoryConfigRead:
     config = get_inventory_config(db)
     config.permitir_saldo_negativo = payload.permitir_saldo_negativo
     db.commit()
     db.refresh(config)
+    add_audit_log(
+        db,
+        user_id=actor.id if actor else None,
+        action="inventory_config_updated",
+        entity="configuracao_estoque",
+        entity_id=config.id,
+    )
+    db.commit()
     return InventoryConfigRead.model_validate(config)
 
 
@@ -147,10 +177,20 @@ def read_movements(
 def create_stock_movement(
     payload: StockMovementCreate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> StockMovementRead:
     try:
         validate_movement_payload(db, payload)
-        movement = create_movement(db, payload)
+        movement = create_movement(db, payload, user_id=actor.id if actor else None)
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="stock_movement_created",
+            entity="movimentacao_estoque",
+            entity_id=movement.id,
+            metadata={"tipo": movement.tipo, "origem": movement.origem},
+        )
+        db.commit()
         return movement_to_read(movement)
     except InventoryNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
@@ -184,9 +224,21 @@ def read_balances(
 def create_stock_inventory(
     payload: InventoryCreate,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> InventoryRead:
     try:
-        return inventory_to_read(create_inventory(db, payload))
+        inventory = create_inventory(
+            db, payload, user_id=actor.id if actor else None
+        )
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="inventory_created",
+            entity="inventario_estoque",
+            entity_id=inventory.id,
+        )
+        db.commit()
+        return inventory_to_read(inventory)
     except InventoryNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except InventoryValidationError as exception:
@@ -216,10 +268,23 @@ def list_stock_inventories(
     dependencies=[Depends(require_permission("inventory:write"))],
 )
 def confirm_stock_inventory(
-    inventory_id: int, db: Session = Depends(get_db_session)
+    inventory_id: int,
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("inventory:write")),
 ) -> InventoryRead:
     try:
-        return inventory_to_read(confirm_inventory(db, inventory_id))
+        inventory = confirm_inventory(
+            db, inventory_id, user_id=actor.id if actor else None
+        )
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="inventory_confirmed",
+            entity="inventario_estoque",
+            entity_id=inventory_id,
+        )
+        db.commit()
+        return inventory_to_read(inventory)
     except InventoryNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except InventoryValidationError as exception:

@@ -74,3 +74,10 @@ def test_finance_installments_partial_payment_reversal_and_cashflow(
     assert reversed_payment.status_code == 200
     cashflow = client.get("/api/finance/cashflow")
     assert Decimal(str(cashflow.json()["realizado_receber"])) == Decimal("0.00")
+    audit = client.get("/api/audit-logs")
+    actions = {entry["acao"] for entry in audit.json()}
+    assert {
+        "financial_title_created",
+        "financial_settlement_created",
+        "financial_settlement_reversed",
+    } <= actions

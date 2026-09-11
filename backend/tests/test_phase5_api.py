@@ -153,3 +153,11 @@ def test_purchase_partial_receipt_updates_stock_once_and_cost_history(
         and item["origem_id"] == final_receipt.json()["id"]
         for item in payables.json()
     )
+    audit = client.get("/api/audit-logs")
+    actions = {entry["acao"] for entry in audit.json()}
+    assert {
+        "purchase_created",
+        "purchase_status_changed",
+        "receipt_created",
+        "receipt_confirmed",
+    } <= actions
