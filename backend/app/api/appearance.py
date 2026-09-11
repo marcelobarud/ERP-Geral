@@ -8,6 +8,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
+from app.core.rate_limit import upload_rate_limit
 from app.db.session import get_db_session
 from app.models.appearance import (
     AppearanceSettings,
@@ -441,6 +442,7 @@ async def upload_logo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db_session),
     actor: Usuario | None = Depends(require_permission("settings:write")),
+    _: None = Depends(upload_rate_limit),
 ) -> AppearanceSettings:
     content_type = (file.content_type or "").split(";", 1)[0].lower()
     if content_type == "application/octet-stream":

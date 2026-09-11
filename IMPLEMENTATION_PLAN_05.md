@@ -992,8 +992,8 @@ Ruff e `git diff --check` aprovados.
 
 ## 13. Fase 7 — Hardening operacional
 
-**Status:** PENDENTE
-**Commit esperado:** `chore: reforça segurança e operação do ERP`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `chore: reforça segurança e operação do ERP`
 
 ### Objetivo
 
@@ -1051,6 +1051,29 @@ Revisar:
 Revisar índices após crescimento dos novos módulos.
 
 Não criar índice sem query real que justifique.
+
+### Resultado da execução
+
+Foram adicionados headers de segurança nas respostas HTTP: proteção contra
+MIME sniffing, framing indevido, referrer excessivo e uso de câmera,
+microfone e geolocalização. Login, bootstrap inicial e upload de logo agora
+possuem limites de tentativa por IP e retornam `429` com `Retry-After` quando
+excedidos.
+
+As sessões mantêm expiração, revogação no logout e bloqueio de usuários
+inativos. O upload da logo já valida conteúdo real, tipo, tamanho e dimensões,
+normaliza a imagem e remove o arquivo anterior. A configuração de módulos
+passou a gerar auditoria; os fluxos de autenticação, usuários, aparência e
+vendas já possuíam registros de auditoria. A revisão do modelo confirmou
+índices nas chaves estrangeiras e colunas usadas nas consultas principais,
+sem justificar migration adicional nesta fase.
+
+O limite por IP é local ao processo; instalações com múltiplas instâncias
+devem aplicar rate limiting compartilhado no proxy ou gateway.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados.
 
 ---
 

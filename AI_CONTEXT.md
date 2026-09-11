@@ -1044,3 +1044,22 @@ ocultação do menu não é usada como segurança. Não houve migration nova.
 
 Validação da fase: frontend `77 passed`, lint, typecheck e build aprovados;
 Ruff e `git diff --check` aprovados. A Fase 7 será executada na sequência.
+
+## Atualização — Plano 05, Fase 7 concluída em 2026-09-11
+
+O backend passou a emitir headers de segurança contra MIME sniffing, framing,
+referrer excessivo e acesso desnecessário a câmera, microfone e
+geolocalização. Login, bootstrap e upload da logo receberam limites de
+tentativa por IP com resposta `429` e `Retry-After`.
+
+Sessões continuam com expiração, revogação no logout e bloqueio de usuários
+inativos. O upload mantém validação de conteúdo, tipo, tamanho e dimensões,
+normalização e remoção do arquivo anterior. A alteração de módulos agora é
+auditada; a cobertura existente de autenticação, usuários, aparência e vendas
+foi preservada. A revisão de índices não encontrou necessidade de migration
+adicional. Em múltiplas instâncias, o rate limiting deve ser aplicado também
+no proxy/gateway compartilhado.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
+aprovados. O Plano 05 foi concluído.

@@ -146,6 +146,11 @@ e Relatórios podem ser ativadas ou desativadas. A navegação acompanha essa
 configuração e rotas diretas de módulos desativados exibem estado bloqueado,
 mantendo autenticação e permissões na API.
 
+O backend aplica headers de segurança, limites de tentativa por IP para login,
+bootstrap e upload de logo, expiração/revogação de sessões e auditoria das
+alterações de configuração. O rate limiting local deve ser complementado por
+um proxy compartilhado quando houver múltiplas instâncias.
+
 ## Execução local
 
 Backend, em um terminal:

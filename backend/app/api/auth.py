@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, require_authenticated
 from app.core.config import get_settings
+from app.core.rate_limit import bootstrap_rate_limit, login_rate_limit
 from app.db.session import get_db_session
 from app.models import Usuario
 from app.schemas.auth import (
@@ -40,6 +41,7 @@ def auth_config() -> AuthConfigRead:
 def bootstrap(
     payload: BootstrapRequest,
     db: Session = Depends(get_db_session),
+    _: None = Depends(bootstrap_rate_limit),
 ) -> LoginResponse:
     settings = get_settings()
     if db.scalar(select(func.count()).select_from(Usuario)):
@@ -96,6 +98,7 @@ def bootstrap(
 def login(
     payload: LoginRequest,
     db: Session = Depends(get_db_session),
+    _: None = Depends(login_rate_limit),
 ) -> LoginResponse:
     try:
         user = authenticate_user(db, payload.email, payload.senha)
