@@ -100,6 +100,9 @@ A migration `20260911_0009` adiciona categorias financeiras, contas/caixas,
 títulos a receber e pagar, parcelamento, liquidações reversíveis e fluxo de
 caixa previsto versus realizado.
 
+Também estão disponíveis relatórios agregados de comercial, compras, estoque
+e financeiro, além do dashboard ERP, sempre calculados no backend.
+
 ## Execução local
 
 Backend, em um terminal:

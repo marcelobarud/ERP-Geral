@@ -1121,7 +1121,7 @@ declarada como aprovada nesta máquina.
 
 # 14. Fase 8 — Relatórios e dashboard ERP
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona relatórios gerenciais do ERP`
 
 ## Objetivo
@@ -1177,6 +1177,17 @@ Evitar carregar coleções inteiras para calcular KPI no browser.
 Adicionar CSV/XLSX apenas se coerente com as dependências e padrões do projeto.
 
 PDF deve ser limitado a documentos que realmente precisem de apresentação formal.
+
+## Resultado da execução
+
+Adicionadas rotas agregadas de relatórios comercial, compras, estoque e
+financeiro, além do dashboard ERP. Os indicadores são calculados no backend a
+partir de vendas, devoluções, compras, movimentações, estoque mínimo e títulos
+financeiros, com filtros de período no relatório comercial.
+
+Validação local: `51 passed`, `65 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff, OpenAPI e validações estruturais aprovados. A suíte PostgreSQL real não
+foi declarada como aprovada nesta máquina.
 
 ---
 

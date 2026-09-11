@@ -97,6 +97,10 @@ A Fase 7 do Plano 04 foi concluída em 2026-09-11 com a migration
 pagar, parcelamento, liquidações reversíveis e fluxo previsto versus realizado
 foram adicionados. A validação local passou com 51 testes e 65 testes
 PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
+A Fase 8 do Plano 04 foi concluída em 2026-09-11: relatórios agregados de
+comercial, compras, estoque e financeiro e um dashboard ERP foram adicionados
+com cálculo no backend. A validação local permaneceu em 51 testes aprovados e
+65 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de
