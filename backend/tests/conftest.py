@@ -25,7 +25,7 @@ REQUIRED_TABLES = {
     "fornecedor_campos",
     "fornecedor_campos_valores",
 }
-EXPECTED_MIGRATION = "20260823_0004"
+EXPECTED_MIGRATION = "20260911_0001"
 
 TEST_DATA_TABLES = (
     "cliente_campos_valores",
