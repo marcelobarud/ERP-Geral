@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { getHealth } from '../services/httpClient'
 
-export type HealthStatus = 'loading' | 'online' | 'offline'
+export type HealthStatus = 'loading' | 'online' | 'degraded' | 'offline'
 
 export function useHealthStatus() {
   const [status, setStatus] = useState<HealthStatus>('loading')
@@ -10,7 +10,7 @@ export function useHealthStatus() {
   const loadHealth = useCallback(async () => {
     try {
       const response = await getHealth()
-      setStatus(response.status === 'ok' ? 'online' : 'offline')
+      setStatus(response.status === 'ok' ? 'online' : 'degraded')
     } catch {
       setStatus('offline')
     }

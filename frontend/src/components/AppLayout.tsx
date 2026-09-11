@@ -46,6 +46,20 @@ function HealthIndicator() {
     )
   }
 
+  if (status === 'degraded') {
+    return (
+      <button
+        className="health-indicator health-degraded"
+        type="button"
+        onClick={() => void retry()}
+        title="O backend está ativo, mas há uma dependência operacional degradada"
+      >
+        <span className="health-dot" aria-hidden="true" />
+        API degradada
+      </button>
+    )
+  }
+
   return (
     <span className="health-indicator health-online" role="status">
       <span className="health-dot" aria-hidden="true" />

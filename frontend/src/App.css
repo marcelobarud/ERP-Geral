@@ -269,6 +269,12 @@
   color: var(--green);
 }
 
+.health-degraded {
+  padding: 0.45rem 0.7rem;
+  color: #9a6b1f;
+  background: #fff7e6;
+}
+
 .health-loading {
   color: var(--color-warning);
 }

@@ -78,6 +78,18 @@ No diretório `backend/`, execute:
 python -m alembic upgrade head
 ```
 
+Antes de iniciar o backend, confirme a revisão aplicada com:
+
+```powershell
+python -m alembic current
+python -m alembic heads
+```
+
+O endpoint `GET /api/health` informa separadamente o estado do processo,
+PostgreSQL e schema. O status `degraded` significa que o processo respondeu,
+mas alguma dependência operacional — normalmente a revisão Alembic — ainda
+não está pronta.
+
 A migration `20260911_0002` prepara a fundação transacional do ERP: adiciona
 timestamps operacionais, ciclo de vida e observação das vendas, paginação das
 listagens e agregações do dashboard.

@@ -1064,3 +1064,23 @@ Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
 passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
 aprovados. Os testes direcionados de auditoria passaram (`3 passed`). O Plano
 05 foi concluído.
+
+## Atualização — Plano 06, Fase 0 concluída em 2026-09-11
+
+O ambiente principal local foi alinhado ao estado atual do código. O banco
+`erp_geral` foi respaldado logicamente antes da alteração e atualizado de
+`20260911_0001` até `20260911_0011` pelas migrations Alembic, sem uso de
+`stamp` e sem remoção de dados. O backend atual foi reiniciado em
+`127.0.0.1:8000`; o frontend continua em `127.0.0.1:5173`.
+
+O endpoint `/api/health` agora diferencia processo, banco e schema, retornando
+`degraded` quando o PostgreSQL está indisponível ou quando a revisão aplicada
+não corresponde ao head do código. Os endpoints principais de módulos,
+dashboard, relatórios, cadastros, compras, estoque e financeiro foram
+validados após a migração.
+
+Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
+passed`, typecheck e lint aprovados; `ruff check app` aprovado. O comando
+abrangente `ruff check .` ainda aponta 53 linhas longas preexistentes em
+migrations históricas e não foi usado como justificativa para reformatá-las.
+O Plano 06 prossegue pela Fase 1, com foco nos smoke tests ponta a ponta.

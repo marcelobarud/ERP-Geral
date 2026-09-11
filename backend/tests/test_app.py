@@ -17,7 +17,12 @@ def test_health_check_returns_minimal_contract() -> None:
     response = client.get("/api/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    payload = response.json()
+    assert payload["status"] in {"ok", "degraded"}
+    assert payload["process"] == "ok"
+    assert "database" in payload
+    assert "schema" in payload
+    assert "expected_migration" in payload
 
 
 def test_health_check_allows_frontend_local_origin() -> None:
