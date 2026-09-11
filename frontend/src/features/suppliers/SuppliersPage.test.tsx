@@ -73,10 +73,10 @@ describe('SuppliersPage relational details', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Estado' }), { target: { value: 'SP' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith({ search: 'Fornecedor', city: 'São Paulo', state: 'SP' }))
+    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith(expect.objectContaining({ search: 'Fornecedor', city: 'São Paulo', state: 'SP', page: 1, pageSize: 20 })))
     fireEvent.click(screen.getByRole('button', { name: /Filtros \(2\)/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
-    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith({}))
+    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 
   it('updates the global search after a debounce and restores the full list when cleared', async () => {
@@ -87,10 +87,10 @@ describe('SuppliersPage relational details', () => {
     fireEvent.change(search, { target: { value: 'For' } })
     fireEvent.change(search, { target: { value: 'Fornecedor' } })
 
-    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith({ search: 'Fornecedor' }), { timeout: 1000 })
-    expect(suppliersApi.listSuppliers).not.toHaveBeenCalledWith({ search: 'For' })
+    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith(expect.objectContaining({ search: 'Fornecedor', page: 1, pageSize: 20 })), { timeout: 1000 })
+    expect(suppliersApi.listSuppliers).not.toHaveBeenCalledWith(expect.objectContaining({ search: 'For' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpar pesquisa' }))
-    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith({}), { timeout: 1000 })
+    await waitFor(() => expect(suppliersApi.listSuppliers).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 20 })), { timeout: 1000 })
   })
 })

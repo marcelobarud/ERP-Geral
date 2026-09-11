@@ -8,9 +8,11 @@ import { FilterMenu } from '../../components/FilterMenu'
 import { uniqueFilterOptions } from '../../components/filterOptions'
 import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
+import { PaginationControls } from '../../components/PaginationControls'
 import { PageHeader } from '../../components/PageHeader'
 import { SearchInput } from '../../components/SearchInput'
 import { getApiErrorMessage } from '../../services/httpClient'
+import { getPaginationMeta, type PaginationMeta } from '../../types/pagination'
 import { CustomFieldDetails, CustomFieldFields } from '../customFields/CustomFieldFields'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import { createProduct, deleteProduct, getProduct, listProductSuppliers, listProducts, updateProduct, type ProductListFilters } from './api'
@@ -18,6 +20,7 @@ import type { Product, ProductPayload } from './types'
 import type { Supplier } from '../suppliers/types'
 
 const emptyProduct: ProductPayload = { nome: '', categoria: '', preco_custo: '', preco_venda: '', fornecedor_id: 0 }
+const PAGE_SIZE = 20
 
 function displayMoney(value: string | number): string {
   return `R$ ${String(value).replace('.', ',')}`
@@ -57,6 +60,8 @@ export function ProductsPage() {
   const [salePriceMinDraft, setSalePriceMinDraft] = useState('')
   const [salePriceMaxDraft, setSalePriceMaxDraft] = useState('')
   const [appliedFilters, setAppliedFilters] = useState<ProductListFilters>({})
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, page_size: PAGE_SIZE, total: 0, total_pages: 0 })
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
   const [modal, setModal] = useState<'create' | 'edit' | 'view' | null>(null)
@@ -70,15 +75,15 @@ export function ProductsPage() {
   const [deleting, setDeleting] = useState(false)
   const loadRequestId = useRef(0)
 
-  const loadProducts = useCallback(async () => { const requestId = ++loadRequestId.current; setLoading(true); setError(null); try { const [productList, optionList, supplierList] = await Promise.all([listProducts(appliedFilters), listProducts(), listProductSuppliers()]); if (requestId !== loadRequestId.current) return; setProducts(productList); setFilterProducts(optionList); setSuppliers(supplierList) } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar produtos e fornecedores.')) } finally { if (requestId === loadRequestId.current) setLoading(false) } }, [appliedFilters])
+  const loadProducts = useCallback(async () => { const requestId = ++loadRequestId.current; setLoading(true); setError(null); try { const [productList, optionList, supplierList] = await Promise.all([listProducts({ ...appliedFilters, page, pageSize: PAGE_SIZE }), listProducts({ page: 1, pageSize: 100 }), listProductSuppliers()]); if (requestId !== loadRequestId.current) return; setProducts(productList); setFilterProducts(optionList); setSuppliers(supplierList); setPagination(getPaginationMeta(productList)) } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar produtos e fornecedores.')) } finally { if (requestId === loadRequestId.current) setLoading(false) } }, [appliedFilters, page])
   // oxlint-disable-next-line
   useEffect(() => { void loadProducts() }, [loadProducts])
 
   const hasDraftFilters = Boolean(searchDraft.trim() || categoryDraft.trim() || supplierDraft !== '' || costMinDraft.trim() || costMaxDraft.trim() || salePriceMinDraft.trim() || salePriceMaxDraft.trim())
   const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.category || appliedFilters.supplierId || appliedFilters.costMin || appliedFilters.costMax || appliedFilters.salePriceMin || appliedFilters.salePriceMax)
   const filterCategories = uniqueFilterOptions(filterProducts.map((product) => product.categoria))
-  const applyFilters = () => { setAppliedFilters({ search: searchDraft.trim(), category: categoryDraft, supplierId: supplierDraft, costMin: costMinDraft.trim(), costMax: costMaxDraft.trim(), salePriceMin: salePriceMinDraft.trim(), salePriceMax: salePriceMaxDraft.trim() }); setFiltersOpen(false) }
-  const clearFilters = () => { setSearchDraft(''); setCategoryDraft(''); setSupplierDraft(''); setCostMinDraft(''); setCostMaxDraft(''); setSalePriceMinDraft(''); setSalePriceMaxDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
+  const applyFilters = () => { setPage(1); setAppliedFilters({ search: searchDraft.trim(), category: categoryDraft, supplierId: supplierDraft, costMin: costMinDraft.trim(), costMax: costMaxDraft.trim(), salePriceMin: salePriceMinDraft.trim(), salePriceMax: salePriceMaxDraft.trim() }); setFiltersOpen(false) }
+  const clearFilters = () => { setPage(1); setSearchDraft(''); setCategoryDraft(''); setSupplierDraft(''); setCostMinDraft(''); setCostMaxDraft(''); setSalePriceMinDraft(''); setSalePriceMaxDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
 
   const saveProduct = async (payload: ProductPayload) => {
     setSaving(true); setFeedback(null)
@@ -123,7 +128,7 @@ export function ProductsPage() {
           <label className="filter-field">Venda máxima<input type="number" min="0" step="0.01" value={salePriceMaxDraft} onChange={(event) => setSalePriceMaxDraft(event.target.value)} /></label>
         </FilterMenu>
       </section>
-      {loading ? <LoadingState label="Carregando produtos..." /> : error ? <ErrorState description={error} onRetry={() => void loadProducts()} /> : products.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum produto cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie um produto e selecione um fornecedor existente.'} /></div> : <div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Produto</th><th>Categoria</th><th>Fornecedor</th><th>Preço de custo</th><th>Preço de venda</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td className="data-primary">{product.nome}<span className="data-secondary">ID {product.id}</span></td><td>{product.categoria}</td><td>{supplierName(product.fornecedor_id)}</td><td>{displayMoney(product.preco_custo)}</td><td>{displayMoney(product.preco_venda)}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openProductDetails(product)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(product); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(product)}>Excluir</button></div></td></tr>)}</tbody></table></div>}
+      {loading ? <LoadingState label="Carregando produtos..." /> : error ? <ErrorState description={error} onRetry={() => void loadProducts()} /> : products.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum produto cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie um produto e selecione um fornecedor existente.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Produto</th><th>Categoria</th><th>Fornecedor</th><th>Preço de custo</th><th>Preço de venda</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td className="data-primary">{product.nome}<span className="data-secondary">ID {product.id}</span></td><td>{product.categoria}</td><td>{supplierName(product.fornecedor_id)}</td><td>{displayMoney(product.preco_custo)}</td><td>{displayMoney(product.preco_venda)}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openProductDetails(product)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(product); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(product)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
     {modal === 'view' && selected ? <Modal title="Detalhes do produto" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do produto..." /> : selectedDetails ? <ProductDetails product={selectedDetails} supplierName={supplierName(selectedDetails.fornecedor_id)} /> : null}</Modal> : null}
     {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar produto' : 'Novo produto'} description="Selecione um fornecedor real e informe os valores com precisão." onClose={() => setModal(null)}><ProductForm initialValue={formValue} suppliers={suppliers} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveProduct(payload)} /></Modal> : null}
     {deleteTarget ? <ConfirmDialog title="Excluir produto?" description={`O cadastro de ${deleteTarget.nome} será removido. Itens de venda relacionados impedem a exclusão.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeProduct()} /> : null}

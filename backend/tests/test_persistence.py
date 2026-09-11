@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Cliente, Fornecedor, Funcionario, Produto, Venda, VendaItem
-from app.services.sales import delete_sale
+from app.schemas.sales import VendaCancel
+from app.services.sales import cancel_sale
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("TEST_DATABASE_URL"),
@@ -419,7 +420,7 @@ def test_same_sale_can_have_multiple_items(session: Session) -> None:
     assert item_count == 2
 
 
-def test_delete_sale_removes_items_but_preserves_root_records(
+def test_cancel_sale_preserves_items_and_root_records(
     session: Session,
 ) -> None:
     supplier = make_supplier()
@@ -454,12 +455,14 @@ def test_delete_sale_removes_items_but_preserves_root_records(
     session.commit()
     sale_id = sale.id
 
-    delete_sale(session, sale_id)
+    cancelled = cancel_sale(session, sale_id, VendaCancel(motivo="Ajuste"))
 
-    assert session.get(Venda, sale_id) is None
-    assert session.scalars(
+    assert cancelled.status == "CANCELADA"
+    assert cancelled.motivo_cancelamento == "Ajuste"
+    assert session.get(Venda, sale_id) is not None
+    assert len(session.scalars(
         select(VendaItem).where(VendaItem.venda_id == sale_id)
-    ).all() == []
+    ).all()) == 2
     assert session.get(Cliente, customer.id) is not None
     assert session.get(Funcionario, employee.id) is not None
     assert session.get(Fornecedor, supplier.id) is not None
@@ -467,7 +470,7 @@ def test_delete_sale_removes_items_but_preserves_root_records(
     assert session.get(Produto, product_two.id) is not None
 
 
-def test_delete_sale_rolls_back_when_commit_fails(
+def test_cancel_sale_rolls_back_when_commit_fails(
     session: Session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -501,9 +504,11 @@ def test_delete_sale_rolls_back_when_commit_fails(
     monkeypatch.setattr(session, "commit", fail_commit)
 
     with pytest.raises(RuntimeError, match="falha simulada"):
-        delete_sale(session, sale_id)
+        cancel_sale(session, sale_id, VendaCancel(motivo="Falha simulada"))
 
-    assert session.get(Venda, sale_id) is not None
+    sale_after_failure = session.get(Venda, sale_id)
+    assert sale_after_failure is not None
+    assert sale_after_failure.status == "CONCLUIDA"
     assert len(session.scalars(
         select(VendaItem).where(VendaItem.venda_id == sale_id)
     ).all()) == 1

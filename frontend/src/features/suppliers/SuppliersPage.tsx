@@ -8,15 +8,18 @@ import { FilterMenu } from '../../components/FilterMenu'
 import { uniqueFilterOptions } from '../../components/filterOptions'
 import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
+import { PaginationControls } from '../../components/PaginationControls'
 import { PageHeader } from '../../components/PageHeader'
 import { SearchInput } from '../../components/SearchInput'
 import { getApiErrorMessage } from '../../services/httpClient'
+import { getPaginationMeta, type PaginationMeta } from '../../types/pagination'
 import { CustomFieldDetails, CustomFieldFields } from '../customFields/CustomFieldFields'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import { createSupplier, deleteSupplier, getSupplier, listSuppliers, updateSupplier, type SupplierListFilters } from './api'
 import type { Supplier, SupplierDetails, SupplierPayload } from './types'
 
 const emptySupplier: SupplierPayload = { nome: '', cidade: '', estado: '', rua: '', numero: '', complemento: '', cnpj: '' }
+const PAGE_SIZE = 20
 
 function SupplierForm({ initialValue, saving, onCancel, onSave }: { initialValue: SupplierPayload; saving: boolean; onCancel: () => void; onSave: (payload: SupplierPayload) => void }) {
   const [form, setForm] = useState({ ...initialValue, complemento: initialValue.complemento ?? '' })
@@ -49,6 +52,8 @@ export function SuppliersPage() {
   const [cityDraft, setCityDraft] = useState('')
   const [stateDraft, setStateDraft] = useState('')
   const [appliedFilters, setAppliedFilters] = useState<SupplierListFilters>({})
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, page_size: PAGE_SIZE, total: 0, total_pages: 0 })
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
   const [modal, setModal] = useState<'create' | 'edit' | 'view' | null>(null)
@@ -63,7 +68,7 @@ export function SuppliersPage() {
   const [deleting, setDeleting] = useState(false)
   const loadRequestId = useRef(0)
 
-  const loadSuppliers = useCallback(async () => { const requestId = ++loadRequestId.current; setLoading(true); setError(null); try { const [supplierList, optionList] = await Promise.all([listSuppliers(appliedFilters), listSuppliers()]); if (requestId !== loadRequestId.current) return; setSuppliers(supplierList); setFilterSuppliers(optionList) } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar os fornecedores.')) } finally { if (requestId === loadRequestId.current) setLoading(false) } }, [appliedFilters])
+  const loadSuppliers = useCallback(async () => { const requestId = ++loadRequestId.current; setLoading(true); setError(null); try { const [supplierList, optionList] = await Promise.all([listSuppliers({ ...appliedFilters, page, pageSize: PAGE_SIZE }), listSuppliers({ page: 1, pageSize: 100 })]); if (requestId !== loadRequestId.current) return; setSuppliers(supplierList); setFilterSuppliers(optionList); setPagination(getPaginationMeta(supplierList)) } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar os fornecedores.')) } finally { if (requestId === loadRequestId.current) setLoading(false) } }, [appliedFilters, page])
   // oxlint-disable-next-line
   useEffect(() => { void loadSuppliers() }, [loadSuppliers])
 
@@ -71,8 +76,8 @@ export function SuppliersPage() {
   const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.city || appliedFilters.state)
   const filterCities = useMemo(() => uniqueFilterOptions(filterSuppliers.map((supplier) => supplier.cidade)), [filterSuppliers])
   const filterStates = useMemo(() => uniqueFilterOptions(filterSuppliers.map((supplier) => supplier.estado)), [filterSuppliers])
-  const applyFilters = () => { setAppliedFilters({ search: searchDraft.trim(), city: cityDraft, state: stateDraft }); setFiltersOpen(false) }
-  const clearFilters = () => { setSearchDraft(''); setCityDraft(''); setStateDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
+  const applyFilters = () => { setPage(1); setAppliedFilters({ search: searchDraft.trim(), city: cityDraft, state: stateDraft }); setFiltersOpen(false) }
+  const clearFilters = () => { setPage(1); setSearchDraft(''); setCityDraft(''); setStateDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
 
   const openSupplierDetails = async (supplier: Supplier) => {
     setSelected(supplier)
@@ -113,7 +118,7 @@ export function SuppliersPage() {
           <label className="filter-field">Estado<select value={stateDraft} onChange={(event) => setStateDraft(event.target.value)}><option value="">Todos os estados</option>{filterStates.map((state) => <option value={state} key={state}>{state}</option>)}</select></label>
         </FilterMenu>
       </section>
-    {loading ? <LoadingState label="Carregando fornecedores..." /> : error ? <ErrorState description={error} onRetry={() => void loadSuppliers()} /> : suppliers.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum fornecedor cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro fornecedor para relacionar seus produtos.'} /></div> : <div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Fornecedor</th><th>CNPJ</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{suppliers.map((supplier) => <tr key={supplier.id}><td className="data-primary">{supplier.nome}<span className="data-secondary">ID {supplier.id}</span></td><td>{supplier.cnpj}</td><td>{supplier.cidade} / {supplier.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openSupplierDetails(supplier)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(supplier); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(supplier)}>Excluir</button></div></td></tr>)}</tbody></table></div>}
+    {loading ? <LoadingState label="Carregando fornecedores..." /> : error ? <ErrorState description={error} onRetry={() => void loadSuppliers()} /> : suppliers.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum fornecedor cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro fornecedor para relacionar seus produtos.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Fornecedor</th><th>CNPJ</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{suppliers.map((supplier) => <tr key={supplier.id}><td className="data-primary">{supplier.nome}<span className="data-secondary">ID {supplier.id}</span></td><td>{supplier.cnpj}</td><td>{supplier.cidade} / {supplier.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openSupplierDetails(supplier)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(supplier); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(supplier)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
     {modal === 'view' && selected ? <Modal title="Detalhes do fornecedor" size="large" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do fornecedor..." /> : detailsError ? <ErrorState description={detailsError} onRetry={() => void openSupplierDetails(selected)} /> : selectedDetails ? <SupplierDetails supplier={selectedDetails} /> : null}</Modal> : null}
     {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar fornecedor' : 'Novo fornecedor'} description="O CNPJ é obrigatório e deve ser único." onClose={() => setModal(null)}><SupplierForm initialValue={formValue} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveSupplier(payload)} /></Modal> : null}
     {deleteTarget ? <ConfirmDialog title="Excluir fornecedor?" description={`O cadastro de ${deleteTarget.nome} será removido. Produtos relacionados impedem a exclusão.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeSupplier()} /> : null}

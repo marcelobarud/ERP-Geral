@@ -58,9 +58,9 @@ describe('ProductsPage filters', () => {
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Venda máxima' }), { target: { value: '20.00' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(productsApi.listProducts).toHaveBeenCalledWith({ search: 'Produto', category: 'Categoria A', supplierId: 2, costMin: '10.50', costMax: '', salePriceMin: '', salePriceMax: '20.00' }))
+    await waitFor(() => expect(productsApi.listProducts).toHaveBeenCalledWith(expect.objectContaining({ search: 'Produto', category: 'Categoria A', supplierId: 2, costMin: '10.50', costMax: '', salePriceMin: '', salePriceMax: '20.00', page: 1, pageSize: 20 })))
     fireEvent.click(screen.getByRole('button', { name: /Filtros \(4\)/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
-    await waitFor(() => expect(productsApi.listProducts).toHaveBeenCalledWith({}))
+    await waitFor(() => expect(productsApi.listProducts).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 })

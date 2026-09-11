@@ -1,5 +1,6 @@
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -33,6 +34,17 @@ def upload_logo(
         "/api/settings/appearance/logo",
         files={"file": (filename, body, content_type)},
     )
+
+
+def test_reading_default_appearance_does_not_persist_missing_settings() -> None:
+    db = Mock()
+    db.get.return_value = None
+
+    settings = appearance_api.appearance_or_default(db, persist=False)
+
+    assert settings.id == 1
+    db.add.assert_not_called()
+    db.flush.assert_not_called()
 
 
 @pytest.fixture

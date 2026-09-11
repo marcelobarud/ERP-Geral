@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
 from app.models import Fornecedor, Produto, VendaItem
+from app.schemas.pagination import PaginationResponse
 from app.schemas.products import ProdutoCreate, ProdutoRead, ProdutoUpdate
 from app.services.custom_fields import (
     CUSTOM_FIELD_DOMAINS,
@@ -14,6 +15,7 @@ from app.services.custom_fields import (
     apply_values,
     read_values,
 )
+from app.services.pagination import paginate
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -23,7 +25,7 @@ def ensure_supplier_exists(db: Session, supplier_id: int) -> None:
         raise HTTPException(status_code=404, detail="Fornecedor não encontrado.")
 
 
-@router.get("", response_model=list[ProdutoRead])
+@router.get("", response_model=PaginationResponse[ProdutoRead])
 def list_products(
     search: str | None = Query(default=None),
     category: str | None = Query(default=None),
@@ -32,8 +34,10 @@ def list_products(
     cost_max: Decimal | None = Query(default=None, ge=0),
     sale_price_min: Decimal | None = Query(default=None, ge=0),
     sale_price_max: Decimal | None = Query(default=None, ge=0),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db_session),
-) -> list[Produto]:
+) -> PaginationResponse[ProdutoRead]:
     if cost_min is not None and cost_max is not None and cost_min > cost_max:
         raise HTTPException(
             status_code=422,
@@ -73,7 +77,16 @@ def list_products(
         query = query.where(Produto.preco_venda >= sale_price_min)
     if sale_price_max is not None:
         query = query.where(Produto.preco_venda <= sale_price_max)
-    return list(db.scalars(query.order_by(Produto.id)).all())
+    items, total, total_pages = paginate(
+        db, query.order_by(Produto.id), page, page_size
+    )
+    return PaginationResponse[ProdutoRead](
+        items=list(items),
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{product_id}", response_model=ProdutoRead)

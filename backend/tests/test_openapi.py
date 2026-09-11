@@ -17,6 +17,8 @@ def test_openapi_lists_sales_routes_and_sale_request_contract() -> None:
     assert "get" in paths["/api/sales"]
     assert "post" in paths["/api/sales"]
     assert "get" in paths["/api/sales/{sale_id}"]
+    assert "/api/sales/{sale_id}/cancel" in paths
+    assert "post" in paths["/api/sales/{sale_id}/cancel"]
 
     sale_schema = response.json()["components"]["schemas"]["VendaCreate"]
     assert set(sale_schema["required"]) == {
@@ -97,8 +99,23 @@ def test_openapi_lists_sales_routes_and_sale_request_contract() -> None:
             "date_to",
             "total_min",
             "total_max",
+            "status",
         },
     }
     for path, expected_parameters in expected_list_filters.items():
         parameters = response.json()["paths"][path]["get"]["parameters"]
-        assert {parameter["name"] for parameter in parameters} >= expected_parameters
+        assert {parameter["name"] for parameter in parameters} >= (
+            expected_parameters | {"page", "page_size"}
+        )
+
+    assert "/api/dashboard/summary" in paths
+    dashboard_properties = response.json()["components"]["schemas"][
+        "DashboardSummaryRead"
+    ]["properties"]
+    assert set(dashboard_properties) == {
+        "customers",
+        "products",
+        "suppliers",
+        "employees",
+        "sales",
+    }

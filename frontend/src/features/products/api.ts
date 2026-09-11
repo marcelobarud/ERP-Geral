@@ -1,4 +1,5 @@
 import { request, requestJson } from '../../services/httpClient'
+import { attachPagination, type PaginatedItems, type PaginatedResponse } from '../../types/pagination'
 import { listSuppliers } from '../suppliers/api'
 import type { Supplier } from '../suppliers/types'
 import type { Product, ProductPayload } from './types'
@@ -11,9 +12,11 @@ export type ProductListFilters = {
   costMax?: string
   salePriceMin?: string
   salePriceMax?: string
+  page?: number
+  pageSize?: number
 }
 
-export function listProducts(filters: ProductListFilters = {}): Promise<Product[]> {
+export function listProducts(filters: ProductListFilters = {}): Promise<PaginatedItems<Product>> {
   const params = new URLSearchParams()
   const search = filters.search?.trim()
   const category = filters.category?.trim()
@@ -24,8 +27,10 @@ export function listProducts(filters: ProductListFilters = {}): Promise<Product[
   if (filters.costMax?.trim()) params.set('cost_max', filters.costMax.trim())
   if (filters.salePriceMin?.trim()) params.set('sale_price_min', filters.salePriceMin.trim())
   if (filters.salePriceMax?.trim()) params.set('sale_price_max', filters.salePriceMax.trim())
+  if (filters.page && filters.page > 1) params.set('page', String(filters.page))
+  if (filters.pageSize) params.set('page_size', String(filters.pageSize))
   const query = params.toString()
-  return request<Product[]>(`/api/products${query ? `?${query}` : ''}`)
+  return request<PaginatedResponse<Product> | Product[]>(`/api/products${query ? `?${query}` : ''}`).then((body) => Array.isArray(body) ? attachPagination(body, { page: 1, page_size: body.length || 20, total: body.length, total_pages: body.length ? 1 : 0 }) : attachPagination(body.items, { page: body.page, page_size: body.page_size, total: body.total, total_pages: body.total_pages }))
 }
 
 export function getProduct(id: number): Promise<Product> {

@@ -9,8 +9,11 @@ export type SaleCreatePayload = {
   cliente_id: number
   funcionario_id: number
   data_venda: string
+  observacao?: string | null
   itens: SaleItemCreate[]
 }
+
+export type SaleStatus = 'CONCLUIDA' | 'CANCELADA'
 
 export type SaleCustomerSummary = {
   id: number
@@ -40,11 +43,19 @@ export type SaleItem = {
   quantidade: DecimalValue
   preco_unitario: DecimalValue
   subtotal: DecimalValue
+  created_at?: string
+  updated_at?: string
 }
 
 export type Sale = {
   id: number
   data_venda: string
+  status?: SaleStatus
+  cancelada_em?: string | null
+  motivo_cancelamento?: string | null
+  observacao?: string | null
+  created_at?: string
+  updated_at?: string
   cliente: SaleCustomerSummary
   funcionario: SaleEmployeeSummary
   itens: SaleItem[]

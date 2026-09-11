@@ -8,9 +8,11 @@ import { FilterMenu } from '../../components/FilterMenu'
 import { uniqueFilterOptions } from '../../components/filterOptions'
 import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
+import { PaginationControls } from '../../components/PaginationControls'
 import { PageHeader } from '../../components/PageHeader'
 import { SearchInput } from '../../components/SearchInput'
 import { getApiErrorMessage } from '../../services/httpClient'
+import { getPaginationMeta, type PaginationMeta } from '../../types/pagination'
 import { CustomFieldDetails, CustomFieldFields } from '../customFields/CustomFieldFields'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import {
@@ -31,6 +33,8 @@ const emptyCustomer: CustomerPayload = {
   numero: '',
   complemento: '',
 }
+
+const PAGE_SIZE = 20
 
 type CustomerFormProps = {
   initialValue: CustomerPayload
@@ -98,6 +102,8 @@ export function CustomersPage() {
   const [cityDraft, setCityDraft] = useState('')
   const [stateDraft, setStateDraft] = useState('')
   const [appliedFilters, setAppliedFilters] = useState<CustomerListFilters>({})
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, page_size: PAGE_SIZE, total: 0, total_pages: 0 })
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
   const [modal, setModal] = useState<'create' | 'edit' | 'view' | null>(null)
@@ -117,12 +123,16 @@ export function CustomersPage() {
     setLoading(true)
     setError(null)
     try {
-      const [customerList, optionList] = await Promise.all([listCustomers(appliedFilters), listCustomers()])
+      const [customerList, optionList] = await Promise.all([
+        listCustomers({ ...appliedFilters, page, pageSize: PAGE_SIZE }),
+        listCustomers({ page: 1, pageSize: 100 }),
+      ])
       if (requestId !== loadRequestId.current) return
       setCustomers(customerList)
       setFilterCustomers(optionList)
+      setPagination(getPaginationMeta(customerList))
     } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar os clientes.')) } finally { if (requestId === loadRequestId.current) setLoading(false) }
-  }, [appliedFilters])
+  }, [appliedFilters, page])
 
   // oxlint-disable-next-line
   useEffect(() => { void loadCustomers() }, [loadCustomers])
@@ -131,8 +141,8 @@ export function CustomersPage() {
   const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.city || appliedFilters.state)
   const filterCities = useMemo(() => uniqueFilterOptions(filterCustomers.map((customer) => customer.cidade)), [filterCustomers])
   const filterStates = useMemo(() => uniqueFilterOptions(filterCustomers.map((customer) => customer.estado)), [filterCustomers])
-  const applyFilters = () => { setAppliedFilters({ search: searchDraft.trim(), city: cityDraft, state: stateDraft }); setFiltersOpen(false) }
-  const clearFilters = () => { setSearchDraft(''); setCityDraft(''); setStateDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
+  const applyFilters = () => { setPage(1); setAppliedFilters({ search: searchDraft.trim(), city: cityDraft, state: stateDraft }); setFiltersOpen(false) }
+  const clearFilters = () => { setPage(1); setSearchDraft(''); setCityDraft(''); setStateDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
 
   const openCustomerDetails = async (customer: Customer) => {
     setSelected(customer)
@@ -184,7 +194,7 @@ export function CustomersPage() {
           <label className="filter-field">Estado<select value={stateDraft} onChange={(event) => setStateDraft(event.target.value)}><option value="">Todos os estados</option>{filterStates.map((state) => <option value={state} key={state}>{state}</option>)}</select></label>
         </FilterMenu>
       </section>
-      {loading ? <LoadingState label="Carregando clientes..." /> : error ? <ErrorState description={error} onRetry={() => void loadCustomers()} /> : customers.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum cliente cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro cliente para começar sua base de relacionamento.'} /></div> : <div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Cliente</th><th>Localização</th><th>Endereço</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{customers.map((customer) => <tr key={customer.id}><td className="data-primary">{customer.nome}<span className="data-secondary">ID {customer.id}</span></td><td>{customer.cidade} / {customer.estado}</td><td>{customer.rua}, {customer.numero}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openCustomerDetails(customer)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(customer); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(customer)}>Excluir</button></div></td></tr>)}</tbody></table></div>}
+      {loading ? <LoadingState label="Carregando clientes..." /> : error ? <ErrorState description={error} onRetry={() => void loadCustomers()} /> : customers.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum cliente cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro cliente para começar sua base de relacionamento.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Cliente</th><th>Localização</th><th>Endereço</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{customers.map((customer) => <tr key={customer.id}><td className="data-primary">{customer.nome}<span className="data-secondary">ID {customer.id}</span></td><td>{customer.cidade} / {customer.estado}</td><td>{customer.rua}, {customer.numero}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openCustomerDetails(customer)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(customer); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(customer)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
       {modal === 'view' && selected ? <Modal title="Detalhes do cliente" size="large" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do cliente..." /> : detailsError ? <ErrorState description={detailsError} onRetry={() => void openCustomerDetails(selected)} /> : selectedDetails ? <CustomerDetails customer={selectedDetails} /> : null}</Modal> : null}
       {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar cliente' : 'Novo cliente'} description="Preencha os campos obrigatórios para continuar." onClose={() => setModal(null)}><CustomerForm initialValue={formValue} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveCustomer(payload)} /></Modal> : null}
       {deleteTarget ? <ConfirmDialog title="Excluir cliente?" description={`O cadastro de ${deleteTarget.nome} será removido. Essa ação não pode ser desfeita.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeCustomer()} /> : null}

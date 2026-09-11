@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import Field, model_validator
@@ -58,4 +59,6 @@ class ProdutoRead(ReadModel):
     preco_custo: Decimal
     preco_venda: Decimal
     fornecedor_id: int
+    created_at: datetime
+    updated_at: datetime
     campos_personalizados: list[CustomFieldValueRead] = Field(default_factory=list)

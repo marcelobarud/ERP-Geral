@@ -46,7 +46,7 @@ describe('EmployeesPage filter infrastructure pilot', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Filtros' }))
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(false, 'Carlos'))
+    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(false, 'Carlos', expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 
   it('combines search and the existing active filter with AND semantics', async () => {
@@ -60,7 +60,7 @@ describe('EmployeesPage filter infrastructure pilot', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: 'active' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, 'Carlos'))
+    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, 'Carlos', expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 
   it('clears search and active filters back to the unfiltered listing', async () => {
@@ -71,11 +71,11 @@ describe('EmployeesPage filter infrastructure pilot', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Filtros' }))
     fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: 'active' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
-    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, 'Carlos'))
+    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, 'Carlos', expect.objectContaining({ page: 1, pageSize: 20 })))
 
     fireEvent.click(screen.getByRole('button', { name: /Filtros \(1\)/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
-    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(false, ''))
+    await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(false, '', expect.objectContaining({ page: 1, pageSize: 20 })))
     expect((screen.getByRole('searchbox', { name: 'Pesquisar funcionários' }) as HTMLInputElement).value).toBe('')
     fireEvent.click(screen.getByRole('button', { name: 'Filtros' }))
     expect((screen.getByRole('combobox', { name: 'Status' }) as HTMLSelectElement).value).toBe('all')

@@ -18,6 +18,8 @@ EXPECTED_COLUMNS = {
         "rua",
         "numero",
         "complemento",
+        "created_at",
+        "updated_at",
     },
     "fornecedores": {
         "id",
@@ -28,6 +30,8 @@ EXPECTED_COLUMNS = {
         "numero",
         "cnpj",
         "complemento",
+        "created_at",
+        "updated_at",
     },
     "funcionarios": {
         "id",
@@ -41,6 +45,8 @@ EXPECTED_COLUMNS = {
         "complemento",
         "rg",
         "ativo",
+        "created_at",
+        "updated_at",
     },
     "produtos": {
         "id",
@@ -49,8 +55,21 @@ EXPECTED_COLUMNS = {
         "preco_custo",
         "preco_venda",
         "fornecedor_id",
+        "created_at",
+        "updated_at",
     },
-    "vendas": {"id", "cliente_id", "funcionario_id", "data_venda"},
+    "vendas": {
+        "id",
+        "cliente_id",
+        "funcionario_id",
+        "data_venda",
+        "status",
+        "cancelada_em",
+        "motivo_cancelamento",
+        "observacao",
+        "created_at",
+        "updated_at",
+    },
     "venda_itens": {
         "id",
         "venda_id",
@@ -58,6 +77,8 @@ EXPECTED_COLUMNS = {
         "quantidade",
         "preco_unitario",
         "fornecedor_id",
+        "created_at",
+        "updated_at",
     },
     "configuracoes_aparencia": {
         "id",
@@ -162,7 +183,7 @@ def test_only_approved_columns_are_nullable() -> None:
         "fornecedores": {"complemento"},
         "funcionarios": {"complemento", "rg"},
         "produtos": set(),
-        "vendas": set(),
+        "vendas": {"cancelada_em", "motivo_cancelamento", "observacao"},
         "venda_itens": set(),
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
@@ -217,6 +238,22 @@ def test_money_and_date_types_are_explicit() -> None:
     assert funcionarios.c.ativo.server_default is not None
     assert isinstance(vendas.c.data_venda.type, DateTime)
     assert vendas.c.data_venda.type.timezone is True
+    assert isinstance(vendas.c.created_at.type, DateTime)
+    assert vendas.c.created_at.type.timezone is True
+    assert isinstance(vendas.c.updated_at.type, DateTime)
+    assert vendas.c.updated_at.type.timezone is True
+
+
+def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
+    for model in (Cliente, Fornecedor, Funcionario, Produto, Venda, VendaItem):
+        created_at = model.__table__.c.created_at
+        updated_at = model.__table__.c.updated_at
+        assert callable(created_at.default.arg)
+        assert callable(updated_at.default.arg)
+        assert callable(updated_at.onupdate.arg)
+
+    assert Venda.__table__.c.status.default.arg == "CONCLUIDA"
+    assert Venda.__table__.c.status.server_default is not None
 
 
 def test_constraints_and_foreign_keys_are_named_and_restrictive() -> None:
@@ -229,6 +266,7 @@ def test_constraints_and_foreign_keys_are_named_and_restrictive() -> None:
             "ck_venda_itens_quantidade_positiva",
             "ck_venda_itens_preco_unitario_nao_negativo",
         },
+        "vendas": {"ck_vendas_status_valido"},
     }
 
     for table_name, constraint_names in expected_constraints.items():

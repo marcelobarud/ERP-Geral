@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
@@ -10,6 +11,7 @@ from app.schemas.sales import (
     FornecedorResumo,
     FuncionarioResumo,
     ProdutoResumo,
+    VendaCancel,
     VendaCreate,
     VendaItemRead,
     VendaRead,
@@ -32,6 +34,28 @@ class SalePersistenceError(Exception):
 
 class SaleNotFound(Exception):
     """Indica uma venda inexistente durante uma operação de venda."""
+
+
+def cancel_sale(db: Session, sale_id: int, payload: VendaCancel) -> Venda:
+    sale = get_sale(db, sale_id)
+    if sale is None:
+        raise SaleNotFound("Venda não encontrada.")
+    if sale.status == "CANCELADA":
+        return sale
+
+    sale.status = "CANCELADA"
+    sale.cancelada_em = datetime.now(timezone.utc)
+    sale.motivo_cancelamento = payload.motivo
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    cancelled_sale = get_sale(db, sale.id)
+    if cancelled_sale is None:
+        raise SalePersistenceError
+    return cancelled_sale
 
 
 def calculate_subtotal(quantity: Decimal, unit_price: Decimal) -> Decimal:
@@ -84,6 +108,7 @@ def create_sale(db: Session, payload: VendaCreate) -> Venda:
         cliente_id=customer.id,
         funcionario_id=employee.id,
         data_venda=payload.data_venda,
+        observacao=payload.observacao,
     )
     for item_payload in payload.itens:
         product = products[item_payload.produto_id]
@@ -112,24 +137,6 @@ def create_sale(db: Session, payload: VendaCreate) -> Venda:
     return persisted_sale
 
 
-def delete_sale(db: Session, sale_id: int) -> None:
-    sale = db.get(Venda, sale_id)
-    if sale is None:
-        raise SaleNotFound("Venda não encontrada.")
-
-    savepoint = db.begin_nested()
-    try:
-        db.execute(delete(VendaItem).where(VendaItem.venda_id == sale_id))
-        db.delete(sale)
-        db.commit()
-    except IntegrityError:
-        savepoint.rollback()
-        raise SalePersistenceError from None
-    except Exception:
-        savepoint.rollback()
-        raise
-
-
 def sale_to_read(sale: Venda) -> VendaRead:
     items: list[VendaItemRead] = []
     for item in sale.itens:
@@ -145,6 +152,8 @@ def sale_to_read(sale: Venda) -> VendaRead:
                     item.quantidade,
                     item.preco_unitario,
                 ),
+                created_at=item.created_at,
+                updated_at=item.updated_at,
             )
         )
 
@@ -152,6 +161,12 @@ def sale_to_read(sale: Venda) -> VendaRead:
     return VendaRead(
         id=sale.id,
         data_venda=sale.data_venda,
+        status=sale.status,
+        cancelada_em=sale.cancelada_em,
+        motivo_cancelamento=sale.motivo_cancelamento,
+        observacao=sale.observacao,
+        created_at=sale.created_at,
+        updated_at=sale.updated_at,
         cliente=ClienteResumo.model_validate(sale.cliente),
         funcionario=FuncionarioResumo.model_validate(sale.funcionario),
         itens=items,

@@ -10,7 +10,7 @@ import * as productsApi from '../products/api'
 import * as salesApi from './api'
 import { SalesPage } from './SalesPages'
 
-vi.mock('./api', () => ({ listSales: vi.fn(), getSale: vi.fn(), deleteSale: vi.fn() }))
+vi.mock('./api', () => ({ listSales: vi.fn(), getSale: vi.fn(), cancelSale: vi.fn() }))
 vi.mock('../customers/api', () => ({ listCustomers: vi.fn() }))
 vi.mock('../employees/api', () => ({ listEmployees: vi.fn() }))
 vi.mock('../products/api', () => ({ listProducts: vi.fn() }))
@@ -39,7 +39,7 @@ describe('SalesPage', () => {
     vi.clearAllMocks()
     vi.mocked(salesApi.listSales).mockResolvedValue([sale])
     vi.mocked(salesApi.getSale).mockResolvedValue(sale)
-    vi.mocked(salesApi.deleteSale).mockResolvedValue(undefined)
+    vi.mocked(salesApi.cancelSale).mockResolvedValue({ ...sale, status: 'CANCELADA', cancelada_em: '2026-08-19T14:00:00Z', motivo_cancelamento: null })
     vi.mocked(customersApi.listCustomers).mockResolvedValue([{ id: 10, nome: 'Cliente Histórico', cidade: 'São Paulo', estado: 'SP', rua: 'Rua A', numero: '1', complemento: null }])
     vi.mocked(employeesApi.listEmployees).mockResolvedValue([{ id: 20, nome_completo: 'Funcionário Histórico', cidade: 'São Paulo', estado: 'SP', rua: 'Rua B', numero: '2', complemento: null, cpf: '123.456.789-09', rg: null, data_nascimento: '1990-01-01', ativo: false }])
     vi.mocked(productsApi.listProducts).mockResolvedValue([{ id: 30, nome: 'Produto Histórico', categoria: 'Geral', preco_custo: '10.00', preco_venda: '12.34', fornecedor_id: 40 }])
@@ -114,52 +114,51 @@ describe('SalesPage', () => {
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Total mínimo' }), { target: { value: '10.00' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(salesApi.listSales).toHaveBeenLastCalledWith({ search: 'Produto', productId: 30, customerId: 10, employeeId: 20, dateFrom: '2026-08-20', dateTo: '', totalMin: '10.00', totalMax: '' }))
+    await waitFor(() => expect(salesApi.listSales).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'Produto', productId: 30, customerId: 10, employeeId: 20, dateFrom: '2026-08-20', dateTo: '', totalMin: '10.00', totalMax: '' })))
     fireEvent.click(screen.getByRole('button', { name: /Filtros \(5\)/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
-    await waitFor(() => expect(salesApi.listSales).toHaveBeenLastCalledWith({}))
+    await waitFor(() => expect(salesApi.listSales).toHaveBeenLastCalledWith(expect.objectContaining({})))
   })
 
-  it('opens and cancels the explicit sale deletion confirmation', async () => {
+  it('opens and cancels the explicit sale cancellation confirmation', async () => {
     render(<SalesPage />)
     await screen.findByText('#70')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Excluir venda' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar venda' }))
 
-    const dialog = await screen.findByRole('dialog', { name: 'Excluir venda #70?' })
-    expect(within(dialog).getByText(/todos os itens associados/)).toBeTruthy()
-    expect(within(dialog).getByText(/Clientes, funcionários e produtos não serão excluídos/)).toBeTruthy()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Cancelar venda #70?' })
+    expect(within(dialog).getByText(/serão preservados no histórico/)).toBeTruthy()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Voltar' }))
 
-    expect(screen.queryByRole('dialog', { name: 'Excluir venda #70?' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'Cancelar venda #70?' })).toBeNull()
     expect(screen.getByText('#70')).toBeTruthy()
-    expect(salesApi.deleteSale).not.toHaveBeenCalled()
+    expect(salesApi.cancelSale).not.toHaveBeenCalled()
   })
 
-  it('deletes the sale after confirmation and removes it from the list', async () => {
+  it('cancels the sale after confirmation and preserves it in the list', async () => {
     render(<SalesPage />)
     await screen.findByText('#70')
-    fireEvent.click(screen.getByRole('button', { name: 'Excluir venda' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Excluir venda #70?' })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar venda' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Cancelar venda #70?' })
 
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Excluir venda' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar venda' }))
 
-    await waitFor(() => expect(salesApi.deleteSale).toHaveBeenCalledWith(70))
-    expect(screen.queryByText('#70')).toBeNull()
-    expect(await screen.findByText('Venda #70 excluída com sucesso.')).toBeTruthy()
-  })
-
-  it('keeps the sale visible when the delete request fails', async () => {
-    vi.mocked(salesApi.deleteSale).mockRejectedValue(new ApiError(500, 'Falha ao excluir venda.'))
-    render(<SalesPage />)
-    await screen.findByText('#70')
-    fireEvent.click(screen.getByRole('button', { name: 'Excluir venda' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Excluir venda #70?' })
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Excluir venda' }))
-
-    expect(await screen.findByText('Falha ao excluir venda.')).toBeTruthy()
+    await waitFor(() => expect(salesApi.cancelSale).toHaveBeenCalledWith(70, undefined))
     expect(screen.getByText('#70')).toBeTruthy()
-    expect(screen.queryByText('Venda #70 excluída com sucesso.')).toBeNull()
+    expect(await screen.findByText('Venda #70 cancelada com sucesso.')).toBeTruthy()
+  })
+
+  it('keeps the sale visible when the cancellation request fails', async () => {
+    vi.mocked(salesApi.cancelSale).mockRejectedValue(new ApiError(500, 'Falha ao cancelar venda.'))
+    render(<SalesPage />)
+    await screen.findByText('#70')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar venda' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Cancelar venda #70?' })
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar venda' }))
+
+    expect(await screen.findByText('Falha ao cancelar venda.')).toBeTruthy()
+    expect(screen.getByText('#70')).toBeTruthy()
+    expect(screen.queryByText('Venda #70 cancelada com sucesso.')).toBeNull()
   })
 })

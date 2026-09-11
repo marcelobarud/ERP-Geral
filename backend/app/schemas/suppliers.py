@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import Field, model_validator
 
 from app.schemas.base import APIModel, ReadModel
@@ -46,6 +48,8 @@ class FornecedorRead(ReadModel):
     numero: str
     complemento: str | None = None
     cnpj: str
+    created_at: datetime
+    updated_at: datetime
     campos_personalizados: list[CustomFieldValueRead] = Field(default_factory=list)
 
 

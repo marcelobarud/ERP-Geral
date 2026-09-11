@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db_session
 from app.models import Fornecedor, Produto, VendaItem
+from app.schemas.pagination import PaginationResponse
 from app.schemas.suppliers import (
     FornecedorCreate,
     FornecedorDetailRead,
@@ -18,6 +19,7 @@ from app.services.custom_fields import (
     apply_values,
     read_values,
 )
+from app.services.pagination import paginate
 
 router = APIRouter(prefix="/api/suppliers", tags=["suppliers"])
 
@@ -34,13 +36,15 @@ def ensure_unique_cnpj(
         raise HTTPException(status_code=409, detail="CNPJ já cadastrado.")
 
 
-@router.get("", response_model=list[FornecedorRead])
+@router.get("", response_model=PaginationResponse[FornecedorRead])
 def list_suppliers(
     search: str | None = Query(default=None),
     city: str | None = Query(default=None),
     state: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db_session),
-) -> list[Fornecedor]:
+) -> PaginationResponse[FornecedorRead]:
     query = select(Fornecedor)
     normalized_search = search.strip() if search else ""
     normalized_city = city.strip() if city else ""
@@ -59,7 +63,16 @@ def list_suppliers(
         query = query.where(Fornecedor.cidade.ilike(normalized_city))
     if normalized_state:
         query = query.where(Fornecedor.estado.ilike(normalized_state))
-    return list(db.scalars(query.order_by(Fornecedor.id)).all())
+    items, total, total_pages = paginate(
+        db, query.order_by(Fornecedor.id), page, page_size
+    )
+    return PaginationResponse[FornecedorRead](
+        items=list(items),
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{supplier_id}", response_model=FornecedorDetailRead)

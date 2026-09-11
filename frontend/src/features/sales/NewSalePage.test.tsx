@@ -109,7 +109,7 @@ describe('NewSalePage', () => {
     render(<NewSalePage />)
     await screen.findByLabelText('Funcionário')
 
-    expect(employeesApi.listEmployees).toHaveBeenCalledWith(true)
+    expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, '', { page: 1, pageSize: 100 })
     expect(screen.getByRole('option', { name: employee.nome_completo })).toBeTruthy()
     expect(screen.queryByRole('option', { name: inactiveEmployee.nome_completo })).toBeNull()
   })

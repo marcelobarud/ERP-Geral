@@ -61,6 +61,10 @@ def employee_payload() -> dict[str, str]:
     }
 
 
+def page_items(response):
+    return response.json()["items"]
+
+
 def product_payload(supplier_id: int) -> dict[str, object]:
     return {
         "nome": "Produto API",
@@ -343,26 +347,26 @@ def test_employee_list_search_normalizes_text_and_combines_with_active_filter(
 
     all_employees = client.get("/api/employees")
     assert all_employees.status_code == 200
-    assert {item["id"] for item in all_employees.json()} == {
+    assert {item["id"] for item in page_items(all_employees)} == {
         first_employee.id,
         second_employee.id,
     }
 
     trimmed_search = client.get("/api/employees?search=%20%20Ana%20%20")
     assert trimmed_search.status_code == 200
-    assert [item["id"] for item in trimmed_search.json()] == [second_employee.id]
+    assert [item["id"] for item in page_items(trimmed_search)] == [second_employee.id]
 
     combined = client.get("/api/employees?search=ana&active=true")
     assert combined.status_code == 200
-    assert combined.json() == []
+    assert page_items(combined) == []
 
     inactive_only = client.get("/api/employees?search=ana&active=false")
     assert inactive_only.status_code == 200
-    assert [item["id"] for item in inactive_only.json()] == [second_employee.id]
+    assert [item["id"] for item in page_items(inactive_only)] == [second_employee.id]
 
     blank_search = client.get("/api/employees?search=%20%20")
     assert blank_search.status_code == 200
-    assert {item["id"] for item in blank_search.json()} == {
+    assert {item["id"] for item in page_items(blank_search)} == {
         first_employee.id,
         second_employee.id,
     }
@@ -374,7 +378,7 @@ def test_employee_status_filters_new_sales_and_preserves_history(
 ) -> None:
     customer, employee, product = seed_sale_dependencies(session)
 
-    assert client.get("/api/employees?active=true").json() == [
+    assert page_items(client.get("/api/employees?active=true")) == [
         client.get(f"/api/employees/{employee.id}").json()
     ]
     deactivate_response = client.patch(
@@ -383,8 +387,8 @@ def test_employee_status_filters_new_sales_and_preserves_history(
     )
     assert deactivate_response.status_code == 200
     assert deactivate_response.json()["ativo"] is False
-    assert client.get("/api/employees?active=true").json() == []
-    assert client.get("/api/employees").json()[0]["ativo"] is False
+    assert page_items(client.get("/api/employees?active=true")) == []
+    assert page_items(client.get("/api/employees"))[0]["ativo"] is False
 
     sale_payload = {
         "cliente_id": customer.id,
@@ -403,7 +407,7 @@ def test_employee_status_filters_new_sales_and_preserves_history(
     )
     assert reactivate_response.status_code == 200
     assert reactivate_response.json()["ativo"] is True
-    assert client.get("/api/employees?active=true").json()[0]["id"] == employee.id
+    assert page_items(client.get("/api/employees?active=true"))[0]["id"] == employee.id
 
     created = client.post("/api/sales", json=sale_payload)
     assert created.status_code == 201
@@ -414,7 +418,12 @@ def test_employee_status_filters_new_sales_and_preserves_history(
     assert history.status_code == 200
     assert history.json()["funcionario"]["id"] == employee.id
     assert client.delete(f"/api/employees/{employee.id}").status_code == 409
-    assert client.delete(f"/api/sales/{sale_id}").status_code == 204
+    cancelled = client.post(
+        f"/api/sales/{sale_id}/cancel",
+        json={"motivo": "Encerramento de teste"},
+    )
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "CANCELADA"
     assert client.delete(f"/api/employees/{employee.id}").status_code == 204
 
 
@@ -435,12 +444,14 @@ def test_customer_list_filters_visible_fields_with_and_semantics(
     session.add_all([first, second])
     session.flush()
 
-    assert [item["id"] for item in client.get("/api/customers?search=ana").json()] == [
+    assert [item["id"] for item in page_items(
+        client.get("/api/customers?search=ana")
+    )] == [
         second.id
     ]
     filtered = client.get("/api/customers?search=ana&city=Campinas&state=SP")
-    assert [item["id"] for item in filtered.json()] == [second.id]
-    assert client.get("/api/customers?city=Recife").json() == []
+    assert [item["id"] for item in page_items(filtered)] == [second.id]
+    assert page_items(client.get("/api/customers?city=Recife")) == []
 
 
 def test_supplier_list_filters_visible_fields_with_and_semantics(
@@ -462,10 +473,10 @@ def test_supplier_list_filters_visible_fields_with_and_semantics(
     session.flush()
 
     response = client.get("/api/suppliers?search=campinas")
-    assert [item["id"] for item in response.json()] == [second.id]
+    assert [item["id"] for item in page_items(response)] == [second.id]
     filtered = client.get("/api/suppliers?search=fornecedor&city=Campinas&state=SP")
-    assert [item["id"] for item in filtered.json()] == [second.id]
-    assert client.get("/api/suppliers?city=Recife").json() == []
+    assert [item["id"] for item in page_items(filtered)] == [second.id]
+    assert page_items(client.get("/api/suppliers?city=Recife")) == []
 
 
 def test_product_list_filters_decimal_ranges_and_supplier(
@@ -498,12 +509,12 @@ def test_product_list_filters_decimal_ranges_and_supplier(
     session.flush()
 
     response = client.get("/api/products?search=notebook")
-    assert [item["id"] for item in response.json()] == [first.id]
+    assert [item["id"] for item in page_items(response)] == [first.id]
     query = (
         f"/api/products?category=Eletrônicos&supplier_id={first_supplier.id}"
         "&cost_min=50.00&cost_max=50.00&sale_price_min=100.00&sale_price_max=100.00"
     )
-    assert [item["id"] for item in client.get(query).json()] == [first.id]
+    assert [item["id"] for item in page_items(client.get(query))] == [first.id]
     invalid = client.get("/api/products?cost_min=80&cost_max=20")
     assert invalid.status_code == 422
     assert "custo mínimo" in invalid.json()["detail"]
@@ -528,8 +539,8 @@ def test_employee_list_filters_location_and_inactive_status(
     session.flush()
 
     filtered = client.get("/api/employees?search=ana&city=Recife&state=PE&active=false")
-    assert [item["id"] for item in filtered.json()] == [inactive.id]
-    assert client.get("/api/employees?city=Recife&active=true").json() == []
+    assert [item["id"] for item in page_items(filtered)] == [inactive.id]
+    assert page_items(client.get("/api/employees?city=Recife&active=true")) == []
 
 
 def test_sales_list_filters_history_without_duplicates_and_validates_ranges(
@@ -585,25 +596,31 @@ def test_sales_list_filters_history_without_duplicates_and_validates_ranges(
     session.commit()
 
     product_filter = client.get(f"/api/sales?product_id={first_product.id}")
-    assert [sale["id"] for sale in product_filter.json()] == [first_sale.json()["id"]]
+    assert [sale["id"] for sale in page_items(product_filter)] == [
+        first_sale.json()["id"]
+    ]
     search_filter = client.get("/api/sales?search=notebook")
-    assert [sale["id"] for sale in search_filter.json()] == [first_sale.json()["id"]]
+    assert [sale["id"] for sale in page_items(search_filter)] == [
+        first_sale.json()["id"]
+    ]
     historical_filter = client.get(
         f"/api/sales?employee_id={historical_employee.id}"
     )
-    assert [sale["id"] for sale in historical_filter.json()] == [
+    assert [sale["id"] for sale in page_items(historical_filter)] == [
         second_sale.json()["id"]
     ]
     total_product_filter = client.get(
         f"/api/sales?product_id={first_product.id}&total_min=120&total_max=120"
     )
-    assert [sale["id"] for sale in total_product_filter.json()] == [
+    assert [sale["id"] for sale in page_items(total_product_filter)] == [
         first_sale.json()["id"]
     ]
     inclusive_date = client.get("/api/sales?date_from=2026-08-20&date_to=2026-08-20")
-    assert [sale["id"] for sale in inclusive_date.json()] == [first_sale.json()["id"]]
+    assert [sale["id"] for sale in page_items(inclusive_date)] == [
+        first_sale.json()["id"]
+    ]
     duplicate_guard = client.get("/api/sales?search=eletrônicos")
-    assert len(duplicate_guard.json()) == 0
+    assert len(page_items(duplicate_guard)) == 0
     invalid_date = client.get("/api/sales?date_from=2026-08-22&date_to=2026-08-20")
     assert invalid_date.status_code == 422
     invalid_total = client.get("/api/sales?total_min=200&total_max=100")
@@ -856,12 +873,12 @@ def test_sales_list_and_missing_references_are_handled_atomically(
     assert created.status_code == 201
     list_response = client.get("/api/sales")
     assert list_response.status_code == 200
-    listed_sale_ids = {sale["id"] for sale in list_response.json()}
+    listed_sale_ids = {sale["id"] for sale in page_items(list_response)}
     expected_sale_ids = existing_sale_ids | {created.json()["id"]}
     assert listed_sale_ids == expected_sale_ids
 
 
-def test_sale_delete_removes_only_sale_and_items_and_preserves_references(
+def test_sale_cancel_preserves_sale_items_and_references(
     client: TestClient,
     session,
 ) -> None:
@@ -895,15 +912,20 @@ def test_sale_delete_removes_only_sale_and_items_and_preserves_references(
     first_sale_id = first_response.json()["id"]
     second_sale_id = second_response.json()["id"]
 
-    delete_response = client.delete(f"/api/sales/{first_sale_id}")
+    cancel_response = client.post(
+        f"/api/sales/{first_sale_id}/cancel",
+        json={"motivo": "Cliente desistiu"},
+    )
 
-    assert delete_response.status_code == 204
-    assert client.get(f"/api/sales/{first_sale_id}").status_code == 404
+    assert cancel_response.status_code == 200
+    assert cancel_response.json()["status"] == "CANCELADA"
+    assert cancel_response.json()["motivo_cancelamento"] == "Cliente desistiu"
+    assert client.get(f"/api/sales/{first_sale_id}").status_code == 200
     assert client.get(f"/api/sales/{second_sale_id}").status_code == 200
-    assert session.get(Venda, first_sale_id) is None
-    assert session.scalars(
+    assert session.get(Venda, first_sale_id) is not None
+    assert len(session.scalars(
         select(VendaItem).where(VendaItem.venda_id == first_sale_id)
-    ).all() == []
+    ).all()) == 2
     assert session.get(Venda, second_sale_id) is not None
     assert session.get(Cliente, customer.id) is not None
     assert session.get(Funcionario, employee.id) is not None
@@ -912,8 +934,8 @@ def test_sale_delete_removes_only_sale_and_items_and_preserves_references(
     assert session.get(Produto, second_product.id) is not None
 
 
-def test_sale_delete_returns_404_for_missing_sale(client: TestClient) -> None:
-    response = client.delete("/api/sales/999999")
+def test_sale_cancel_returns_404_for_missing_sale(client: TestClient) -> None:
+    response = client.post("/api/sales/999999/cancel", json={})
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Venda não encontrada."

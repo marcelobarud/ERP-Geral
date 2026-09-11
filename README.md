@@ -14,8 +14,10 @@ A versão atual oferece:
 - registro de vendas;
 - campos personalizados;
 - filtros e busca operacional;
+- paginação backend-driven nas listagens principais;
 - detalhes relacionais;
 - histórico operacional;
+- cancelamento não destrutivo de vendas com status e observação;
 - personalização visual e branding.
 
 ## Direção futura
@@ -51,6 +53,10 @@ No diretório `backend/`, execute:
 ```powershell
 python -m alembic upgrade head
 ```
+
+A migration `20260911_0002` prepara a fundação transacional do ERP: adiciona
+timestamps operacionais, ciclo de vida e observação das vendas, paginação das
+listagens e agregações do dashboard.
 
 ## Execução local
 

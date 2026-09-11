@@ -1,17 +1,20 @@
 import { request, requestJson } from '../../services/httpClient'
+import { attachPagination, type PaginatedItems, type PaginatedResponse } from '../../types/pagination'
 import type { Employee, EmployeePayload } from './types'
 
 export type EmployeeListOptions = {
   active?: boolean
   city?: string
   state?: string
+  page?: number
+  pageSize?: number
 }
 
 export function listEmployees(
   activeOnly = false,
   search = '',
   options: EmployeeListOptions = {},
-): Promise<Employee[]> {
+): Promise<PaginatedItems<Employee>> {
   const params = new URLSearchParams()
   const active = options.active ?? (activeOnly ? true : undefined)
   if (active !== undefined) params.set('active', String(active))
@@ -21,8 +24,10 @@ export function listEmployees(
   const state = options.state?.trim()
   if (city) params.set('city', city)
   if (state) params.set('state', state)
+  if (options.page && options.page > 1) params.set('page', String(options.page))
+  if (options.pageSize) params.set('page_size', String(options.pageSize))
   const query = params.toString()
-  return request<Employee[]>(`/api/employees${query ? `?${query}` : ''}`)
+  return request<PaginatedResponse<Employee> | Employee[]>(`/api/employees${query ? `?${query}` : ''}`).then((body) => Array.isArray(body) ? attachPagination(body, { page: 1, page_size: body.length || 20, total: body.length, total_pages: body.length ? 1 : 0 }) : attachPagination(body.items, { page: body.page, page_size: body.page_size, total: body.total, total_pages: body.total_pages }))
 }
 
 export function getEmployee(id: number): Promise<Employee> {

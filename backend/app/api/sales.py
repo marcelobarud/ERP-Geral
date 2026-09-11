@@ -7,14 +7,16 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
 from app.models import Cliente, Funcionario, Produto, Venda, VendaItem
-from app.schemas.sales import VendaCreate, VendaRead
+from app.schemas.pagination import PaginationResponse
+from app.schemas.sales import VendaCancel, VendaCreate, VendaRead, VendaStatus
+from app.services.pagination import paginate
 from app.services.sales import (
     SaleEmployeeInactive,
     SaleNotFound,
     SalePersistenceError,
     SaleReferenceNotFound,
+    cancel_sale,
     create_sale,
-    delete_sale,
     get_sale,
     sale_query,
     sale_to_read,
@@ -42,7 +44,7 @@ def create_sale_endpoint(
     return sale_to_read(sale)
 
 
-@router.get("", response_model=list[VendaRead])
+@router.get("", response_model=PaginationResponse[VendaRead])
 def list_sales(
     search: str | None = Query(default=None),
     product_id: int | None = Query(default=None, gt=0),
@@ -52,8 +54,11 @@ def list_sales(
     date_to: date | None = Query(default=None),
     total_min: Decimal | None = Query(default=None, ge=0),
     total_max: Decimal | None = Query(default=None, ge=0),
+    status_filter: VendaStatus | None = Query(default=None, alias="status"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db_session),
-) -> list[VendaRead]:
+) -> PaginationResponse[VendaRead]:
     if date_from is not None and date_to is not None and date_from > date_to:
         raise HTTPException(
             status_code=422,
@@ -110,11 +115,22 @@ def list_sales(
         query = query.where(sale_total >= total_min)
     if total_max is not None:
         query = query.where(sale_total <= total_max)
+    if status_filter is not None:
+        query = query.where(Venda.status == status_filter)
 
-    sales = db.scalars(
-        query.order_by(Venda.data_venda.desc(), Venda.id.desc())
-    ).all()
-    return [sale_to_read(sale) for sale in sales]
+    sales, total, total_pages = paginate(
+        db,
+        query.order_by(Venda.data_venda.desc(), Venda.id.desc()),
+        page,
+        page_size,
+    )
+    return PaginationResponse[VendaRead](
+        items=[sale_to_read(sale) for sale in sales],
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{sale_id}", response_model=VendaRead)
@@ -128,17 +144,19 @@ def get_sale_endpoint(
     return sale_to_read(sale)
 
 
-@router.delete("/{sale_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_sale_endpoint(
+@router.post("/{sale_id}/cancel", response_model=VendaRead)
+def cancel_sale_endpoint(
     sale_id: int,
+    payload: VendaCancel,
     db: Session = Depends(get_db_session),
-) -> None:
+) -> VendaRead:
     try:
-        delete_sale(db, sale_id)
+        sale = cancel_sale(db, sale_id, payload)
     except SaleNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except SalePersistenceError:
         raise HTTPException(
             status_code=409,
-            detail="Não foi possível excluir a venda por conflito de integridade.",
+            detail="Não foi possível cancelar a venda por conflito de integridade.",
         ) from None
+    return sale_to_read(sale)

@@ -3,11 +3,7 @@ import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
-import { listCustomers } from '../customers/api'
-import { listEmployees } from '../employees/api'
-import { listProducts } from '../products/api'
-import { listSales } from '../sales/api'
-import { listSuppliers } from '../suppliers/api'
+import { getDashboardSummary } from './api'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 
 type DashboardPageProps = {
@@ -47,10 +43,6 @@ const initialCounts: DashboardCounts = {
   suppliers: null,
   employees: null,
   sales: null,
-}
-
-function countResult<T>(result: PromiseSettledResult<T[]>): number | null {
-  return result.status === 'fulfilled' ? result.value.length : null
 }
 
 function navigateFromLink(
@@ -132,24 +124,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     setLoading(true)
     setLoadError(null)
 
-    const results = await Promise.allSettled([
-      listCustomers(),
-      listProducts(),
-      listSuppliers(),
-      listEmployees(),
-      listSales(),
-    ])
-
-    const [customers, products, suppliers, employees, sales] = results
-    setCounts({
-      customers: countResult(customers),
-      products: countResult(products),
-      suppliers: countResult(suppliers),
-      employees: countResult(employees),
-      sales: countResult(sales),
-    })
-
-    if (results.some((result) => result.status === 'rejected')) {
+    try {
+      setCounts(await getDashboardSummary())
+    } catch {
+      setCounts(initialCounts)
       setLoadError('Algumas informações não puderam ser carregadas. Tente novamente.')
     }
 

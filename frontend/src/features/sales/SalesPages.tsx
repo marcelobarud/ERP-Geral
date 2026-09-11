@@ -6,9 +6,11 @@ import { FeedbackBanner } from '../../components/FeedbackBanner'
 import { FilterMenu } from '../../components/FilterMenu'
 import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
+import { PaginationControls } from '../../components/PaginationControls'
 import { PageHeader } from '../../components/PageHeader'
 import { SearchInput } from '../../components/SearchInput'
 import { ApiError, getApiErrorMessage } from '../../services/httpClient'
+import { getPaginationMeta, type PaginationMeta } from '../../types/pagination'
 import { listCustomers } from '../customers/api'
 import type { Customer } from '../customers/types'
 import { listEmployees } from '../employees/api'
@@ -16,8 +18,8 @@ import type { Employee } from '../employees/types'
 import { listProducts } from '../products/api'
 import type { Product } from '../products/types'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
-import { createSale, deleteSale, getSale, listSales, type SaleListFilters } from './api'
-import type { Sale, SaleCreatePayload } from './types'
+import { cancelSale, createSale, getSale, listSales, type SaleListFilters } from './api'
+import type { Sale, SaleCreatePayload, SaleStatus } from './types'
 
 type DraftSaleItem = {
   key: number
@@ -189,6 +191,7 @@ export function NewSalePage() {
   const [customerId, setCustomerId] = useState<number | ''>('')
   const [employeeId, setEmployeeId] = useState<number | ''>('')
   const [saleDate, setSaleDate] = useState(defaultSaleDate)
+  const [saleObservation, setSaleObservation] = useState('')
   const [items, setItems] = useState<DraftSaleItem[]>([])
   const [nextItemKey, setNextItemKey] = useState(1)
   const [saving, setSaving] = useState(false)
@@ -202,9 +205,9 @@ export function NewSalePage() {
     setLoadError(null)
     try {
       const [customerList, employeeList, productList] = await Promise.all([
-        listCustomers(),
-        listEmployees(true),
-        listProducts(),
+        listCustomers({ page: 1, pageSize: 100 }),
+        listEmployees(true, '', { page: 1, pageSize: 100 }),
+        listProducts({ page: 1, pageSize: 100 }),
       ])
       setCustomers(customerList)
       setEmployees(employeeList)
@@ -256,6 +259,7 @@ export function NewSalePage() {
     setCustomerId('')
     setEmployeeId('')
     setSaleDate(defaultSaleDate())
+    setSaleObservation('')
     setItems([])
     setCreatedSale(null)
     setFeedback(null)
@@ -303,17 +307,20 @@ export function NewSalePage() {
 
     setSaving(true)
     try {
-      const saved = await createSale({
+      const payload: SaleCreatePayload = {
         cliente_id: customerId,
         funcionario_id: employeeId,
         data_venda: parsedDate.toISOString(),
         itens: normalizedItems,
-      })
+      }
+      if (saleObservation.trim()) payload.observacao = saleObservation.trim()
+      const saved = await createSale(payload)
       setCreatedSale(saved)
       setFeedback(`Venda #${saved.id} criada com sucesso. Total confirmado: ${formatMoney(saved.total)}.`)
       setCustomerId('')
       setEmployeeId('')
       setSaleDate(defaultSaleDate())
+      setSaleObservation('')
       setItems([])
     } catch (error) {
       setSubmitError(saleErrorMessage(error, 'Não foi possível criar a venda.'))
@@ -368,6 +375,10 @@ export function NewSalePage() {
                 <label htmlFor="sale-date">Data da venda</label>
                 <input id="sale-date" required type="datetime-local" value={saleDate} onChange={(event) => setSaleDate(event.target.value)} />
               </div>
+              <div className="form-field form-grid-wide">
+                <label htmlFor="sale-observation">Observação (opcional)</label>
+                <textarea id="sale-observation" maxLength={1000} value={saleObservation} onChange={(event) => setSaleObservation(event.target.value)} />
+              </div>
             </div>
           </section>
 
@@ -408,12 +419,15 @@ function formatQuantityForDisplay(value: string | number): string {
   return normalizeDecimal(value).replace('.', ',')
 }
 
-function SaleDetails({ sale, onDelete }: { sale: Sale; onDelete: () => void }) {
+function SaleDetails({ sale, onCancel }: { sale: Sale; onCancel: () => void }) {
+  const saleStatus = sale.status ?? 'CONCLUIDA'
   return (
     <div className="sale-details">
       <dl className="detail-grid sale-detail-meta">
-        <div><dt>ID</dt><dd>#{sale.id}</dd></div><div><dt>Data</dt><dd>{formatDate(sale.data_venda)}</dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div>
+        <div><dt>ID</dt><dd>#{sale.id}</dd></div><div><dt>Data</dt><dd>{formatDate(sale.data_venda)}</dd></div><div><dt>Status</dt><dd><span className={`status-badge ${saleStatus === 'CANCELADA' ? 'status-badge-inactive' : 'status-badge-active'}`}>{saleStatus === 'CANCELADA' ? 'Cancelada' : 'Concluída'}</span></dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div>
       </dl>
+      {sale.observacao ? <p className="sale-observation"><strong>Observação:</strong> {sale.observacao}</p> : null}
+      {sale.motivo_cancelamento ? <p className="sale-observation"><strong>Motivo do cancelamento:</strong> {sale.motivo_cancelamento}</p> : null}
       <div className="sale-detail-items">
         <div className="sale-detail-heading"><h3>Itens</h3><span>Valores históricos</span></div>
         {sale.itens.map((item) => (
@@ -442,26 +456,24 @@ function SaleDetails({ sale, onDelete }: { sale: Sale; onDelete: () => void }) {
         ))}
       </div>
       <div className="sale-detail-total"><span>Total da venda</span><strong>{formatMoney(sale.total)}</strong></div>
-      <div className="sale-detail-actions">
-        <button className="button button-danger" type="button" onClick={onDelete}>
-          Excluir venda
-        </button>
-      </div>
+      {saleStatus === 'CONCLUIDA' ? <div className="sale-detail-actions"><button className="button button-danger" type="button" onClick={onCancel}>Cancelar venda</button></div> : null}
     </div>
   )
 }
 
 export function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([])
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, page_size: 20, total: 0, total_pages: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedSaleId, setSelectedSaleId] = useState<number | null>(null)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Sale | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [deletingSaleId, setDeletingSaleId] = useState<number | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<Sale | null>(null)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [cancellingSaleId, setCancellingSaleId] = useState<number | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [searchDraft, setSearchDraft] = useState('')
   const [productIdDraft, setProductIdDraft] = useState<number | ''>('')
@@ -471,6 +483,7 @@ export function SalesPage() {
   const [dateToDraft, setDateToDraft] = useState('')
   const [totalMinDraft, setTotalMinDraft] = useState('')
   const [totalMaxDraft, setTotalMaxDraft] = useState('')
+  const [statusDraft, setStatusDraft] = useState<SaleStatus | ''>('')
   const [appliedFilters, setAppliedFilters] = useState<SaleListFilters>({})
   const [filterCustomers, setFilterCustomers] = useState<Customer[]>([])
   const [filterEmployees, setFilterEmployees] = useState<Employee[]>([])
@@ -485,15 +498,16 @@ export function SalesPage() {
     setLoading(true)
     setError(null)
     try {
-      const saleList = await listSales(appliedFilters)
+      const saleList = await listSales({ ...appliedFilters, page, pageSize: 20 })
       if (requestId !== loadRequestId.current) return
       setSales(saleList)
+      setPagination(getPaginationMeta(saleList))
     } catch (loadError) {
       if (requestId === loadRequestId.current) setError(saleErrorMessage(loadError, 'Não foi possível carregar as vendas.'))
     } finally {
       if (requestId === loadRequestId.current) setLoading(false)
     }
-  }, [appliedFilters])
+  }, [appliedFilters, page])
 
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
@@ -502,7 +516,11 @@ export function SalesPage() {
 
   useEffect(() => {
     let mounted = true
-    Promise.all([listCustomers(), listEmployees(), listProducts()])
+    Promise.all([
+      listCustomers({ page: 1, pageSize: 100 }),
+      listEmployees(false, '', { page: 1, pageSize: 100 }),
+      listProducts({ page: 1, pageSize: 100 }),
+    ])
       .then(([customerList, employeeList, productList]) => {
         if (!mounted) return
         setFilterCustomers(customerList)
@@ -516,10 +534,10 @@ export function SalesPage() {
     return () => { mounted = false }
   }, [])
 
-  const hasDraftFilters = Boolean(searchDraft.trim() || productIdDraft !== '' || customerIdDraft !== '' || employeeIdDraft !== '' || dateFromDraft || dateToDraft || totalMinDraft.trim() || totalMaxDraft.trim())
-  const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.productId || appliedFilters.customerId || appliedFilters.employeeId || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.totalMin || appliedFilters.totalMax)
-  const applyFilters = () => { setAppliedFilters({ search: searchDraft.trim(), productId: productIdDraft, customerId: customerIdDraft, employeeId: employeeIdDraft, dateFrom: dateFromDraft, dateTo: dateToDraft, totalMin: totalMinDraft.trim(), totalMax: totalMaxDraft.trim() }); setFiltersOpen(false) }
-  const clearFilters = () => { setSearchDraft(''); setProductIdDraft(''); setCustomerIdDraft(''); setEmployeeIdDraft(''); setDateFromDraft(''); setDateToDraft(''); setTotalMinDraft(''); setTotalMaxDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
+  const hasDraftFilters = Boolean(searchDraft.trim() || productIdDraft !== '' || customerIdDraft !== '' || employeeIdDraft !== '' || dateFromDraft || dateToDraft || totalMinDraft.trim() || totalMaxDraft.trim() || statusDraft)
+  const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.productId || appliedFilters.customerId || appliedFilters.employeeId || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.totalMin || appliedFilters.totalMax || appliedFilters.status)
+  const applyFilters = () => { setPage(1); setAppliedFilters({ search: searchDraft.trim(), productId: productIdDraft, customerId: customerIdDraft, employeeId: employeeIdDraft, dateFrom: dateFromDraft, dateTo: dateToDraft, totalMin: totalMinDraft.trim(), totalMax: totalMaxDraft.trim(), status: statusDraft || undefined }); setFiltersOpen(false) }
+  const clearFilters = () => { setPage(1); setSearchDraft(''); setProductIdDraft(''); setCustomerIdDraft(''); setEmployeeIdDraft(''); setDateFromDraft(''); setDateToDraft(''); setTotalMinDraft(''); setTotalMaxDraft(''); setStatusDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
 
   const openSaleDetails = async (saleId: number) => {
     setSelectedSaleId(saleId)
@@ -541,33 +559,32 @@ export function SalesPage() {
     setDetailError(null)
   }
 
-  const requestSaleDeletion = (sale: Sale) => {
-    setDeleteTarget(sale)
-    setDeleteError(null)
+  const requestSaleCancellation = (sale: Sale) => {
+    setCancelTarget(sale)
+    setCancelError(null)
   }
 
-  const confirmSaleDeletion = async () => {
-    if (deleteTarget === null) return
+  const confirmSaleCancellation = async () => {
+    if (cancelTarget === null) return
 
-    const saleId = deleteTarget.id
-    setDeletingSaleId(saleId)
-    setDeleteError(null)
+    const saleId = cancelTarget.id
+    setCancellingSaleId(saleId)
+    setCancelError(null)
     try {
-      await deleteSale(saleId)
-      setSales((current) => current.filter((sale) => sale.id !== saleId))
-      setDeleteTarget(null)
-      setFeedback(`Venda #${saleId} excluída com sucesso.`)
-      if (selectedSaleId === saleId) closeDetails()
+      const cancelled = await cancelSale(saleId, cancelTarget.motivo_cancelamento ?? undefined)
+      setSales((current) => current.map((sale) => sale.id === saleId ? cancelled : sale))
+      setCancelTarget(null)
+      setFeedback(`Venda #${saleId} cancelada com sucesso.`)
+      if (selectedSaleId === saleId) setSelectedSale(cancelled)
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
-        setSales((current) => current.filter((sale) => sale.id !== saleId))
-        setDeleteTarget(null)
+        setCancelTarget(null)
         setFeedback(`A venda #${saleId} já não estava disponível. A lista foi atualizada.`)
       } else {
-        setDeleteError(getApiErrorMessage(error, 'Não foi possível excluir a venda. Tente novamente.'))
+        setCancelError(getApiErrorMessage(error, 'Não foi possível cancelar a venda. Tente novamente.'))
       }
     } finally {
-      setDeletingSaleId(null)
+      setCancellingSaleId(null)
     }
   }
 
@@ -580,7 +597,7 @@ export function SalesPage() {
       {feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}
       <section className="filter-toolbar" aria-label="Filtros de vendas">
         <SearchInput value={searchDraft} onChange={setSearchDraft} onSearch={(value) => setAppliedFilters((current) => { const search = value.trim(); if (current.search === search) return current; const { search: _search, ...filters } = current; return search ? { ...filters, search } : filters })} onClear={() => setSearchDraft('')} label="Pesquisar vendas" customizationKey="sales.search_input" customizationPage="sales" />
-        <FilterMenu activeCount={[appliedFilters.productId, appliedFilters.customerId, appliedFilters.employeeId, appliedFilters.dateFrom, appliedFilters.dateTo, appliedFilters.totalMin, appliedFilters.totalMax].filter(Boolean).length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
+        <FilterMenu activeCount={[appliedFilters.productId, appliedFilters.customerId, appliedFilters.employeeId, appliedFilters.dateFrom, appliedFilters.dateTo, appliedFilters.totalMin, appliedFilters.totalMax, appliedFilters.status].filter(Boolean).length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
           <label className="filter-field">Produto<select value={productIdDraft} onChange={(event) => setProductIdDraft(event.target.value ? Number(event.target.value) : '')}><option value="">Todos os produtos</option>{filterProducts.map((product) => <option value={product.id} key={product.id}>{product.nome}</option>)}</select></label>
           <label className="filter-field">Cliente<select value={customerIdDraft} onChange={(event) => setCustomerIdDraft(event.target.value ? Number(event.target.value) : '')}><option value="">Todos os clientes</option>{filterCustomers.map((customer) => <option value={customer.id} key={customer.id}>{customer.nome}</option>)}</select></label>
           <label className="filter-field">Funcionário<select value={employeeIdDraft} onChange={(event) => setEmployeeIdDraft(event.target.value ? Number(event.target.value) : '')}><option value="">Todos os funcionários</option>{filterEmployees.map((employee) => <option value={employee.id} key={employee.id}>{employee.nome_completo}</option>)}</select></label>
@@ -588,21 +605,23 @@ export function SalesPage() {
           <label className="filter-field">Data final<input type="date" value={dateToDraft} onChange={(event) => setDateToDraft(event.target.value)} /></label>
           <label className="filter-field">Total mínimo<input type="number" min="0" step="0.01" value={totalMinDraft} onChange={(event) => setTotalMinDraft(event.target.value)} /></label>
           <label className="filter-field">Total máximo<input type="number" min="0" step="0.01" value={totalMaxDraft} onChange={(event) => setTotalMaxDraft(event.target.value)} /></label>
+          <label className="filter-field">Status<select value={statusDraft} onChange={(event) => setStatusDraft(event.target.value as SaleStatus | '')}><option value="">Todos</option><option value="CONCLUIDA">Concluídas</option><option value="CANCELADA">Canceladas</option></select></label>
         </FilterMenu>
       </section>
       {loading || optionsLoading ? <LoadingState label="Carregando vendas..." /> : error ? <ErrorState description={error} onRetry={() => void loadSales()} /> : sales.length === 0 ? (
         <div className="data-card sales-empty-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhuma venda registrada ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie sua primeira venda para começar o histórico operacional.'} />{!hasAppliedFilters ? <a className="button button-primary" href="/sales/new">Criar nova venda</a> : null}</div>
       ) : (
-        <div className="sales-list" {...tableCustomization}>
-          {sales.map((sale) => <article className="sale-list-card" key={sale.id}><div className="sale-list-header"><div><span className="sale-list-kicker">Venda</span><strong>#{sale.id}</strong></div><span className="sale-list-date">{formatDate(sale.data_venda)}</span></div><dl className="sale-list-meta"><div><dt>Produto</dt><dd className="sale-list-product">{saleProductLabel(sale)}</dd></div><div><dt>Valor Total</dt><dd className="sale-list-total">{formatMoney(sale.total)}</dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div></dl><div className="sale-list-actions"><button className="button button-secondary sale-detail-button" type="button" onClick={() => void openSaleDetails(sale.id)}>Ver detalhes</button><button className="button button-danger sale-delete-button" type="button" onClick={() => requestSaleDeletion(sale)}>Excluir venda</button></div></article>)}
-        </div>
+        <><div className="sales-list" {...tableCustomization}>
+          {sales.map((sale) => { const saleStatus = sale.status ?? 'CONCLUIDA'; return <article className="sale-list-card" key={sale.id}><div className="sale-list-header"><div><span className="sale-list-kicker">Venda</span><strong>#{sale.id}</strong></div><div><span className={`status-badge ${saleStatus === 'CANCELADA' ? 'status-badge-inactive' : 'status-badge-active'}`}>{saleStatus === 'CANCELADA' ? 'Cancelada' : 'Concluída'}</span><span className="sale-list-date">{formatDate(sale.data_venda)}</span></div></div><dl className="sale-list-meta"><div><dt>Produto</dt><dd className="sale-list-product">{saleProductLabel(sale)}</dd></div><div><dt>Valor Total</dt><dd className="sale-list-total">{formatMoney(sale.total)}</dd></div><div><dt>Cliente</dt><dd>{sale.cliente.nome}</dd></div><div><dt>Funcionário</dt><dd>{sale.funcionario.nome_completo}</dd></div></dl><div className="sale-list-actions"><button className="button button-secondary sale-detail-button" type="button" onClick={() => void openSaleDetails(sale.id)}>Ver detalhes</button>{saleStatus === 'CONCLUIDA' ? <button className="button button-danger sale-delete-button" type="button" onClick={() => requestSaleCancellation(sale)}>Cancelar venda</button> : null}</div></article> })}
+        </div><PaginationControls meta={pagination} onPageChange={setPage} /></>
       )}
-      {selectedSaleId !== null ? <Modal title={`Detalhes da venda #${selectedSaleId}`} description="Os preços abaixo são os valores históricos retornados pelo backend." size="large" onClose={closeDetails}>{detailLoading ? <LoadingState label="Carregando detalhes..." /> : detailError ? <ErrorState description={detailError} onRetry={() => void openSaleDetails(selectedSaleId)} /> : selectedSale ? <SaleDetails sale={selectedSale} onDelete={() => { requestSaleDeletion(selectedSale); closeDetails() }} /> : null}</Modal> : null}
-      {deleteTarget ? <Modal title={`Excluir venda #${deleteTarget.id}?`} description="Esta ação removerá a venda e todos os itens associados a ela. Clientes, funcionários e produtos não serão excluídos." onClose={() => setDeleteTarget(null)}>
-        {deleteError ? <FeedbackBanner kind="error" message={deleteError} /> : null}
+      {selectedSaleId !== null ? <Modal title={`Detalhes da venda #${selectedSaleId}`} description="Os preços abaixo são os valores históricos retornados pelo backend." size="large" onClose={closeDetails}>{detailLoading ? <LoadingState label="Carregando detalhes..." /> : detailError ? <ErrorState description={detailError} onRetry={() => void openSaleDetails(selectedSaleId)} /> : selectedSale ? <SaleDetails sale={selectedSale} onCancel={() => { requestSaleCancellation(selectedSale); closeDetails() }} /> : null}</Modal> : null}
+      {cancelTarget ? <Modal title={`Cancelar venda #${cancelTarget.id}?`} description="A venda e seus itens serão preservados no histórico. Esta operação marcará a venda como cancelada." onClose={() => setCancelTarget(null)}>
+        {cancelError ? <FeedbackBanner kind="error" message={cancelError} /> : null}
+        <label className="form-field"><span>Motivo (opcional)</span><textarea maxLength={500} onChange={(event) => setCancelTarget((current) => current ? { ...current, motivo_cancelamento: event.target.value } : current)} value={cancelTarget.motivo_cancelamento ?? ''} /></label>
         <div className="confirm-actions">
-          <button className="button button-secondary" type="button" onClick={() => setDeleteTarget(null)} disabled={deletingSaleId !== null}>Cancelar</button>
-          <button className="button button-danger" type="button" onClick={() => void confirmSaleDeletion()} disabled={deletingSaleId !== null}>{deletingSaleId !== null ? 'Excluindo...' : 'Excluir venda'}</button>
+          <button className="button button-secondary" type="button" onClick={() => setCancelTarget(null)} disabled={cancellingSaleId !== null}>Voltar</button>
+          <button className="button button-danger" type="button" onClick={() => void confirmSaleCancellation()} disabled={cancellingSaleId !== null}>{cancellingSaleId !== null ? 'Cancelando...' : 'Cancelar venda'}</button>
         </div>
       </Modal> : null}
     </div>

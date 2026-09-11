@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import Field, model_validator
 
@@ -65,4 +65,6 @@ class FuncionarioRead(ReadModel):
     rg: str | None = None
     data_nascimento: date
     ativo: bool
+    created_at: datetime
+    updated_at: datetime
     campos_personalizados: list[CustomFieldValueRead] = Field(default_factory=list)

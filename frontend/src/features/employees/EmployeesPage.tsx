@@ -8,15 +8,18 @@ import { FilterMenu } from '../../components/FilterMenu'
 import { uniqueFilterOptions } from '../../components/filterOptions'
 import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
+import { PaginationControls } from '../../components/PaginationControls'
 import { PageHeader } from '../../components/PageHeader'
 import { SearchInput } from '../../components/SearchInput'
 import { getApiErrorMessage } from '../../services/httpClient'
+import { getPaginationMeta, type PaginationMeta } from '../../types/pagination'
 import { CustomFieldDetails, CustomFieldFields } from '../customFields/CustomFieldFields'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import { createEmployee, deleteEmployee, getEmployee, listEmployees, updateEmployee } from './api'
 import type { Employee, EmployeePayload } from './types'
 
 const emptyEmployee: EmployeePayload = { nome_completo: '', cidade: '', estado: '', rua: '', numero: '', complemento: '', cpf: '', rg: '', data_nascimento: '' }
+const PAGE_SIZE = 20
 
 function EmployeeForm({ initialValue, saving, onCancel, onSave }: { initialValue: EmployeePayload; saving: boolean; onCancel: () => void; onSave: (payload: EmployeePayload) => void }) {
   const [form, setForm] = useState({ ...initialValue, complemento: initialValue.complemento ?? '', rg: initialValue.rg ?? '' })
@@ -62,6 +65,8 @@ export function EmployeesPage() {
   const [appliedCity, setAppliedCity] = useState('')
   const [appliedState, setAppliedState] = useState('')
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'active' | 'inactive'>('all')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, page_size: PAGE_SIZE, total: 0, total_pages: 0 })
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
   const [modal, setModal] = useState<'create' | 'edit' | 'view' | null>(null)
@@ -80,18 +85,16 @@ export function EmployeesPage() {
     setLoading(true)
     setError(null)
     const active = appliedStatus === 'all' ? undefined : appliedStatus === 'active'
-    const hasLocationFilter = Boolean(appliedCity || appliedState)
-    const options = { active, city: appliedCity, state: appliedState }
+    const options = { active, city: appliedCity, state: appliedState, page, pageSize: PAGE_SIZE }
     try {
-      const employeesRequest = appliedStatus === 'inactive' || hasLocationFilter
-        ? listEmployees(active === true, appliedSearch, options)
-        : listEmployees(active === true, appliedSearch)
-      const [employeeList, optionList] = await Promise.all([employeesRequest, listEmployees(false)])
+      const employeesRequest = listEmployees(active === true, appliedSearch, options)
+      const [employeeList, optionList] = await Promise.all([employeesRequest, listEmployees(false, '', { page: 1, pageSize: 100 })])
       if (requestId !== loadRequestId.current) return
       setEmployees(employeeList)
       setFilterEmployees(optionList)
+      setPagination(getPaginationMeta(employeeList))
     } catch (loadError) { if (requestId === loadRequestId.current) setError(getApiErrorMessage(loadError, 'Não foi possível carregar os funcionários.')) } finally { if (requestId === loadRequestId.current) setLoading(false) }
-  }, [appliedCity, appliedSearch, appliedState, appliedStatus])
+  }, [appliedCity, appliedSearch, appliedState, appliedStatus, page])
 
   // oxlint-disable-next-line
   useEffect(() => { void loadEmployees() }, [loadEmployees])
@@ -100,8 +103,8 @@ export function EmployeesPage() {
   const hasAppliedFilters = Boolean(appliedSearch || appliedCity || appliedState || appliedStatus !== 'all')
   const filterCities = useMemo(() => uniqueFilterOptions(filterEmployees.map((employee) => employee.cidade)), [filterEmployees])
   const filterStates = useMemo(() => uniqueFilterOptions(filterEmployees.map((employee) => employee.estado)), [filterEmployees])
-  const applyFilters = () => { setAppliedSearch(searchDraft.trim()); setAppliedCity(cityDraft); setAppliedState(stateDraft); setAppliedStatus(statusDraft); setFiltersOpen(false) }
-  const clearFilters = () => { setSearchDraft(''); setAppliedSearch(''); setCityDraft(''); setAppliedCity(''); setStateDraft(''); setAppliedState(''); setStatusDraft('all'); setAppliedStatus('all'); setFiltersOpen(false) }
+  const applyFilters = () => { setPage(1); setAppliedSearch(searchDraft.trim()); setAppliedCity(cityDraft); setAppliedState(stateDraft); setAppliedStatus(statusDraft); setFiltersOpen(false) }
+  const clearFilters = () => { setPage(1); setSearchDraft(''); setAppliedSearch(''); setCityDraft(''); setAppliedCity(''); setStateDraft(''); setAppliedState(''); setStatusDraft('all'); setAppliedStatus('all'); setFiltersOpen(false) }
 
   const saveEmployee = async (payload: EmployeePayload) => {
     setSaving(true); setFeedback(null)
@@ -141,7 +144,7 @@ export function EmployeesPage() {
           <label className="filter-field">Status<select value={statusDraft} onChange={(event) => setStatusDraft(event.target.value as 'all' | 'active' | 'inactive')}><option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option></select></label>
         </FilterMenu>
       </section>
-      {loading ? <LoadingState label="Carregando funcionários..." /> : error ? <ErrorState description={error} onRetry={() => void loadEmployees()} /> : employees.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum funcionário cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro funcionário responsável pela operação.'} /></div> : <div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Funcionário</th><th>Status</th><th>CPF</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}><td className="data-primary">{employee.nome_completo}<span className="data-secondary">ID {employee.id}</span></td><td><span className={`status-badge ${employee.ativo ? 'status-badge-active' : 'status-badge-inactive'}`}>{employee.ativo ? 'Ativo' : 'Inativo'}</span></td><td>{employee.cpf}</td><td>{employee.cidade} / {employee.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openEmployeeDetails(employee)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(employee); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(employee)}>Excluir</button></div></td></tr>)}</tbody></table></div>}
+      {loading ? <LoadingState label="Carregando funcionários..." /> : error ? <ErrorState description={error} onRetry={() => void loadEmployees()} /> : employees.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum funcionário cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro funcionário responsável pela operação.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Funcionário</th><th>Status</th><th>CPF</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}><td className="data-primary">{employee.nome_completo}<span className="data-secondary">ID {employee.id}</span></td><td><span className={`status-badge ${employee.ativo ? 'status-badge-active' : 'status-badge-inactive'}`}>{employee.ativo ? 'Ativo' : 'Inativo'}</span></td><td>{employee.cpf}</td><td>{employee.cidade} / {employee.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openEmployeeDetails(employee)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(employee); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(employee)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
     {modal === 'view' && selected ? <Modal title="Detalhes do funcionário" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do funcionário..." /> : selectedDetails ? <EmployeeDetails employee={selectedDetails} /> : null}</Modal> : null}
     {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar funcionário' : 'Novo funcionário'} description="RG e complemento são opcionais." onClose={() => setModal(null)}><EmployeeForm initialValue={formValue} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveEmployee(payload)} /></Modal> : null}
     {deleteTarget ? <ConfirmDialog title="Excluir funcionário?" description={`O cadastro de ${deleteTarget.nome_completo} será removido. Vendas relacionadas impedem a exclusão.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeEmployee()} /> : null}

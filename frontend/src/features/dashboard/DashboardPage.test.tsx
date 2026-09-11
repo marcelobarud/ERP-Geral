@@ -4,48 +4,21 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '../../services/httpClient'
-import * as customerApi from '../customers/api'
-import * as employeeApi from '../employees/api'
-import * as productApi from '../products/api'
-import * as salesApi from '../sales/api'
-import * as supplierApi from '../suppliers/api'
-import type { Customer } from '../customers/types'
-import type { Employee } from '../employees/types'
-import type { Product } from '../products/types'
-import type { Sale } from '../sales/types'
-import type { Supplier } from '../suppliers/types'
+import * as dashboardApi from './api'
 import { DashboardPage } from './DashboardPage'
 
-vi.mock('../customers/api', () => ({ listCustomers: vi.fn() }))
-vi.mock('../employees/api', () => ({ listEmployees: vi.fn() }))
-vi.mock('../products/api', () => ({ listProducts: vi.fn() }))
-vi.mock('../sales/api', () => ({ listSales: vi.fn() }))
-vi.mock('../suppliers/api', () => ({ listSuppliers: vi.fn() }))
-
-const customer = {} as Customer
-const employee = {} as Employee
-const product = {} as Product
-const supplier = {} as Supplier
-const sale = {} as Sale
+vi.mock('./api', () => ({ getDashboardSummary: vi.fn() }))
 
 describe('DashboardPage', () => {
   afterEach(() => cleanup())
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(customerApi.listCustomers).mockResolvedValue([])
-    vi.mocked(employeeApi.listEmployees).mockResolvedValue([])
-    vi.mocked(productApi.listProducts).mockResolvedValue([])
-    vi.mocked(salesApi.listSales).mockResolvedValue([])
-    vi.mocked(supplierApi.listSuppliers).mockResolvedValue([])
+    vi.mocked(dashboardApi.getDashboardSummary).mockResolvedValue({ customers: 0, products: 0, suppliers: 0, employees: 0, sales: 0 })
   })
 
   it('loads and renders operational counts and all shortcuts', async () => {
-    vi.mocked(customerApi.listCustomers).mockResolvedValue([customer, customer])
-    vi.mocked(employeeApi.listEmployees).mockResolvedValue([employee, employee, employee, employee])
-    vi.mocked(productApi.listProducts).mockResolvedValue([product, product, product])
-    vi.mocked(salesApi.listSales).mockResolvedValue([sale, sale, sale, sale, sale])
-    vi.mocked(supplierApi.listSuppliers).mockResolvedValue([supplier])
+    vi.mocked(dashboardApi.getDashboardSummary).mockResolvedValue({ customers: 2, products: 3, suppliers: 1, employees: 4, sales: 5 })
     const onNavigate = vi.fn()
 
     render(<DashboardPage onNavigate={onNavigate} />)
@@ -64,11 +37,7 @@ describe('DashboardPage', () => {
   })
 
   it('shows a consistent loading state while list requests are pending', () => {
-    vi.mocked(customerApi.listCustomers).mockImplementation(() => new Promise<never>(() => {}))
-    vi.mocked(employeeApi.listEmployees).mockImplementation(() => new Promise<never>(() => {}))
-    vi.mocked(productApi.listProducts).mockImplementation(() => new Promise<never>(() => {}))
-    vi.mocked(salesApi.listSales).mockImplementation(() => new Promise<never>(() => {}))
-    vi.mocked(supplierApi.listSuppliers).mockImplementation(() => new Promise<never>(() => {}))
+    vi.mocked(dashboardApi.getDashboardSummary).mockImplementation(() => new Promise<never>(() => {}))
 
     render(<DashboardPage onNavigate={vi.fn()} />)
 
@@ -86,16 +55,16 @@ describe('DashboardPage', () => {
   })
 
   it('shows a retryable message when one list request fails', async () => {
-    vi.mocked(productApi.listProducts).mockRejectedValue(new ApiError(503, 'Backend indisponível.'))
+    vi.mocked(dashboardApi.getDashboardSummary).mockRejectedValue(new ApiError(503, 'Backend indisponível.'))
     render(<DashboardPage onNavigate={vi.fn()} />)
 
     expect(await screen.findByText('Algumas informações não puderam ser carregadas. Tente novamente.')).toBeTruthy()
-    expect(screen.getByText('—')).toBeTruthy()
+    expect(screen.getAllByText('—')).toHaveLength(5)
 
-    vi.mocked(productApi.listProducts).mockResolvedValue([])
+    vi.mocked(dashboardApi.getDashboardSummary).mockResolvedValue({ customers: 0, products: 0, suppliers: 0, employees: 0, sales: 0 })
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
 
-    await waitFor(() => expect(productApi.listProducts).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(dashboardApi.getDashboardSummary).toHaveBeenCalledTimes(2))
     expect(await screen.findByText('Nenhum produto cadastrado')).toBeTruthy()
   })
 

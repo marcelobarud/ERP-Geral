@@ -5,7 +5,7 @@ comercial de até 10 dígitos inteiros. Quantidades usam ``NUMERIC(12, 3)`` para
 permitir itens fracionáveis sem usar ponto flutuante binário.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -25,6 +25,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 class Cliente(Base):
     __tablename__ = "clientes"
 
@@ -35,6 +39,12 @@ class Cliente(Base):
     rua: Mapped[str] = mapped_column(String(255), nullable=False)
     numero: Mapped[str] = mapped_column(String(20), nullable=False)
     complemento: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
 
     vendas: Mapped[list["Venda"]] = relationship(
         back_populates="cliente",
@@ -56,6 +66,12 @@ class Fornecedor(Base):
     numero: Mapped[str] = mapped_column(String(20), nullable=False)
     cnpj: Mapped[str] = mapped_column(String(18), nullable=False)
     complemento: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
 
     produtos: Mapped[list["Produto"]] = relationship(
         back_populates="fornecedor",
@@ -84,6 +100,12 @@ class Funcionario(Base):
         nullable=False,
         default=True,
         server_default=true(),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
     )
 
     vendas: Mapped[list["Venda"]] = relationship(
@@ -121,6 +143,12 @@ class Produto(Base):
         nullable=False,
         index=True,
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
+    )
 
     fornecedor: Mapped[Fornecedor] = relationship(back_populates="produtos")
     itens: Mapped[list["VendaItem"]] = relationship(
@@ -131,6 +159,12 @@ class Produto(Base):
 
 class Venda(Base):
     __tablename__ = "vendas"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('CONCLUIDA', 'CANCELADA')",
+            name="ck_vendas_status_valido",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     cliente_id: Mapped[int] = mapped_column(
@@ -146,6 +180,22 @@ class Venda(Base):
     data_venda: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="CONCLUIDA", server_default="CONCLUIDA"
+    )
+    cancelada_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    motivo_cancelamento: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
+    observacao: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
     )
 
     cliente: Mapped[Cliente] = relationship(back_populates="vendas")
@@ -192,6 +242,12 @@ class VendaItem(Base):
         ForeignKey("fornecedores.id"),
         nullable=False,
         index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now
     )
 
     venda: Mapped[Venda] = relationship(back_populates="itens")

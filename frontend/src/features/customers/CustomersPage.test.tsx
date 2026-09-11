@@ -109,10 +109,10 @@ describe('CustomersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Estado' }), { target: { value: 'SP' } })
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
 
-    await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith({ search: 'Ana', city: 'São Paulo', state: 'SP' }))
+    await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith(expect.objectContaining({ search: 'Ana', city: 'São Paulo', state: 'SP', page: 1, pageSize: 20 })))
     expect(screen.queryByRole('dialog', { name: 'Filtros detalhados' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /Filtros \(2\)/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
-    await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith({}))
+    await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 })

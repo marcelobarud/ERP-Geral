@@ -799,6 +799,29 @@
   color: var(--red);
 }
 
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface);
+}
+
+.pagination-summary {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pagination-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .modal-backdrop {
   display: grid;
   position: fixed;
@@ -2380,6 +2403,16 @@ a,
 
   .filter-actions .button {
     width: 100%;
+  }
+
+  .pagination-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .appearance-options {

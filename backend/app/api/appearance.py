@@ -121,12 +121,17 @@ def _page_response(
     )
 
 
-def appearance_or_default(db: Session) -> AppearanceSettings:
+def appearance_or_default(
+    db: Session,
+    *,
+    persist: bool = True,
+) -> AppearanceSettings:
     settings = db.get(AppearanceSettings, 1)
     if settings is None:
         settings = AppearanceSettings(**DEFAULTS)
-        db.add(settings)
-        db.flush()
+        if persist:
+            db.add(settings)
+            db.flush()
     return settings
 
 
@@ -203,10 +208,7 @@ def detect_logo_content_type(body: bytes) -> str | None:
 
 @router.get("", response_model=AppearanceRead)
 def get_appearance(db: Session = Depends(get_db_session)) -> AppearanceSettings:
-    settings = appearance_or_default(db)
-    db.commit()
-    db.refresh(settings)
-    return settings
+    return appearance_or_default(db, persist=False)
 
 
 @router.patch("", response_model=AppearanceRead)
@@ -214,7 +216,7 @@ def update_appearance(
     payload: AppearancePatch,
     db: Session = Depends(get_db_session),
 ) -> AppearanceSettings:
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=True)
     for field_name, value in payload.model_dump(exclude_unset=True).items():
         setattr(settings, field_name, value)
     try:
@@ -228,7 +230,7 @@ def update_appearance(
 
 @router.post("/reset", response_model=AppearanceRead)
 def reset_appearance(db: Session = Depends(get_db_session)) -> AppearanceSettings:
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=True)
     previous_logo = settings.logo_url
     for field_name, value in DEFAULTS.items():
         if field_name != "id":
@@ -248,7 +250,7 @@ def get_page_appearance(
     page: PageId,
     db: Session = Depends(get_db_session),
 ) -> PageAppearanceRead:
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=False)
     override = (
         db.query(PageAppearanceSettings)
         .filter(PageAppearanceSettings.pagina == page)
@@ -263,7 +265,7 @@ def update_page_appearance(
     payload: PageAppearancePatch,
     db: Session = Depends(get_db_session),
 ) -> PageAppearanceRead:
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=True)
     override = (
         db.query(PageAppearanceSettings)
         .filter(PageAppearanceSettings.pagina == page)
@@ -288,7 +290,7 @@ def reset_page_appearance(
     page: PageId,
     db: Session = Depends(get_db_session),
 ) -> PageAppearanceRead:
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=False)
     override = (
         db.query(PageAppearanceSettings)
         .filter(PageAppearanceSettings.pagina == page)
@@ -415,7 +417,7 @@ async def upload_logo(
     filename = f"{uuid.uuid4().hex}.{extension}"
     destination = LOGO_STORAGE_DIR / filename
     destination.write_bytes(normalized_body)
-    settings = appearance_or_default(db)
+    settings = appearance_or_default(db, persist=True)
     previous_logo = settings.logo_url
     settings.logo_url = f"/uploads/branding/{filename}"
     try:

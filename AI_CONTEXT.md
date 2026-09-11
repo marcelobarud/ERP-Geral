@@ -48,7 +48,14 @@ operacionais. A Fase 18 concluiu a auditoria e estabilização das Fases 11 a 17
 com validação estática, frontend, UI responsiva, OpenAPI, segurança e
 PostgreSQL real. A execução PostgreSQL final foi realizada externamente e
 confirmada como aprovada pelo usuário em 2026-08-22. O Plano 03 foi concluído
-com três commits locais separados; o Plano 04 não foi iniciado.
+com três commits locais separados. A Fase 0 do Plano 04 foi concluída em
+2026-09-11 com a migration `20260911_0002`: vendas agora possuem ciclo de
+vida concluída/cancelada, observação, cancelamento não destrutivo e timestamps
+operacionais; as cinco listagens principais usam paginação backend-driven; o
+dashboard usa agregação no backend; e leituras de aparência não criam mais
+configuração persistida como efeito colateral. O frontend foi validado com 74
+testes e build aprovado. A suíte PostgreSQL não foi executada nesta máquina
+porque `TEST_DATABASE_URL` não estava configurada.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de
@@ -199,9 +206,10 @@ Campos obrigatórios:
 - ID do funcionário
 - Data da venda
 
-Exclusão explícita de uma venda remove a própria venda e todos os seus itens
-da venda. Essa operação não remove os cadastros raiz referenciados: cliente,
-funcionário, produto e fornecedor permanecem existentes.
+Vendas são criadas como `CONCLUIDA` e podem ser marcadas como `CANCELADA`.
+O cancelamento registra data e motivo opcional e preserva a Venda, os
+VendaItens e os cadastros raiz referenciados. A API pública não oferece mais
+exclusão física de vendas consolidadas.
 
 ### Itens da venda
 
@@ -257,6 +265,10 @@ Para os cadastros, considerar inicialmente as operações:
 - editar;
 - excluir.
 
+As listagens de clientes, fornecedores, funcionários, produtos e vendas são
+paginadas no backend e retornam `items`, `page`, `page_size`, `total` e
+`total_pages`, preservando os filtros existentes.
+
 O design deve ser:
 
 - genérico e adaptável a lojas em geral;
@@ -297,6 +309,11 @@ O design deve ser:
 - data_venda deve utilizar tipo apropriado para data e hora da operação.
 - No fluxo de inclusão de um item, o backend deve consultar o preco_venda
   atual do produto e persistir esse valor como preco_unitario.
+- Vendas novas devem iniciar com status `CONCLUIDA`; cancelamento não deve
+  apagar a venda nem seus itens.
+- Entidades operacionais principais devem manter `created_at` e `updated_at`.
+- A leitura de configurações de aparência não deve persistir defaults como
+  efeito colateral.
 - O total de cada item deve ser derivado de quantidade multiplicada por
   preco_unitario.
 - O total da venda deve ser derivado da soma dos itens.
@@ -550,6 +567,9 @@ decisões arquiteturais registradas aqui.
   em tempo real implementadas e validadas.
 - [x] Plano 03 — Fase 3: campos personalizados isolados por cadastro,
   validação tipada, formulários dinâmicos e detalhes concluídos.
+- [x] Plano 04 — Fase 0: fundação transacional, cancelamento não destrutivo,
+  timestamps, paginação backend-driven, dashboard agregado e observação em
+  vendas.
 - [ ] Funcionalidades fora da V1 permanecem no backlog futuro.
 
 ## 13. Comandos
@@ -571,9 +591,9 @@ Data: 2026-08-23
 
 - Ambiguidades do modelo resolvidas: categoria, funcionário responsável,
   histórico de preço, totais, exclusões e tipos mínimos de dados.
-- Regra de exclusão de vendas formalizada: excluir uma Venda remove somente a
-  Venda e seus VendaItens; Cliente, Funcionário, Produto e Fornecedor
-  permanecem preservados.
+- Regra transacional atualizada na Fase 0: o fluxo público cancela vendas e
+  preserva a Venda e seus VendaItens; a exclusão física de venda não é mais
+  oferecida.
 - Obrigatoriedade, opcionalidade e nulabilidade dos campos da V1 formalizadas;
   RG permanece opcional.
 - Modelo de Vendas, relacionamentos e regras de domínio atualizados para
@@ -596,6 +616,9 @@ Data: 2026-08-23
   leitura, eager loading sem N+1, listagem na ordem Produto/Valor Total/
   Cliente/Funcionário, contagem de múltiplos produtos e detalhe completo dos
   itens.
+- Fase 0 do Plano 04 implementada com a migration `20260911_0002`, timestamps,
+  cancelamento não destrutivo, observação em vendas, paginação backend-driven,
+  dashboard agregado e leitura de aparência sem persistência implícita.
 - A validação local da Fase 14 ficou em `27 passed, 36 skipped, 1 warning` no
   backend e `34 passed` no frontend; os skips ocorreram porque
   `TEST_DATABASE_URL` não estava definida. Ruff, lint, typecheck e build
