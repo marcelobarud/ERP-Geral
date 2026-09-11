@@ -103,6 +103,9 @@ caixa previsto versus realizado.
 Também estão disponíveis relatórios agregados de comercial, compras, estoque
 e financeiro, além do dashboard ERP, sempre calculados no backend.
 
+A migration `20260911_0010` adiciona a configuração central dos módulos
+Comercial, Compras, Estoque, Financeiro e Relatórios.
+
 ## Execução local
 
 Backend, em um terminal:

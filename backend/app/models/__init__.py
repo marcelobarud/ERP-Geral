@@ -51,6 +51,7 @@ from app.models.inventory import (
     InventarioEstoqueItem,
     MovimentacaoEstoque,
 )
+from app.models.modules import ModuloERP
 from app.models.purchases import (
     PedidoCompra,
     PedidoCompraItem,
@@ -94,6 +95,7 @@ __all__ = [
     "TituloFinanceiro",
     "ParcelaFinanceira",
     "LiquidacaoFinanceira",
+    "ModuloERP",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

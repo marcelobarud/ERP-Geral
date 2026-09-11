@@ -348,6 +348,7 @@ EXPECTED_COLUMNS = {
         "observacao",
         "created_at",
     },
+    "modulos_erp": {"id", "codigo", "nome", "ativo", "ordem"},
     "configuracoes_aparencia": {
         "id",
         "nome_sistema",
@@ -505,6 +506,7 @@ def test_only_approved_columns_are_nullable() -> None:
         },
         "parcelas_financeiras": set(),
         "liquidacoes_financeiras": {"observacao"},
+        "modulos_erp": set(),
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",

@@ -1193,7 +1193,7 @@ foi declarada como aprovada nesta máquina.
 
 # 15. Fase 9 — Modularidade por cliente
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona configuração modular do ERP`
 
 ## Objetivo
@@ -1244,6 +1244,17 @@ Documentar regra:
 - extensão específica somente para demanda realmente exclusiva.
 
 Não criar branches permanentes por cliente como arquitetura de produto.
+
+## Resultado da execução
+
+Adicionado o catálogo central `modulos_erp` com os módulos Comercial, Compras,
+Estoque, Financeiro e Relatórios. A API permite consultar módulos ativos e
+alterar sua visibilidade com permissão administrativa; a autorização das rotas
+continua sendo aplicada independentemente da visibilidade na interface.
+
+Validação local: `53 passed`, `65 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff, OpenAPI e validações estruturais aprovados. A suíte PostgreSQL real não
+foi declarada como aprovada nesta máquina.
 
 ---
 

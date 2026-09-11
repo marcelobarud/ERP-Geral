@@ -15,6 +15,7 @@ from app.api.employees import router as employees_router
 from app.api.finance import router as finance_router
 from app.api.health import router as health_router
 from app.api.inventory import router as inventory_router
+from app.api.modules import router as modules_router
 from app.api.products import router as products_router
 from app.api.purchases import router as purchases_router
 from app.api.reports import router as reports_router
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     application.include_router(purchases_router)
     application.include_router(finance_router)
     application.include_router(reports_router)
+    application.include_router(modules_router)
     return application
 
 

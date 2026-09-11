@@ -92,6 +92,11 @@ A Fase 6 do Plano 04 foi concluída em 2026-09-11 com a migration
 compensatória no cancelamento e devoluções parciais/totais aprovadas foram
 adicionadas. A validação local passou com 49 testes e 64 testes PostgreSQL
 ignorados por ausência de `TEST_DATABASE_URL`.
+A Fase 9 do Plano 04 foi concluída em 2026-09-11 com a migration
+`20260911_0010`: configuração central de módulos ativos para Comercial,
+Compras, Estoque, Financeiro e Relatórios foi adicionada. A visibilidade não
+substitui a autorização backend. A validação local passou com 53 testes e 65
+testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
 A Fase 7 do Plano 04 foi concluída em 2026-09-11 com a migration
 `20260911_0009`: categorias financeiras, contas/caixas, títulos a receber e
 pagar, parcelamento, liquidações reversíveis e fluxo previsto versus realizado

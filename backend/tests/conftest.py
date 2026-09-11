@@ -52,8 +52,9 @@ REQUIRED_TABLES = {
     "titulos_financeiros",
     "parcelas_financeiras",
     "liquidacoes_financeiras",
+    "modulos_erp",
 }
-EXPECTED_MIGRATION = "20260911_0009"
+EXPECTED_MIGRATION = "20260911_0010"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
@@ -81,6 +82,7 @@ TEST_DATA_TABLES = (
     "titulos_financeiros",
     "contas_financeiras",
     "categorias_financeiras",
+    "modulos_erp",
     "produtos_fornecedores",
     "categorias_produto",
     "unidades_medida",
