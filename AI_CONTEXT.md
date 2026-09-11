@@ -87,6 +87,11 @@ A Fase 5 do Plano 04 foi concluída em 2026-09-11 com a migration
 idempotentes no estoque e atualização do histórico de custos foram adicionados.
 A validação local passou com 47 testes e 63 testes PostgreSQL ignorados por
 ausência de `TEST_DATABASE_URL`.
+A Fase 6 do Plano 04 foi concluída em 2026-09-11 com a migration
+`20260911_0008`: postagem idempotente de vendas no estoque, reversão
+compensatória no cancelamento e devoluções parciais/totais aprovadas foram
+adicionadas. A validação local passou com 49 testes e 64 testes PostgreSQL
+ignorados por ausência de `TEST_DATABASE_URL`.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de

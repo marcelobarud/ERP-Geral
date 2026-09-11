@@ -58,6 +58,9 @@ def cancel_sale(
     sale.cancelada_em = datetime.now(timezone.utc)
     sale.motivo_cancelamento = payload.motivo
     try:
+        from app.services.sales_stock import reverse_sale_stock
+
+        reverse_sale_stock(db, sale.id, actor_user_id)
         add_audit_log(
             db,
             user_id=actor_user_id,

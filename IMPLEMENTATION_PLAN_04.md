@@ -939,7 +939,7 @@ declarada como aprovada nesta máquina.
 
 # 12. Fase 6 — Integração operacional e devoluções
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: integra vendas compras e estoque`
 
 ## Objetivo
@@ -992,6 +992,18 @@ Toda integração documento → estoque deve ser protegida contra execução dup
 - recebimento gera entrada única;
 - saldo final reconciliado;
 - falha no meio da transação não deixa documento e estoque divergentes.
+
+## Resultado da execução
+
+Implementada a postagem explícita de vendas no estoque com idempotência,
+reversão compensatória automática no cancelamento e devoluções parciais ou
+totais com aprovação. Devoluções aprovadas geram entradas de estoque e a
+quantidade devolvida é limitada ao snapshot vendido. As integrações usam o
+depósito padrão, mantêm os eventos históricos e não apagam movimentos.
+
+Validação local: `49 passed`, `64 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff e validações estruturais aprovados. A suíte PostgreSQL real não foi
+declarada como aprovada nesta máquina.
 
 ---
 

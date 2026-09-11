@@ -45,8 +45,10 @@ REQUIRED_TABLES = {
     "pedido_compra_itens",
     "recebimentos_compra",
     "recebimentos_compra_itens",
+    "devolucoes_venda",
+    "devolucoes_venda_itens",
 }
-EXPECTED_MIGRATION = "20260911_0007"
+EXPECTED_MIGRATION = "20260911_0008"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
@@ -67,6 +69,8 @@ TEST_DATA_TABLES = (
     "recebimentos_compra",
     "pedido_compra_itens",
     "pedidos_compra",
+    "devolucoes_venda_itens",
+    "devolucoes_venda",
     "produtos_fornecedores",
     "categorias_produto",
     "unidades_medida",

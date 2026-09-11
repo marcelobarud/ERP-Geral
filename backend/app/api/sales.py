@@ -9,6 +9,7 @@ from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import Cliente, Funcionario, Produto, Usuario, Venda, VendaItem
 from app.schemas.pagination import PaginationResponse
+from app.schemas.returns import ReturnCreate, ReturnRead
 from app.schemas.sales import VendaCancel, VendaCreate, VendaRead, VendaStatus
 from app.services.pagination import paginate
 from app.services.sales import (
@@ -22,6 +23,14 @@ from app.services.sales import (
     get_sale,
     sale_query,
     sale_to_read,
+)
+from app.services.sales_stock import (
+    SalesStockConflict,
+    approve_return,
+    create_return,
+    get_return,
+    post_sale_to_stock,
+    return_to_read,
 )
 
 router = APIRouter(
@@ -182,3 +191,60 @@ def cancel_sale_endpoint(
             detail="Não foi possível cancelar a venda por conflito de integridade.",
         ) from None
     return sale_to_read(sale)
+
+
+@router.post(
+    "/{sale_id}/post-stock",
+    response_model=VendaRead,
+    dependencies=[Depends(require_permission("sales:create"))],
+)
+def post_sale_stock_endpoint(
+    sale_id: int,
+    db: Session = Depends(get_db_session),
+) -> VendaRead:
+    try:
+        sale = post_sale_to_stock(db, sale_id)
+    except SalesStockConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
+    return sale_to_read(sale)
+
+
+@router.post(
+    "/{sale_id}/returns",
+    response_model=ReturnRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("sales:create"))],
+)
+def create_sale_return_endpoint(
+    sale_id: int,
+    payload: ReturnCreate,
+    db: Session = Depends(get_db_session),
+) -> ReturnRead:
+    try:
+        return return_to_read(create_return(db, sale_id, payload))
+    except SalesStockConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
+
+
+@router.get("/returns/{return_id}", response_model=ReturnRead)
+def get_sale_return_endpoint(
+    return_id: int, db: Session = Depends(get_db_session)
+) -> ReturnRead:
+    record = get_return(db, return_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Devolução não encontrada.")
+    return return_to_read(record)
+
+
+@router.post(
+    "/returns/{return_id}/approve",
+    response_model=ReturnRead,
+    dependencies=[Depends(require_permission("sales:create"))],
+)
+def approve_sale_return_endpoint(
+    return_id: int, db: Session = Depends(get_db_session)
+) -> ReturnRead:
+    try:
+        return return_to_read(approve_return(db, return_id))
+    except SalesStockConflict as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None

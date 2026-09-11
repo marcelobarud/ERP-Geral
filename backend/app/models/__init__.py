@@ -50,6 +50,7 @@ from app.models.purchases import (
     RecebimentoCompra,
     RecebimentoCompraItem,
 )
+from app.models.returns import DevolucaoVenda, DevolucaoVendaItem
 
 __all__ = [
     "Cliente",
@@ -79,6 +80,8 @@ __all__ = [
     "PedidoCompraItem",
     "RecebimentoCompra",
     "RecebimentoCompraItem",
+    "DevolucaoVenda",
+    "DevolucaoVendaItem",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

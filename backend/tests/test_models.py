@@ -5,6 +5,7 @@ from app.models import (
     Cliente,
     ConfiguracaoEstoque,
     DepositoEstoque,
+    DevolucaoVenda,
     Fornecedor,
     Funcionario,
     HistoricoCustoProduto,
@@ -295,6 +296,24 @@ EXPECTED_COLUMNS = {
         "quantidade",
         "custo_efetivo",
     },
+    "devolucoes_venda": {
+        "id",
+        "venda_id",
+        "status",
+        "motivo",
+        "usuario_id",
+        "created_at",
+        "updated_at",
+    },
+    "devolucoes_venda_itens": {
+        "id",
+        "devolucao_id",
+        "venda_item_id",
+        "produto_id",
+        "produto_nome",
+        "quantidade",
+        "preco_unitario",
+    },
     "configuracoes_aparencia": {
         "id",
         "nome_sistema",
@@ -439,6 +458,8 @@ def test_only_approved_columns_are_nullable() -> None:
         "pedido_compra_itens": set(),
         "recebimentos_compra": {"usuario_id", "observacao"},
         "recebimentos_compra_itens": set(),
+        "devolucoes_venda": {"usuario_id"},
+        "devolucoes_venda_itens": set(),
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",
@@ -515,6 +536,7 @@ def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
         InventarioEstoque,
         PedidoCompra,
         RecebimentoCompra,
+        DevolucaoVenda,
     ):
         created_at = model.__table__.c.created_at
         updated_at = model.__table__.c.updated_at

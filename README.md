@@ -92,6 +92,10 @@ A migration `20260911_0007` adiciona pedidos de compra, recebimentos parciais
 ou totais, entradas idempotentes no estoque e atualização do histórico de
 custos após a confirmação do recebimento.
 
+A migration `20260911_0008` integra vendas e devoluções ao estoque: vendas
+podem ser postadas uma única vez, cancelamentos geram reversões compensatórias
+e devoluções aprovadas geram entradas idempotentes.
+
 ## Execução local
 
 Backend, em um terminal:
