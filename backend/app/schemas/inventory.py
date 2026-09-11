@@ -24,6 +24,13 @@ class DepositCreate(APIModel):
     padrao: bool = False
 
 
+class DepositUpdate(APIModel):
+    codigo: str | None = Field(default=None, min_length=1, max_length=40)
+    nome: str | None = Field(default=None, min_length=1, max_length=100)
+    ativo: bool | None = None
+    padrao: bool | None = None
+
+
 class DepositRead(ReadModel):
     id: int
     codigo: str

@@ -979,4 +979,22 @@ recebimentos. Não houve migration nova na fase.
 
 Validação da fase: PostgreSQL específico de compras `1 passed`; suíte backend
 `118 passed`; frontend `77 passed`, lint, typecheck e build aprovados; Ruff e
-`git diff --check` aprovados. A Fase 3 permanece pendente.
+`git diff --check` aprovados. A Fase 3 foi executada na sequência.
+
+## Atualização — Plano 05, Fase 3 concluída em 2026-09-11
+
+A interface de Estoque agora expõe Saldos, Movimentações, Ajustes, Inventários
+e Depósitos. Saldos possuem filtros de depósito, produto, categoria e baixo
+estoque. Movimentações exibem metadados operacionais. Ajustes exigem motivo e
+usam os tipos append-oriented existentes. Inventários permitem contar vários
+produtos, calcular diferenças e confirmar ajustes. Depósitos podem ser
+criados, editados, ativados/inativados e definidos como padrão.
+
+O backend recebeu edição de depósitos e listagem de inventários, sem migration
+nova. O saldo continua calculado a partir dos eventos; a confirmação de
+inventário permanece idempotente. Transferência entre depósitos ficou fora da
+fase por ausência de contrato atual e foi registrada para evolução posterior.
+
+Validação da fase: PostgreSQL específico de estoque `1 passed`; suíte backend
+`118 passed`; frontend `77 passed`, lint, typecheck e build aprovados; Ruff e
+`git diff --check` aprovados. A Fase 4 permanece pendente.

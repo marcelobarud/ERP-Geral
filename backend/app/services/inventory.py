@@ -297,6 +297,14 @@ def get_inventory(db: Session, inventory_id: int) -> InventarioEstoque | None:
     )
 
 
+def list_inventories(db: Session) -> list[InventarioEstoque]:
+    return db.scalars(
+        select(InventarioEstoque)
+        .options(selectinload(InventarioEstoque.itens))
+        .order_by(InventarioEstoque.created_at.desc(), InventarioEstoque.id.desc())
+    ).all()
+
+
 def confirm_inventory(
     db: Session, inventory_id: int, *, user_id: int | None = None
 ) -> InventarioEstoque:

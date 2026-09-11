@@ -21,6 +21,13 @@ describe('navegação comercial', () => {
       '/purchases',
       '/purchases/receipts',
     ])
+    expect(groups.find((group) => group.label === 'Estoque')?.items.map((item) => item.path)).toEqual([
+      '/inventory/balances',
+      '/inventory/movements',
+      '/inventory/adjustments',
+      '/inventory/inventories',
+      '/inventory/deposits',
+    ])
   })
 
   it('resolve as rotas comerciais com descrição própria', () => {
@@ -28,5 +35,6 @@ describe('navegação comercial', () => {
     expect(getRoute('/commercial/orders').label).toBe('Pedidos')
     expect(getRoute('/commercial/returns').description).toContain('devoluções')
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
+    expect(getRoute('/inventory/balances').label).toBe('Saldos')
   })
 })

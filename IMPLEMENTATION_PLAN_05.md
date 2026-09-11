@@ -566,8 +566,8 @@ Nenhum ID fixo.
 
 ## 9. Fase 3 — Estoque completo
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: conclui gestão operacional de estoque`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: conclui gestão operacional de estoque`
 
 ### Objetivo
 
@@ -664,6 +664,26 @@ Não otimizar prematuramente sem medição.
 Se infraestrutura atual permitir com baixo risco, incluir transferência simples entre depósitos.
 
 Caso contrário, registrar para plano posterior.
+
+### Resultado da execução
+
+A Fase 3 foi concluída com navegação para Saldos, Movimentações, Ajustes,
+Inventários e Depósitos. Saldos permitem selecionar depósito, produto,
+categoria e baixo estoque; movimentações exibem data, produto, depósito, tipo,
+quantidade, origem e documento; ajustes exigem motivo e registram entrada ou
+saída manual; inventários permitem contagem de vários produtos, cálculo de
+diferença e confirmação; e depósitos permitem criação, edição, ativação e
+definição do padrão.
+
+O backend recebeu edição de depósitos e listagem de inventários. O saldo
+continua derivado exclusivamente das movimentações, e a confirmação de
+inventário gera ajustes compensatórios idempotentes. Transferência entre
+depósitos permanece registrada para evolução posterior por não haver um
+contrato específico no backend atual.
+
+Validações da fase: teste PostgreSQL de estoque `1 passed`, backend completo
+`118 passed`, frontend `77 passed`, lint, typecheck, build, Ruff e
+`git diff --check` aprovados.
 
 ### Resultado da execução
 

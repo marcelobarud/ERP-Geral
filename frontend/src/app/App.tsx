@@ -14,6 +14,7 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
 import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
+import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -57,6 +58,16 @@ function PageForRoute({
       return <PurchasesPage />
     case '/purchases/receipts':
       return <ReceiptsPage />
+    case '/inventory/balances':
+      return <BalancesPage />
+    case '/inventory/movements':
+      return <MovementsPage />
+    case '/inventory/adjustments':
+      return <AdjustmentsPage />
+    case '/inventory/inventories':
+      return <InventoriesPage />
+    case '/inventory/deposits':
+      return <DepositsPage />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':

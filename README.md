@@ -128,6 +128,10 @@ A interface de compras agora oferece pedidos de compra e recebimentos,
 incluindo recebimentos parciais, custo efetivo, confirmação idempotente,
 entrada no estoque e histórico de custos.
 
+A interface de estoque agora oferece saldos, movimentações, ajustes,
+inventários e depósitos, mantendo o saldo derivado das movimentações e o
+depósito padrão resolvido explicitamente.
+
 ## Execução local
 
 Backend, em um terminal:

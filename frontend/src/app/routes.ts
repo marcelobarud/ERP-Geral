@@ -54,6 +54,16 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       ],
     },
     {
+      label: 'Estoque',
+      items: [
+        { path: '/inventory/balances', label: 'Saldos', icon: '▦' },
+        { path: '/inventory/movements', label: 'Movimentações', icon: '⇄' },
+        { path: '/inventory/adjustments', label: 'Ajustes', icon: '±' },
+        { path: '/inventory/inventories', label: 'Inventários', icon: '☷' },
+        { path: '/inventory/deposits', label: 'Depósitos', icon: '⌂' },
+      ],
+    },
+    {
       label: 'Configurações',
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
@@ -80,6 +90,11 @@ const routeDescriptions: Record<string, string> = {
   '/commercial/returns': 'Registre e aprove devoluções de vendas.',
   '/purchases': 'Gerencie pedidos de compra e itens pendentes.',
   '/purchases/receipts': 'Registre recebimentos parciais ou totais.',
+  '/inventory/balances': 'Consulte saldos e níveis mínimos por depósito.',
+  '/inventory/movements': 'Consulte as movimentações de estoque.',
+  '/inventory/adjustments': 'Registre ajustes manuais com motivo.',
+  '/inventory/inventories': 'Faça contagens e confirme inventários.',
+  '/inventory/deposits': 'Gerencie depósitos e o depósito padrão.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
   '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',

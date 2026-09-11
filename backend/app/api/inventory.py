@@ -10,6 +10,7 @@ from app.models import DepositoEstoque
 from app.schemas.inventory import (
     DepositCreate,
     DepositRead,
+    DepositUpdate,
     InventoryConfigRead,
     InventoryConfigUpdate,
     InventoryCreate,
@@ -29,6 +30,7 @@ from app.services.inventory import (
     get_inventory_config,
     inventory_to_read,
     list_balances,
+    list_inventories,
     list_movements,
     movement_to_read,
     validate_movement_payload,
@@ -43,11 +45,7 @@ router = APIRouter(
 
 @router.get("/deposits", response_model=list[DepositRead])
 def list_deposits(db: Session = Depends(get_db_session)) -> list[DepositRead]:
-    deposits = db.scalars(
-        select(DepositoEstoque)
-        .where(DepositoEstoque.ativo.is_(True))
-        .order_by(DepositoEstoque.nome)
-    ).all()
+    deposits = db.scalars(select(DepositoEstoque).order_by(DepositoEstoque.nome)).all()
     return [DepositRead.model_validate(deposit) for deposit in deposits]
 
 
@@ -64,6 +62,35 @@ def create_deposit(
         db.execute(update(DepositoEstoque).values(padrao=False))
     deposit = DepositoEstoque(**payload.model_dump())
     db.add(deposit)
+    try:
+        db.commit()
+        db.refresh(deposit)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409, detail="Código de depósito já cadastrado."
+        ) from None
+    return DepositRead.model_validate(deposit)
+
+
+@router.patch(
+    "/deposits/{deposit_id}",
+    response_model=DepositRead,
+    dependencies=[Depends(require_permission("inventory:write"))],
+)
+def update_deposit(
+    deposit_id: int,
+    payload: DepositUpdate,
+    db: Session = Depends(get_db_session),
+) -> DepositRead:
+    deposit = db.get(DepositoEstoque, deposit_id)
+    if deposit is None:
+        raise HTTPException(status_code=404, detail="Depósito não encontrado.")
+    data = payload.model_dump(exclude_unset=True)
+    if data.get("padrao") is True:
+        db.execute(update(DepositoEstoque).values(padrao=False))
+    for field, value in data.items():
+        setattr(deposit, field, value)
     try:
         db.commit()
         db.refresh(deposit)
@@ -174,6 +201,13 @@ def read_stock_inventory(
     if inventory is None:
         raise HTTPException(status_code=404, detail="Inventário não encontrado.")
     return inventory_to_read(inventory)
+
+
+@router.get("/inventories", response_model=list[InventoryRead])
+def list_stock_inventories(
+    db: Session = Depends(get_db_session),
+) -> list[InventoryRead]:
+    return [inventory_to_read(item) for item in list_inventories(db)]
 
 
 @router.post(

@@ -50,6 +50,12 @@ def test_stock_movements_balance_negative_protection_reversal_and_inventory(
     deposit = client.get("/api/inventory/deposits")
     assert deposit.status_code == 200
     deposit_id = deposit.json()[0]["id"]
+    renamed_deposit = client.patch(
+        f"/api/inventory/deposits/{deposit_id}",
+        json={"nome": "Depósito principal operacional"},
+    )
+    assert renamed_deposit.status_code == 200
+    assert renamed_deposit.json()["padrao"] is True
     movement_payload = {
         "produto_id": product.id,
         "deposito_id": deposit_id,
@@ -113,6 +119,9 @@ def test_stock_movements_balance_negative_protection_reversal_and_inventory(
         },
     )
     assert inventory.status_code == 201
+    inventories = client.get("/api/inventory/inventories")
+    assert inventories.status_code == 200
+    assert inventories.json()[0]["id"] == inventory.json()["id"]
     confirmed = client.post(
         f"/api/inventory/inventories/{inventory.json()['id']}/confirm"
     )
