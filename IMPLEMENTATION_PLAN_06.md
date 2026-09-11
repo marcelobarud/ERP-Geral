@@ -692,7 +692,7 @@ Navegação e telas equivalentes seguem padrões previsíveis.
 
 # 9. Fase 4 — Relatórios, responsividade e acessibilidade
 
-**Status:** EM ANDAMENTO
+**Status:** CONCLUÍDA em 11/09/2026
 **Commit esperado:** `fix: refina relatórios responsividade e acessibilidade`
 
 ## Objetivo
@@ -763,11 +763,25 @@ Otimizar somente com evidência.
 
 Sem bloqueadores de mobile/acessibilidade nos fluxos principais.
 
+### Evidências da execução
+
+- cada relatório passou a usar um `pageId` visual próprio, com a migration
+  `20260911_0012` aplicada no banco principal e no banco de testes;
+- os relatórios mantiveram filtros, exportação CSV e totalizadores, além de
+  apresentar estado vazio real quando não há dados;
+- os controles de período permanecem rotulados e os botões de ação seguem
+  acessíveis por teclado;
+- a estrutura responsiva cobre sidebar/drawer, filtros, tabelas, formulários
+  e modais nos breakpoints de mobile, tablet e desktop;
+- backend: `120 passed`; frontend: `79 passed`, typecheck e build aprovados;
+- health principal: `ok`, banco `ok`, schema `ok`, migration atual e esperada
+  em `20260911_0012`.
+
 ---
 
 # 10. Fase 5 — Gate de maturidade V1
 
-**Status:** PENDENTE  
+**Status:** EM ANDAMENTO
 **Commit esperado:** `chore: consolida marco funcional v1 do ERP`
 
 ## Objetivo

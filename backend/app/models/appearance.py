@@ -50,7 +50,9 @@ class PageAppearanceSettings(Base):
         UniqueConstraint("pagina", name="uq_config_aparencia_paginas_pagina"),
         CheckConstraint(
             "pagina IN ('dashboard', 'customers', 'products', 'employees', "
-            "'suppliers', 'sales', 'new_sale', 'settings')",
+            "'suppliers', 'sales', 'new_sale', 'settings', "
+            "'reports_dashboard', 'reports_commercial', 'reports_purchases', "
+            "'reports_stock', 'reports_finance')",
             name="ck_config_aparencia_paginas_pagina",
         ),
     )

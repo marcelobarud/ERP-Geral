@@ -1136,3 +1136,19 @@ mantida coerente entre telas equivalentes.
 Validação da fase: frontend `79 passed`, typecheck e build aprovados. O Plano
 06 prossegue pela Fase 4, voltada a relatórios, responsividade e
 acessibilidade.
+
+## Atualização — Plano 06, Fase 4 concluída em 2026-09-11
+
+Os relatórios deixaram de compartilhar o identificador visual `dashboard`.
+Dashboard ERP, Comercial, Compras, Estoque e Financeiro agora possuem
+identificadores próprios, suportados pela migration `20260911_0012` e pelo
+contrato de aparência do backend.
+
+O layout dos relatórios passou a distinguir carregamento de estado vazio,
+mantendo filtros de período, totalizadores e exportação CSV. Os controles
+continuam rotulados e a estrutura responsiva existente cobre sidebar/drawer,
+filtros, tabelas, formulários e modais nos breakpoints previstos.
+
+Validação da fase: backend PostgreSQL `120 passed`; frontend `79 passed`,
+typecheck e build aprovados; Ruff e `git diff --check` aprovados. O Plano 06
+prossegue pela Fase 5, o gate final de maturidade V1.

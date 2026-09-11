@@ -10,7 +10,8 @@ export type AppearanceLabels = {
 
 export const appearancePageIds = [
   'dashboard', 'customers', 'products', 'employees',
-  'suppliers', 'sales', 'new_sale', 'settings',
+  'suppliers', 'sales', 'new_sale', 'settings', 'reports_dashboard',
+  'reports_commercial', 'reports_purchases', 'reports_stock', 'reports_finance',
 ] as const
 
 export type AppearancePageId = typeof appearancePageIds[number]
@@ -166,6 +167,11 @@ export function pageIdForPath(pathname: string): AppearancePageId {
     '/sales/new': 'new_sale',
     '/settings/appearance': 'settings',
     '/settings/custom-fields': 'settings',
+    '/reports/dashboard': 'reports_dashboard',
+    '/reports/commercial': 'reports_commercial',
+    '/reports/purchases': 'reports_purchases',
+    '/reports/stock': 'reports_stock',
+    '/reports/finance': 'reports_finance',
   }
   return ids[pathname.replace(/\/$/, '') || '/'] ?? 'settings'
 }

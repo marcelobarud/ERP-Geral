@@ -54,7 +54,7 @@ REQUIRED_TABLES = {
     "liquidacoes_financeiras",
     "modulos_erp",
 }
-EXPECTED_MIGRATION = "20260911_0011"
+EXPECTED_MIGRATION = "20260911_0012"
 
 REFERENCE_DATA_SQL = (
     "INSERT INTO unidades_medida (codigo, nome) VALUES "
@@ -167,7 +167,9 @@ def test_engine():
         )
         if applied_versions != {EXPECTED_MIGRATION}:
             engine.dispose()
-            pytest.fail("A migration da Fase 12 não está aplicada em head")
+            pytest.fail(
+                f"A migration atual não está aplicada em head: {applied_versions}"
+            )
     yield engine
     engine.dispose()
 

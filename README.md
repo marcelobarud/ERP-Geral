@@ -136,6 +136,11 @@ condição de pagamento utilizada. A interface comercial agora oferece
 orçamentos, pedidos, devoluções e condições de pagamento, com conversões
 controladas e impressão HTML dos documentos.
 
+A migration `20260911_0012` separa os identificadores de aparência do
+dashboard e dos relatórios Comercial, Compras, Estoque e Financeiro, evitando
+que personalizações visuais de uma tela sejam reutilizadas indevidamente em
+outra.
+
 A interface de compras agora oferece pedidos de compra e recebimentos,
 incluindo recebimentos parciais, custo efetivo, confirmação idempotente,
 entrada no estoque e histórico de custos.

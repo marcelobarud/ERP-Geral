@@ -92,6 +92,11 @@ PageId = Literal[
     "sales",
     "new_sale",
     "settings",
+    "reports_dashboard",
+    "reports_commercial",
+    "reports_purchases",
+    "reports_stock",
+    "reports_finance",
 ]
 
 CustomizationType = Literal[
