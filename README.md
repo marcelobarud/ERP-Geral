@@ -88,6 +88,10 @@ A migration `20260911_0006` adiciona o depósito padrão, movimentações de
 estoque, proteção contra saldo negativo, reversões idempotentes, inventário e
 consulta de saldo comparada ao estoque mínimo.
 
+A migration `20260911_0007` adiciona pedidos de compra, recebimentos parciais
+ou totais, entradas idempotentes no estoque e atualização do histórico de
+custos após a confirmação do recebimento.
+
 ## Execução local
 
 Backend, em um terminal:

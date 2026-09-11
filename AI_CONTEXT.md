@@ -82,6 +82,11 @@ movimentações append-oriented, reversões com origem e inventário com
 confirmação foram adicionados. O saldo é calculado pelos eventos e a consulta
 usa o estoque mínimo do catálogo. A validação local passou com 45 testes e 62
 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
+A Fase 5 do Plano 04 foi concluída em 2026-09-11 com a migration
+`20260911_0007`: pedidos de compra, recebimentos parciais/totais, entradas
+idempotentes no estoque e atualização do histórico de custos foram adicionados.
+A validação local passou com 47 testes e 63 testes PostgreSQL ignorados por
+ausência de `TEST_DATABASE_URL`.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de

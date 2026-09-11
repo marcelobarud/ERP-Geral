@@ -44,6 +44,12 @@ from app.models.inventory import (
     InventarioEstoqueItem,
     MovimentacaoEstoque,
 )
+from app.models.purchases import (
+    PedidoCompra,
+    PedidoCompraItem,
+    RecebimentoCompra,
+    RecebimentoCompraItem,
+)
 
 __all__ = [
     "Cliente",
@@ -69,6 +75,10 @@ __all__ = [
     "MovimentacaoEstoque",
     "InventarioEstoque",
     "InventarioEstoqueItem",
+    "PedidoCompra",
+    "PedidoCompraItem",
+    "RecebimentoCompra",
+    "RecebimentoCompraItem",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

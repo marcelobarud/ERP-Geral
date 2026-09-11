@@ -849,7 +849,7 @@ declarada como aprovada nesta máquina.
 
 # 11. Fase 5 — Compras e recebimentos
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona compras e recebimentos`
 
 ## Objetivo
@@ -922,6 +922,18 @@ Pode ser backlog P2 caso não seja necessária para o fluxo principal.
 - cancelamento antes/depois de recebimento conforme regras;
 - custo histórico;
 - fornecedor/produto íntegros.
+
+## Resultado da execução
+
+Implementados pedidos de compra, itens com snapshot de produto e custo,
+recebimentos parciais ou totais e confirmação transacional. A confirmação gera
+uma entrada idempotente no depósito padrão, atualiza a quantidade recebida,
+avança o status do pedido e registra o custo no histórico de produtos. Pedidos
+com recebimento não podem ser cancelados sem uma operação compensatória futura.
+
+Validação local: `47 passed`, `63 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff e validações estruturais aprovados. A suíte PostgreSQL real não foi
+declarada como aprovada nesta máquina.
 
 ---
 
