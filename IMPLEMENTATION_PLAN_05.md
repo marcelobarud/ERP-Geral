@@ -914,8 +914,8 @@ aprovados.
 
 ## 12. Fase 6 — Navegação modular e configurações
 
-**Status:** PENDENTE
-**Commit esperado:** `feat: integra módulos ativos à navegação do ERP`
+**Status:** CONCLUÍDA em 11/09/2026
+**Commit:** `feat: integra módulos ativos à navegação do ERP`
 
 ### Objetivo
 
@@ -972,6 +972,21 @@ Configurações
 ```
 
 Evitar menu lateral excessivo.
+
+### Resultado da execução
+
+Foi criada a tela Configurações → Módulos, usando a API existente para listar
+e ativar/desativar Comercial, Compras, Estoque, Financeiro e Relatórios. A
+navegação lateral passa a refletir os módulos ativos e a atualização é
+propagada imediatamente para a aplicação.
+
+O acesso direto a uma rota de módulo desativado apresenta estado explícito de
+módulo indisponível. A proteção de autenticação e permissões da API permanece
+ativa; ocultar a navegação não é tratado como mecanismo de segurança. Não foi
+necessária migration nova.
+
+Validação da fase: frontend `77 passed`, lint, typecheck e build aprovados;
+Ruff e `git diff --check` aprovados.
 
 ---
 

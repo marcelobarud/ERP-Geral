@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { AppLayout } from '../components/AppLayout'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
@@ -17,10 +17,12 @@ import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPage
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
 import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
+import { ModulesPage } from '../features/settings/ModulesPage'
+import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
-import { NotFoundPage } from '../pages/NotFoundPage'
-import { getRoute, type RouteDefinition } from './routes'
+import { ModuleDisabledPage, NotFoundPage } from '../pages/NotFoundPage'
+import { getModuleForPath, getRoute, type RouteDefinition } from './routes'
 
 function currentPathname(): string {
   return window.location.pathname || '/'
@@ -92,6 +94,10 @@ function PageForRoute({
       return <CustomFieldsPage />
     case '/settings/payment-conditions':
       return <PaymentConditionsPage />
+    case '/settings/modules':
+      return <ModulesPage />
+    case '/module-disabled':
+      return <ModuleDisabledPage />
     default:
       return <NotFoundPage />
   }
@@ -100,6 +106,9 @@ function PageForRoute({
 function AppContent() {
   const { preview, pageAppearances, loadPageAppearance } = useAppearance()
   const [pathname, setPathname] = useState(currentPathname)
+  const [modules, setModules] = useState<ErpModule[]>([])
+  const activeModules = useMemo(() => new Set(modules.filter((module) => module.ativo).map((module) => module.codigo)), [modules])
+  const loadModules = useCallback(async () => { try { setModules(await listModules()) } catch { /* A API continua protegendo os endpoints. */ } }, [])
 
   useEffect(() => {
     const handlePopState = () => setPathname(currentPathname())
@@ -107,6 +116,13 @@ function AppContent() {
 
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
+
+  useEffect(() => {
+    void loadModules()
+    const reload = () => void loadModules()
+    window.addEventListener('erp-modules-changed', reload)
+    return () => window.removeEventListener('erp-modules-changed', reload)
+  }, [loadModules])
 
   const navigate = useCallback(
     (path: string) => {
@@ -118,7 +134,9 @@ function AppContent() {
     [pathname],
   )
 
-  const route = getRoute(pathname, appearanceLabels(preview))
+  const moduleCode = getModuleForPath(pathname)
+  const moduleDisabled = modules.length > 0 && moduleCode !== null && !activeModules.has(moduleCode)
+  const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: '!', description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
   const pageId = pageIdForPath(pathname)
 
   useEffect(() => {
@@ -126,7 +144,7 @@ function AppContent() {
   }, [loadPageAppearance, pageId])
 
   return (
-    <AppLayout route={route} onNavigate={navigate} pageTheme={pageAppearances[pageId]?.resolved}>
+    <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} pageTheme={pageAppearances[pageId]?.resolved}>
       <PageForRoute route={route} onNavigate={navigate} />
     </AppLayout>
   )

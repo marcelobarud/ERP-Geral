@@ -1031,3 +1031,16 @@ Não foi necessária migration nova nesta fase.
 Validação da fase: suíte backend PostgreSQL `118 passed`; frontend `77
 passed`, lint, typecheck e build aprovados; Ruff e `git diff --check`
 aprovados. A Fase 6 será executada na sequência.
+
+## Atualização — Plano 05, Fase 6 concluída em 2026-09-11
+
+Foi criada a tela Configurações → Módulos para listar e ativar/desativar
+Comercial, Compras, Estoque, Financeiro e Relatórios pela API existente. A
+barra lateral agora reflete os módulos ativos e uma rota acessada diretamente
+quando seu módulo está desativado apresenta estado explícito de indisponibilidade.
+
+A autenticação e as permissões da API continuam sendo a proteção efetiva; a
+ocultação do menu não é usada como segurança. Não houve migration nova.
+
+Validação da fase: frontend `77 passed`, lint, typecheck e build aprovados;
+Ruff e `git diff --check` aprovados. A Fase 7 será executada na sequência.

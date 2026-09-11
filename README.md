@@ -141,6 +141,11 @@ A área de Relatórios oferece Dashboard ERP e visões agregadas de Comercial,
 Compras, Estoque e Financeiro, com filtro comercial por período e exportação
 CSV dos dados carregados.
 
+Em Configurações → Módulos, as áreas Comercial, Compras, Estoque, Financeiro
+e Relatórios podem ser ativadas ou desativadas. A navegação acompanha essa
+configuração e rotas diretas de módulos desativados exibem estado bloqueado,
+mantendo autenticação e permissões na API.
+
 ## Execução local
 
 Backend, em um terminal:

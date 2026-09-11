@@ -40,6 +40,10 @@ describe('navegação comercial', () => {
       '/reports/stock',
       '/reports/finance',
     ])
+    expect(groups.find((group) => group.label === 'Configurações')?.items.map((item) => item.path)).toContain('/settings/modules')
+    const onlyFinance = getNavigationGroups(appearanceLabels(defaultAppearance), new Set(['finance']))
+    expect(onlyFinance.find((group) => group.label === 'Financeiro')).toBeTruthy()
+    expect(onlyFinance.find((group) => group.label === 'Estoque')).toBeUndefined()
   })
 
   it('resolve as rotas comerciais com descrição própria', () => {

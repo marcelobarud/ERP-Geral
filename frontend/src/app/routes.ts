@@ -9,14 +9,15 @@ export type NavigationItem = {
 export type NavigationGroup = {
   label: string
   items: NavigationItem[]
+  moduleCode?: string
 }
 
 export type RouteDefinition = NavigationItem & {
   description: string
 }
 
-export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[] {
-  return [
+export function getNavigationGroups(labels: AppearanceLabels, activeModules?: ReadonlySet<string>): NavigationGroup[] {
+  const groups: NavigationGroup[] = [
     {
       label: 'Visão geral',
       items: [{ path: '/', label: labels.dashboard, icon: '⌂' }],
@@ -32,6 +33,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Vendas',
+      moduleCode: 'commercial',
       items: [
         { path: '/sales/new', label: labels.newSale, icon: '+' },
         { path: '/sales', label: labels.sales, icon: '↗' },
@@ -39,6 +41,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Comercial',
+      moduleCode: 'commercial',
       items: [
         { path: '/commercial/quotes', label: 'Orçamentos', icon: '▤' },
         { path: '/commercial/orders', label: 'Pedidos', icon: '▥' },
@@ -48,6 +51,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Compras',
+      moduleCode: 'purchases',
       items: [
         { path: '/purchases', label: 'Pedidos', icon: '▧' },
         { path: '/purchases/receipts', label: 'Recebimentos', icon: '⇩' },
@@ -55,6 +59,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Estoque',
+      moduleCode: 'inventory',
       items: [
         { path: '/inventory/balances', label: 'Saldos', icon: '▦' },
         { path: '/inventory/movements', label: 'Movimentações', icon: '⇄' },
@@ -65,6 +70,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Financeiro',
+      moduleCode: 'finance',
       items: [
         { path: '/finance/receivables', label: 'Contas a receber', icon: '↗' },
         { path: '/finance/payables', label: 'Contas a pagar', icon: '↙' },
@@ -73,6 +79,7 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
     },
     {
       label: 'Relatórios',
+      moduleCode: 'reports',
       items: [
         { path: '/reports/dashboard', label: 'Dashboard ERP', icon: '▥' },
         { path: '/reports/commercial', label: 'Comercial', icon: '↗' },
@@ -86,10 +93,12 @@ export function getNavigationGroups(labels: AppearanceLabels): NavigationGroup[]
       items: [
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
         { path: '/settings/custom-fields', label: 'Campos personalizados', icon: '✦' },
+        { path: '/settings/modules', label: 'Módulos', icon: '◈' },
         { path: '/settings/payment-conditions', label: 'Condições de pagamento', icon: '◫' },
       ],
     },
   ]
+  return groups.filter((group) => !group.moduleCode || !activeModules || activeModules.has(group.moduleCode))
 }
 
 export const navigationGroups = getNavigationGroups(appearanceLabels(defaultAppearance))
@@ -121,9 +130,19 @@ const routeDescriptions: Record<string, string> = {
   '/reports/purchases': 'Acompanhe pedidos e recebimentos pendentes.',
   '/reports/stock': 'Analise saldos e produtos abaixo do mínimo.',
   '/reports/finance': 'Analise títulos, vencimentos e fluxo financeiro.',
+  '/settings/modules': 'Ative ou desative áreas disponíveis no ERP.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',
   '/settings/payment-conditions': 'Gerencie as condições de pagamento comerciais.',
+}
+
+export function getModuleForPath(pathname: string): string | null {
+  if (pathname.startsWith('/commercial') || pathname.startsWith('/sales')) return 'commercial'
+  if (pathname.startsWith('/purchases')) return 'purchases'
+  if (pathname.startsWith('/inventory')) return 'inventory'
+  if (pathname.startsWith('/finance')) return 'finance'
+  if (pathname.startsWith('/reports')) return 'reports'
+  return null
 }
 
 export const notFoundRoute: RouteDefinition = {

@@ -12,3 +12,16 @@ export function NotFoundPage() {
     />
   )
 }
+
+export function ModuleDisabledPage() {
+  return (
+    <FeaturePlaceholder
+      eyebrow="Configurações"
+      title="Módulo desativado"
+      description="Esta área foi desativada na configuração atual do ERP."
+      emptyTitle="Área indisponível"
+      emptyDescription="Ative o módulo em Configurações → Módulos para liberar seu acesso."
+      icon="!"
+    />
+  )
+}
