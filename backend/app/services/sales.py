@@ -16,6 +16,7 @@ from app.schemas.sales import (
     VendaItemRead,
     VendaRead,
 )
+from app.services.auth import add_audit_log
 
 MONEY_QUANTUM = Decimal("0.01")
 
@@ -36,7 +37,13 @@ class SaleNotFound(Exception):
     """Indica uma venda inexistente durante uma operação de venda."""
 
 
-def cancel_sale(db: Session, sale_id: int, payload: VendaCancel) -> Venda:
+def cancel_sale(
+    db: Session,
+    sale_id: int,
+    payload: VendaCancel,
+    *,
+    actor_user_id: int | None = None,
+) -> Venda:
     sale = get_sale(db, sale_id)
     if sale is None:
         raise SaleNotFound("Venda não encontrada.")
@@ -47,6 +54,14 @@ def cancel_sale(db: Session, sale_id: int, payload: VendaCancel) -> Venda:
     sale.cancelada_em = datetime.now(timezone.utc)
     sale.motivo_cancelamento = payload.motivo
     try:
+        add_audit_log(
+            db,
+            user_id=actor_user_id,
+            action="sale_cancelled",
+            entity="venda",
+            entity_id=sale.id,
+            metadata={"motivo_informado": bool(payload.motivo)},
+        )
         db.commit()
     except Exception:
         db.rollback()

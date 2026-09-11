@@ -9,6 +9,8 @@ import { NewSalePage, SalesPage } from '../features/sales/SalesPages'
 import { SuppliersPage } from '../features/suppliers/SuppliersPage'
 import { AppearancePage } from '../features/settings/AppearancePage'
 import { AppearanceProvider, useAppearance } from '../features/settings/AppearanceContext'
+import { AuthProvider, useAuth } from '../features/auth/AuthContext'
+import { LoginPage } from '../features/auth/LoginPage'
 import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
@@ -86,6 +88,17 @@ function AppContent() {
 }
 
 function App() {
+  return <AuthProvider><AuthenticatedApp /></AuthProvider>
+}
+
+function AuthenticatedApp() {
+  const { authRequired, loading, user } = useAuth()
+
+  if (loading) {
+    return <div className="auth-loading" role="status">Carregando acesso...</div>
+  }
+  if (authRequired && !user) return <LoginPage />
+
   return <AppearanceProvider><VisualCustomizationProvider><AppContent /></VisualCustomizationProvider></AppearanceProvider>
 }
 

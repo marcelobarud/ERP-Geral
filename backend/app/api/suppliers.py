@@ -3,6 +3,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import Fornecedor, Produto, VendaItem
 from app.schemas.pagination import PaginationResponse
@@ -21,7 +22,11 @@ from app.services.custom_fields import (
 )
 from app.services.pagination import paginate
 
-router = APIRouter(prefix="/api/suppliers", tags=["suppliers"])
+router = APIRouter(
+    prefix="/api/suppliers",
+    tags=["suppliers"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 def ensure_unique_cnpj(
@@ -106,7 +111,12 @@ def get_supplier(
     )
 
 
-@router.post("", response_model=FornecedorRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=FornecedorRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("suppliers:write"))],
+)
 def create_supplier(
     payload: FornecedorCreate,
     db: Session = Depends(get_db_session),
@@ -136,7 +146,11 @@ def create_supplier(
     )
 
 
-@router.patch("/{supplier_id}", response_model=FornecedorRead)
+@router.patch(
+    "/{supplier_id}",
+    response_model=FornecedorRead,
+    dependencies=[Depends(require_permission("suppliers:write"))],
+)
 def update_supplier(
     supplier_id: int,
     payload: FornecedorUpdate,
@@ -178,7 +192,11 @@ def update_supplier(
     )
 
 
-@router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{supplier_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("suppliers:write"))],
+)
 def delete_supplier(
     supplier_id: int,
     db: Session = Depends(get_db_session),

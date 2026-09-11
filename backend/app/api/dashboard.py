@@ -2,11 +2,16 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated
 from app.db.session import get_db_session
 from app.models import Cliente, Fornecedor, Funcionario, Produto, Venda
 from app.schemas.dashboard import DashboardSummaryRead
 
-router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+router = APIRouter(
+    prefix="/api/dashboard",
+    tags=["dashboard"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 @router.get("/summary", response_model=DashboardSummaryRead)

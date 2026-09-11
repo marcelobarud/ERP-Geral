@@ -6,6 +6,23 @@ export const API_BASE_URL = (
   configuredBaseUrl || 'http://127.0.0.1:8000'
 ).replace(/\/+$/, '')
 
+const AUTH_TOKEN_KEY = 'erp_geral_access_token'
+
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(AUTH_TOKEN_KEY)
+}
+
+export function setAuthToken(token: string): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token)
+}
+
+export function clearAuthToken(): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(AUTH_TOKEN_KEY)
+}
+
 export function resolveBackendAssetUrl(path: string | null): string | null {
   if (!path) return null
   if (/^https?:\/\//i.test(path)) return path
@@ -40,10 +57,12 @@ export async function request<T>(
   let response: Response
 
   try {
+    const token = getAuthToken()
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       headers: {
         Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },
     })

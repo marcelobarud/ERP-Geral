@@ -5,6 +5,7 @@ from app.models.appearance import (
     ElementAppearanceOverride,
     PageAppearanceSettings,
 )
+from app.models.auth import LogAuditoria, SessaoAutenticacao, Usuario
 from app.models.custom_fields import (
     ClienteCampo,
     ClienteCampoValor,
@@ -31,6 +32,9 @@ __all__ = [
     "Produto",
     "Venda",
     "VendaItem",
+    "Usuario",
+    "SessaoAutenticacao",
+    "LogAuditoria",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

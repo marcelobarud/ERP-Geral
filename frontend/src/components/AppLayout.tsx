@@ -9,6 +9,7 @@ import { pageIdForPath } from '../features/settings/types'
 import { pageAppearanceCssVars } from '../features/settings/theme'
 import type { PageAppearanceTheme } from '../features/settings/types'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+import { useAuth } from '../features/auth/AuthContext'
 import { resolveBackendAssetUrl } from '../services/httpClient'
 
 type AppLayoutProps = {
@@ -54,6 +55,7 @@ function HealthIndicator() {
 
 export function AppLayout({ route, onNavigate, children, pageTheme }: AppLayoutProps) {
   const { preview } = useAppearance()
+  const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pageCustomization = useCustomizable({
     key: `${pageIdForPath(route.path)}.page`,
@@ -103,7 +105,11 @@ export function AppLayout({ route, onNavigate, children, pageTheme }: AppLayoutP
               <strong>{route.label}</strong>
             </div>
           </div>
-          <HealthIndicator />
+          <div className="topbar-actions">
+            {user ? <span className="topbar-user">{user.nome}</span> : null}
+            {user ? <button className="text-button" type="button" onClick={() => void logout()}>Sair</button> : null}
+            <HealthIndicator />
+          </div>
         </header>
 
         <main

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     database_url: str = Field(description="URL de conexão do PostgreSQL")
     app_name: str = "ERP Geral"
     environment: str = "development"
+    auth_required: bool = False
+    auth_secret: str | None = None
+    auth_token_expiration_minutes: int = Field(default=60, ge=5, le=1440)
+    auth_bootstrap_token: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -24,6 +28,29 @@ class Settings(BaseSettings):
                 "DATABASE_URL deve usar o driver PostgreSQL postgresql+psycopg"
             )
         return normalized_value
+
+    @model_validator(mode="after")
+    def validate_authentication_settings(self) -> "Settings":
+        is_production = self.environment.strip().lower() == "production"
+        if is_production:
+            self.auth_required = True
+            if not self.auth_secret or len(self.auth_secret) < 32:
+                raise ValueError(
+                    "AUTH_SECRET deve possuir pelo menos 32 caracteres em produção"
+                )
+            if not self.auth_bootstrap_token or len(self.auth_bootstrap_token) < 16:
+                raise ValueError(
+                    "AUTH_BOOTSTRAP_TOKEN deve possuir pelo menos 16 "
+                    "caracteres em produção"
+                )
+        elif self.auth_required and (
+            not self.auth_secret or len(self.auth_secret) < 32
+        ):
+            raise ValueError(
+                "AUTH_SECRET deve possuir pelo menos 32 caracteres quando "
+                "a autenticação está ativa"
+            )
+        return self
 
 
 @lru_cache

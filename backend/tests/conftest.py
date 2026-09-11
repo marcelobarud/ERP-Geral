@@ -24,10 +24,16 @@ REQUIRED_TABLES = {
     "funcionario_campos_valores",
     "fornecedor_campos",
     "fornecedor_campos_valores",
+    "usuarios",
+    "sessoes_autenticacao",
+    "logs_auditoria",
 }
-EXPECTED_MIGRATION = "20260911_0002"
+EXPECTED_MIGRATION = "20260911_0003"
 
 TEST_DATA_TABLES = (
+    "logs_auditoria",
+    "sessoes_autenticacao",
+    "usuarios",
     "cliente_campos_valores",
     "produto_campos_valores",
     "funcionario_campos_valores",

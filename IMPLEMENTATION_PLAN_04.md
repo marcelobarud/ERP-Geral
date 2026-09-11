@@ -212,7 +212,7 @@ O executor deve alterar apenas o status da fase que estiver executando.
 
 # 6. Fase 0 — Fundação ERP
 
-**Status:** CONCLUÍDA  
+**Status:** CONCLUÍDA
 **Commit esperado:** `refactor: prepara fundação transacional do ERP`
 
 ## Objetivo
@@ -356,7 +356,7 @@ A base deve estar pronta para receber novos documentos transacionais sem depende
 
 # 7. Fase 1 — Segurança e auditoria
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona segurança e auditoria operacional`
 
 ## Objetivo
@@ -467,6 +467,20 @@ Não exigir que todo usuário seja funcionário.
 ## Gate operacional
 
 A partir desta fase, nenhuma nova rota mutável de módulo operacional deve ser criada sem autenticação/autorização compatível, salvo se o projeto estiver explicitamente executando em modo de desenvolvimento controlado.
+
+### Resultado da execução
+
+- migration `20260911_0003_security_audit` criada com usuários, sessões e logs;
+- autenticação por token assinado, expiração, revogação e logout implementada;
+- senhas armazenadas com PBKDF2 e nunca em texto puro;
+- papéis `ADMIN`, `MANAGER` e `OPERATOR` e matriz central de permissões
+  aplicados às rotas operacionais;
+- bootstrap seguro do primeiro administrador disponível;
+- auditoria de login, logout, usuários, cancelamento de venda e aparência;
+- frontend integrado com login, sessão persistida e logout;
+- em produção, secrets ausentes ou fracos fazem a configuração falhar;
+- suíte PostgreSQL não executada nesta máquina por ausência de
+  `TEST_DATABASE_URL`.
 
 ---
 

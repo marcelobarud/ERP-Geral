@@ -3,6 +3,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import Funcionario, Venda
 from app.schemas.employees import (
@@ -19,7 +20,11 @@ from app.services.custom_fields import (
 )
 from app.services.pagination import paginate
 
-router = APIRouter(prefix="/api/employees", tags=["employees"])
+router = APIRouter(
+    prefix="/api/employees",
+    tags=["employees"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 def ensure_unique_cpf(
@@ -94,7 +99,12 @@ def get_employee(
     )
 
 
-@router.post("", response_model=FuncionarioRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=FuncionarioRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("employees:write"))],
+)
 def create_employee(
     payload: FuncionarioCreate,
     db: Session = Depends(get_db_session),
@@ -124,7 +134,11 @@ def create_employee(
     )
 
 
-@router.patch("/{employee_id}", response_model=FuncionarioRead)
+@router.patch(
+    "/{employee_id}",
+    response_model=FuncionarioRead,
+    dependencies=[Depends(require_permission("employees:write"))],
+)
 def update_employee(
     employee_id: int,
     payload: FuncionarioUpdate,
@@ -166,7 +180,11 @@ def update_employee(
     )
 
 
-@router.delete("/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{employee_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("employees:write"))],
+)
 def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db_session),

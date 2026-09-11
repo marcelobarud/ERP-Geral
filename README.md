@@ -43,8 +43,24 @@ As variáveis principais são:
 
 - `DATABASE_URL`: banco usado pelo backend e pelas migrations;
 - `TEST_DATABASE_URL`: banco PostgreSQL dedicado aos testes.
+- `ENVIRONMENT`: ambiente de execução; `production` ativa a autenticação
+  obrigatória e valida os secrets.
+- `AUTH_REQUIRED`: ativa autenticação fora de produção quando necessário.
+- `AUTH_SECRET`: segredo usado para assinar sessões; mantenha fora do Git.
+- `AUTH_TOKEN_EXPIRATION_MINUTES`: duração dos tokens de sessão.
+- `AUTH_BOOTSTRAP_TOKEN`: token temporário para criar o primeiro administrador.
 
 Ambas devem usar o formato `postgresql+psycopg://...`.
+
+Em desenvolvimento controlado, `AUTH_REQUIRED=false` mantém a experiência
+local existente. Em produção, configure `AUTH_SECRET` e
+`AUTH_BOOTSTRAP_TOKEN` com valores reais; o backend rejeita uma configuração
+de produção sem esses secrets.
+
+Quando a autenticação está ativa, crie o primeiro administrador com
+`POST /api/auth/bootstrap` usando `nome`, `email`, `senha` e o token de
+bootstrap. Depois utilize `POST /api/auth/login`; o frontend mantém a sessão
+e oferece a opção de logout.
 
 ## Migrations
 

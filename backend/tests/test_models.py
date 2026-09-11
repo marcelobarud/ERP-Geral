@@ -4,7 +4,10 @@ from app.models import (
     Cliente,
     Fornecedor,
     Funcionario,
+    LogAuditoria,
     Produto,
+    SessaoAutenticacao,
+    Usuario,
     Venda,
     VendaItem,
 )
@@ -79,6 +82,34 @@ EXPECTED_COLUMNS = {
         "fornecedor_id",
         "created_at",
         "updated_at",
+    },
+    "usuarios": {
+        "id",
+        "nome",
+        "email",
+        "senha_hash",
+        "ativo",
+        "role",
+        "funcionario_id",
+        "created_at",
+        "updated_at",
+    },
+    "sessoes_autenticacao": {
+        "id",
+        "usuario_id",
+        "token_hash",
+        "expires_at",
+        "revoked_at",
+        "created_at",
+    },
+    "logs_auditoria": {
+        "id",
+        "usuario_id",
+        "acao",
+        "entidade",
+        "entidade_id",
+        "metadata_json",
+        "created_at",
     },
     "configuracoes_aparencia": {
         "id",
@@ -185,6 +216,9 @@ def test_only_approved_columns_are_nullable() -> None:
         "produtos": set(),
         "vendas": {"cancelada_em", "motivo_cancelamento", "observacao"},
         "venda_itens": set(),
+        "usuarios": {"funcionario_id"},
+        "sessoes_autenticacao": {"revoked_at"},
+        "logs_auditoria": {"usuario_id", "entidade_id", "metadata_json"},
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",
@@ -245,12 +279,15 @@ def test_money_and_date_types_are_explicit() -> None:
 
 
 def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
-    for model in (Cliente, Fornecedor, Funcionario, Produto, Venda, VendaItem):
+    for model in (Cliente, Fornecedor, Funcionario, Produto, Venda, VendaItem, Usuario):
         created_at = model.__table__.c.created_at
         updated_at = model.__table__.c.updated_at
         assert callable(created_at.default.arg)
         assert callable(updated_at.default.arg)
         assert callable(updated_at.onupdate.arg)
+
+    for model in (SessaoAutenticacao, LogAuditoria):
+        assert callable(model.__table__.c.created_at.default.arg)
 
     assert Venda.__table__.c.status.default.arg == "CONCLUIDA"
     assert Venda.__table__.c.status.server_default is not None

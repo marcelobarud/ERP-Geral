@@ -7,12 +7,14 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models.appearance import (
     AppearanceSettings,
     ElementAppearanceOverride,
     PageAppearanceSettings,
 )
+from app.models.auth import Usuario
 from app.schemas.appearance import (
     AppearanceOverridePayload,
     AppearanceOverrideRead,
@@ -24,8 +26,13 @@ from app.schemas.appearance import (
     PageId,
     ResolvedPageAppearance,
 )
+from app.services.auth import add_audit_log
 
-router = APIRouter(prefix="/api/settings/appearance", tags=["appearance"])
+router = APIRouter(
+    prefix="/api/settings/appearance",
+    tags=["appearance"],
+    dependencies=[Depends(require_authenticated)],
+)
 LOGO_STORAGE_DIR = Path(__file__).resolve().parents[2] / "storage" / "branding"
 MAX_LOGO_BYTES = 2 * 1024 * 1024
 MAX_LOGO_DIMENSION = 1024
@@ -211,15 +218,27 @@ def get_appearance(db: Session = Depends(get_db_session)) -> AppearanceSettings:
     return appearance_or_default(db, persist=False)
 
 
-@router.patch("", response_model=AppearanceRead)
+@router.patch(
+    "",
+    response_model=AppearanceRead,
+)
 def update_appearance(
     payload: AppearancePatch,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("settings:write")),
 ) -> AppearanceSettings:
     settings = appearance_or_default(db, persist=True)
     for field_name, value in payload.model_dump(exclude_unset=True).items():
         setattr(settings, field_name, value)
     try:
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="appearance_updated",
+            entity="configuracao_aparencia",
+            entity_id=settings.id,
+            metadata={"fields": list(payload.model_dump(exclude_unset=True))},
+        )
         db.commit()
         db.refresh(settings)
     except Exception:
@@ -228,14 +247,27 @@ def update_appearance(
     return settings
 
 
-@router.post("/reset", response_model=AppearanceRead)
-def reset_appearance(db: Session = Depends(get_db_session)) -> AppearanceSettings:
+@router.post(
+    "/reset",
+    response_model=AppearanceRead,
+)
+def reset_appearance(
+    db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("settings:write")),
+) -> AppearanceSettings:
     settings = appearance_or_default(db, persist=True)
     previous_logo = settings.logo_url
     for field_name, value in DEFAULTS.items():
         if field_name != "id":
             setattr(settings, field_name, value)
     try:
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="appearance_reset",
+            entity="configuracao_aparencia",
+            entity_id=settings.id,
+        )
         db.commit()
         db.refresh(settings)
     except Exception:
@@ -259,7 +291,11 @@ def get_page_appearance(
     return _page_response(page, settings, override)
 
 
-@router.patch("/pages/{page}", response_model=PageAppearanceRead)
+@router.patch(
+    "/pages/{page}",
+    response_model=PageAppearanceRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def update_page_appearance(
     page: PageId,
     payload: PageAppearancePatch,
@@ -285,7 +321,11 @@ def update_page_appearance(
     return _page_response(page, settings, override)
 
 
-@router.post("/pages/{page}/reset", response_model=PageAppearanceRead)
+@router.post(
+    "/pages/{page}/reset",
+    response_model=PageAppearanceRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def reset_page_appearance(
     page: PageId,
     db: Session = Depends(get_db_session),
@@ -326,6 +366,7 @@ def get_appearance_overrides(
 @router.put(
     "/overrides/{customization_key}",
     response_model=AppearanceOverrideRead,
+    dependencies=[Depends(require_permission("settings:write"))],
 )
 def upsert_appearance_override(
     customization_key: str,
@@ -361,7 +402,11 @@ def upsert_appearance_override(
     return override
 
 
-@router.delete("/overrides/{customization_key}", status_code=204)
+@router.delete(
+    "/overrides/{customization_key}",
+    status_code=204,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def reset_appearance_override(
     customization_key: str,
     db: Session = Depends(get_db_session),
@@ -388,10 +433,14 @@ def reset_appearance_override(
         raise
 
 
-@router.put("/logo", response_model=AppearanceRead)
+@router.put(
+    "/logo",
+    response_model=AppearanceRead,
+)
 async def upload_logo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("settings:write")),
 ) -> AppearanceSettings:
     content_type = (file.content_type or "").split(";", 1)[0].lower()
     if content_type == "application/octet-stream":
@@ -421,6 +470,13 @@ async def upload_logo(
     previous_logo = settings.logo_url
     settings.logo_url = f"/uploads/branding/{filename}"
     try:
+        add_audit_log(
+            db,
+            user_id=actor.id if actor else None,
+            action="logo_updated",
+            entity="configuracao_aparencia",
+            entity_id=settings.id,
+        )
         db.commit()
         db.refresh(settings)
     except Exception:

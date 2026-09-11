@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
-from app.models import Cliente, Funcionario, Produto, Venda, VendaItem
+from app.models import Cliente, Funcionario, Produto, Usuario, Venda, VendaItem
 from app.schemas.pagination import PaginationResponse
 from app.schemas.sales import VendaCancel, VendaCreate, VendaRead, VendaStatus
 from app.services.pagination import paginate
@@ -22,10 +23,19 @@ from app.services.sales import (
     sale_to_read,
 )
 
-router = APIRouter(prefix="/api/sales", tags=["sales"])
+router = APIRouter(
+    prefix="/api/sales",
+    tags=["sales"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
-@router.post("", response_model=VendaRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=VendaRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("sales:create"))],
+)
 def create_sale_endpoint(
     payload: VendaCreate,
     db: Session = Depends(get_db_session),
@@ -144,14 +154,23 @@ def get_sale_endpoint(
     return sale_to_read(sale)
 
 
-@router.post("/{sale_id}/cancel", response_model=VendaRead)
+@router.post(
+    "/{sale_id}/cancel",
+    response_model=VendaRead,
+)
 def cancel_sale_endpoint(
     sale_id: int,
     payload: VendaCancel,
     db: Session = Depends(get_db_session),
+    actor: Usuario | None = Depends(require_permission("sales:cancel")),
 ) -> VendaRead:
     try:
-        sale = cancel_sale(db, sale_id, payload)
+        sale = cancel_sale(
+            db,
+            sale_id,
+            payload,
+            actor_user_id=actor.id if actor else None,
+        )
     except SaleNotFound as exception:
         raise HTTPException(status_code=404, detail=str(exception)) from None
     except SalePersistenceError:

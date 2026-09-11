@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.schemas.custom_fields import (
     CustomFieldDefinitionCreate,
@@ -18,7 +19,11 @@ from app.services.custom_fields import (
     update_definition,
 )
 
-router = APIRouter(prefix="/api/settings/custom-fields", tags=["custom-fields"])
+router = APIRouter(
+    prefix="/api/settings/custom-fields",
+    tags=["custom-fields"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 def _list(domain_name: str, db: Session) -> list[dict[str, Any]]:
@@ -73,6 +78,7 @@ def list_customer_fields(db: Session = Depends(get_db_session)):
     "/customers",
     response_model=CustomFieldDefinitionRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("settings:write"))],
 )
 def create_customer_field(
     payload: CustomFieldDefinitionCreate, db: Session = Depends(get_db_session)
@@ -80,7 +86,11 @@ def create_customer_field(
     return _create("customers", payload, db)
 
 
-@router.patch("/customers/{field_id}", response_model=CustomFieldDefinitionRead)
+@router.patch(
+    "/customers/{field_id}",
+    response_model=CustomFieldDefinitionRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def update_customer_field(
     field_id: int,
     payload: CustomFieldDefinitionUpdate,
@@ -98,6 +108,7 @@ def list_product_fields(db: Session = Depends(get_db_session)):
     "/products",
     response_model=CustomFieldDefinitionRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("settings:write"))],
 )
 def create_product_field(
     payload: CustomFieldDefinitionCreate, db: Session = Depends(get_db_session)
@@ -105,7 +116,11 @@ def create_product_field(
     return _create("products", payload, db)
 
 
-@router.patch("/products/{field_id}", response_model=CustomFieldDefinitionRead)
+@router.patch(
+    "/products/{field_id}",
+    response_model=CustomFieldDefinitionRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def update_product_field(
     field_id: int,
     payload: CustomFieldDefinitionUpdate,
@@ -123,6 +138,7 @@ def list_employee_fields(db: Session = Depends(get_db_session)):
     "/employees",
     response_model=CustomFieldDefinitionRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("settings:write"))],
 )
 def create_employee_field(
     payload: CustomFieldDefinitionCreate, db: Session = Depends(get_db_session)
@@ -130,7 +146,11 @@ def create_employee_field(
     return _create("employees", payload, db)
 
 
-@router.patch("/employees/{field_id}", response_model=CustomFieldDefinitionRead)
+@router.patch(
+    "/employees/{field_id}",
+    response_model=CustomFieldDefinitionRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def update_employee_field(
     field_id: int,
     payload: CustomFieldDefinitionUpdate,
@@ -148,6 +168,7 @@ def list_supplier_fields(db: Session = Depends(get_db_session)):
     "/suppliers",
     response_model=CustomFieldDefinitionRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("settings:write"))],
 )
 def create_supplier_field(
     payload: CustomFieldDefinitionCreate, db: Session = Depends(get_db_session)
@@ -155,7 +176,11 @@ def create_supplier_field(
     return _create("suppliers", payload, db)
 
 
-@router.patch("/suppliers/{field_id}", response_model=CustomFieldDefinitionRead)
+@router.patch(
+    "/suppliers/{field_id}",
+    response_model=CustomFieldDefinitionRead,
+    dependencies=[Depends(require_permission("settings:write"))],
+)
 def update_supplier_field(
     field_id: int,
     payload: CustomFieldDefinitionUpdate,

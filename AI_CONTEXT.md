@@ -56,6 +56,11 @@ dashboard usa agregação no backend; e leituras de aparência não criam mais
 configuração persistida como efeito colateral. O frontend foi validado com 74
 testes e build aprovado. A suíte PostgreSQL não foi executada nesta máquina
 porque `TEST_DATABASE_URL` não estava configurada.
+A Fase 1 do Plano 04 também foi concluída em 2026-09-11 com a migration
+`20260911_0003`: autenticação por sessão revogável, usuários, papéis,
+permissões centralizadas e logs de auditoria foram adicionados. Em produção,
+`AUTH_SECRET` e `AUTH_BOOTSTRAP_TOKEN` são obrigatórios; o frontend oferece
+login e logout quando `auth_required` está ativo.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de
@@ -345,6 +350,11 @@ Segurança deve ser considerada desde o início:
 - Manter .gitignore adequado.
 - Não adicionar credenciais, chaves, certificados ou dumps de banco ao
   repositório.
+- Usuários possuem papéis `ADMIN`, `MANAGER` e `OPERATOR`; autorização é
+  aplicada no backend por uma matriz central de permissões.
+- Senhas usam hash PBKDF2 com salt; sessões usam tokens assinados, expiração e
+  revogação persistida.
+- A trilha de auditoria não armazena senha, token ou segredo.
 
 ## 9. Fora do escopo da V1
 
@@ -570,6 +580,8 @@ decisões arquiteturais registradas aqui.
 - [x] Plano 04 — Fase 0: fundação transacional, cancelamento não destrutivo,
   timestamps, paginação backend-driven, dashboard agregado e observação em
   vendas.
+- [x] Plano 04 — Fase 1: autenticação, usuários, papéis, autorização
+  backend-first, sessões revogáveis e auditoria operacional.
 - [ ] Funcionalidades fora da V1 permanecem no backlog futuro.
 
 ## 13. Comandos
@@ -587,7 +599,7 @@ apontando para um banco dedicado com sufixo `_test`.
 
 ## 14. Última atualização
 
-Data: 2026-08-23
+Data: 2026-09-11
 
 - Ambiguidades do modelo resolvidas: categoria, funcionário responsável,
   histórico de preço, totais, exclusões e tipos mínimos de dados.
@@ -619,6 +631,9 @@ Data: 2026-08-23
 - Fase 0 do Plano 04 implementada com a migration `20260911_0002`, timestamps,
   cancelamento não destrutivo, observação em vendas, paginação backend-driven,
   dashboard agregado e leitura de aparência sem persistência implícita.
+- Fase 1 do Plano 04 implementada com a migration `20260911_0003`, usuários,
+  sessões revogáveis, papéis, autorização backend-first e logs de auditoria;
+  autenticação no frontend e CORS para `Authorization` foram integrados.
 - A validação local da Fase 14 ficou em `27 passed, 36 skipped, 1 warning` no
   backend e `34 passed` no frontend; os skips ocorreram porque
   `TEST_DATABASE_URL` não estava definida. Ruff, lint, typecheck e build

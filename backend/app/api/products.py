@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import Fornecedor, Produto, VendaItem
 from app.schemas.pagination import PaginationResponse
@@ -17,7 +18,11 @@ from app.services.custom_fields import (
 )
 from app.services.pagination import paginate
 
-router = APIRouter(prefix="/api/products", tags=["products"])
+router = APIRouter(
+    prefix="/api/products",
+    tags=["products"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 def ensure_supplier_exists(db: Session, supplier_id: int) -> None:
@@ -104,7 +109,12 @@ def get_product(product_id: int, db: Session = Depends(get_db_session)) -> Produ
     )
 
 
-@router.post("", response_model=ProdutoRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ProdutoRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("products:write"))],
+)
 def create_product(
     payload: ProdutoCreate,
     db: Session = Depends(get_db_session),
@@ -137,7 +147,11 @@ def create_product(
     )
 
 
-@router.patch("/{product_id}", response_model=ProdutoRead)
+@router.patch(
+    "/{product_id}",
+    response_model=ProdutoRead,
+    dependencies=[Depends(require_permission("products:write"))],
+)
 def update_product(
     product_id: int,
     payload: ProdutoUpdate,
@@ -182,7 +196,11 @@ def update_product(
     )
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("products:write"))],
+)
 def delete_product(product_id: int, db: Session = Depends(get_db_session)) -> Response:
     product = db.get(Produto, product_id)
     if product is None:

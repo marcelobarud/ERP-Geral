@@ -3,6 +3,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import require_authenticated, require_permission
 from app.db.session import get_db_session
 from app.models import Cliente, Produto, Venda, VendaItem
 from app.schemas.customers import (
@@ -21,7 +22,11 @@ from app.services.custom_fields import (
 )
 from app.services.pagination import paginate
 
-router = APIRouter(prefix="/api/customers", tags=["customers"])
+router = APIRouter(
+    prefix="/api/customers",
+    tags=["customers"],
+    dependencies=[Depends(require_authenticated)],
+)
 
 
 @router.get("", response_model=PaginationResponse[ClienteRead])
@@ -105,7 +110,12 @@ def get_customer(
     )
 
 
-@router.post("", response_model=ClienteRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ClienteRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("customers:write"))],
+)
 def create_customer(
     payload: ClienteCreate,
     db: Session = Depends(get_db_session),
@@ -131,7 +141,11 @@ def create_customer(
     )
 
 
-@router.patch("/{customer_id}", response_model=ClienteRead)
+@router.patch(
+    "/{customer_id}",
+    response_model=ClienteRead,
+    dependencies=[Depends(require_permission("customers:write"))],
+)
 def update_customer(
     customer_id: int,
     payload: ClienteUpdate,
@@ -168,7 +182,11 @@ def update_customer(
     )
 
 
-@router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{customer_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("customers:write"))],
+)
 def delete_customer(
     customer_id: int,
     db: Session = Depends(get_db_session),
