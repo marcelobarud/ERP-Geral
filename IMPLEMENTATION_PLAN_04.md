@@ -722,7 +722,7 @@ declarada como aprovada nesta máquina.
 
 # 10. Fase 4 — Fundação de estoque
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA
 **Commit esperado:** `feat: adiciona controle de estoque por movimentações`
 
 ## Objetivo
@@ -831,6 +831,19 @@ Utilizar campo definido no catálogo para sinalizações.
 - inventário;
 - reversão;
 - integridade de origem.
+
+## Resultado da execução
+
+Implementada a migration `20260911_0006` com depósito padrão, configuração
+explícita de saldo negativo, movimentações append-oriented, reversões por
+movimento de origem e inventário com confirmação. O saldo é calculado a partir
+dos eventos, saídas são bloqueadas quando gerariam saldo negativo por padrão,
+chaves de idempotência evitam duplicações e o estoque mínimo do catálogo é
+exposto nas consultas de saldo.
+
+Validação local: `45 passed`, `62 skipped` por ausência de `TEST_DATABASE_URL`;
+Ruff e validações estruturais aprovados. A suíte PostgreSQL real não foi
+declarada como aprovada nesta máquina.
 
 ---
 

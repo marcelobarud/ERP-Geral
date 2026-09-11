@@ -37,6 +37,13 @@ from app.models.entities import (
     Venda,
     VendaItem,
 )
+from app.models.inventory import (
+    ConfiguracaoEstoque,
+    DepositoEstoque,
+    InventarioEstoque,
+    InventarioEstoqueItem,
+    MovimentacaoEstoque,
+)
 
 __all__ = [
     "Cliente",
@@ -57,6 +64,11 @@ __all__ = [
     "OrcamentoItem",
     "PedidoVenda",
     "PedidoVendaItem",
+    "DepositoEstoque",
+    "ConfiguracaoEstoque",
+    "MovimentacaoEstoque",
+    "InventarioEstoque",
+    "InventarioEstoqueItem",
     "AppearanceSettings",
     "PageAppearanceSettings",
     "ElementAppearanceOverride",

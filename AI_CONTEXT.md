@@ -76,6 +76,12 @@ snapshots comerciais, transições controladas, conversões idempotentes para
 pedido/venda e impressão HTML foram adicionados. Os documentos não movimentam
 estoque definitivamente nesta fase. A validação local passou com 43 testes e
 61 testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
+A Fase 4 do Plano 04 foi concluída em 2026-09-11 com a migration
+`20260911_0006`: depósito padrão, configuração explícita de saldo negativo,
+movimentações append-oriented, reversões com origem e inventário com
+confirmação foram adicionados. O saldo é calculado pelos eventos e a consulta
+usa o estoque mínimo do catálogo. A validação local passou com 45 testes e 62
+testes PostgreSQL ignorados por ausência de `TEST_DATABASE_URL`.
 
 Princípio central: privilegiar simplicidade sobre abrangência. Não tratar um
 ERP genérico como autorização para construir uma plataforma completa antes de

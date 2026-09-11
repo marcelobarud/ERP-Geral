@@ -3,10 +3,14 @@ from sqlalchemy import Boolean, Date, DateTime, Integer, Numeric, inspect
 from app.models import (
     CategoriaProduto,
     Cliente,
+    ConfiguracaoEstoque,
+    DepositoEstoque,
     Fornecedor,
     Funcionario,
     HistoricoCustoProduto,
+    InventarioEstoque,
     LogAuditoria,
+    MovimentacaoEstoque,
     Orcamento,
     PedidoVenda,
     Produto,
@@ -208,6 +212,49 @@ EXPECTED_COLUMNS = {
         "desconto",
         "acrescimo",
     },
+    "depositos_estoque": {
+        "id",
+        "codigo",
+        "nome",
+        "ativo",
+        "created_at",
+        "updated_at",
+    },
+    "configuracoes_estoque": {"id", "permitir_saldo_negativo", "updated_at"},
+    "movimentacoes_estoque": {
+        "id",
+        "produto_id",
+        "deposito_id",
+        "tipo",
+        "quantidade",
+        "data_movimentacao",
+        "origem",
+        "documento_tipo",
+        "documento_id",
+        "movimento_origem_id",
+        "usuario_id",
+        "observacao",
+        "chave_idempotencia",
+        "created_at",
+    },
+    "inventarios_estoque": {
+        "id",
+        "deposito_id",
+        "data_inventario",
+        "status",
+        "usuario_id",
+        "observacao",
+        "created_at",
+        "updated_at",
+    },
+    "inventarios_estoque_itens": {
+        "id",
+        "inventario_id",
+        "produto_id",
+        "saldo_sistema",
+        "quantidade_contada",
+        "diferenca",
+    },
     "configuracoes_aparencia": {
         "id",
         "nome_sistema",
@@ -336,6 +383,18 @@ def test_only_approved_columns_are_nullable() -> None:
             "observacao",
         },
         "pedido_venda_itens": set(),
+        "depositos_estoque": set(),
+        "configuracoes_estoque": set(),
+        "movimentacoes_estoque": {
+            "documento_tipo",
+            "documento_id",
+            "movimento_origem_id",
+            "usuario_id",
+            "observacao",
+            "chave_idempotencia",
+        },
+        "inventarios_estoque": {"usuario_id", "observacao"},
+        "inventarios_estoque_itens": set(),
         "configuracoes_aparencia": {"logo_url"},
         "configuracoes_aparencia_paginas": {
             "cor_fundo",
@@ -408,6 +467,8 @@ def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
         ProdutoFornecedor,
         Orcamento,
         PedidoVenda,
+        DepositoEstoque,
+        InventarioEstoque,
     ):
         created_at = model.__table__.c.created_at
         updated_at = model.__table__.c.updated_at
@@ -418,6 +479,8 @@ def test_operational_timestamps_and_sale_defaults_are_declared() -> None:
     for model in (SessaoAutenticacao, LogAuditoria):
         assert callable(model.__table__.c.created_at.default.arg)
     assert callable(HistoricoCustoProduto.__table__.c.created_at.default.arg)
+    assert callable(MovimentacaoEstoque.__table__.c.created_at.default.arg)
+    assert callable(ConfiguracaoEstoque.__table__.c.updated_at.default.arg)
 
     assert Venda.__table__.c.status.default.arg == "CONCLUIDA"
     assert Venda.__table__.c.status.server_default is not None

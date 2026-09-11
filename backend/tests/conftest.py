@@ -36,8 +36,13 @@ REQUIRED_TABLES = {
     "orcamento_itens",
     "pedidos_venda",
     "pedido_venda_itens",
+    "depositos_estoque",
+    "configuracoes_estoque",
+    "movimentacoes_estoque",
+    "inventarios_estoque",
+    "inventarios_estoque_itens",
 }
-EXPECTED_MIGRATION = "20260911_0005"
+EXPECTED_MIGRATION = "20260911_0006"
 
 TEST_DATA_TABLES = (
     "logs_auditoria",
@@ -49,6 +54,11 @@ TEST_DATA_TABLES = (
     "orcamento_itens",
     "orcamentos",
     "condicoes_pagamento",
+    "inventarios_estoque_itens",
+    "inventarios_estoque",
+    "movimentacoes_estoque",
+    "configuracoes_estoque",
+    "depositos_estoque",
     "produtos_fornecedores",
     "categorias_produto",
     "unidades_medida",

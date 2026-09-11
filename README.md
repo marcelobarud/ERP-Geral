@@ -84,6 +84,10 @@ A migration `20260911_0005` adiciona condições de pagamento, orçamentos e
 pedidos de venda, com snapshots comerciais, transições de status, conversões
 idempotentes para pedido/venda e saída HTML simples para impressão.
 
+A migration `20260911_0006` adiciona o depósito padrão, movimentações de
+estoque, proteção contra saldo negativo, reversões idempotentes, inventário e
+consulta de saldo comparada ao estoque mínimo.
+
 ## Execução local
 
 Backend, em um terminal:
