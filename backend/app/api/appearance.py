@@ -1,13 +1,16 @@
+import os
 import uuid
 import warnings
 from io import BytesIO
 from pathlib import Path
 
+from dotenv import dotenv_values
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_authenticated, require_permission
+from app.core.config import PROJECT_ROOT
 from app.core.rate_limit import upload_rate_limit
 from app.db.session import get_db_session
 from app.models.appearance import (
@@ -34,7 +37,19 @@ router = APIRouter(
     tags=["appearance"],
     dependencies=[Depends(require_authenticated)],
 )
-LOGO_STORAGE_DIR = Path(__file__).resolve().parents[2] / "storage" / "branding"
+def _logo_storage_dir() -> Path:
+    configured = os.getenv("STORAGE_DIR")
+    if not configured:
+        configured = str(dotenv_values(PROJECT_ROOT / ".env").get("STORAGE_DIR") or "")
+    if configured:
+        storage_root = Path(configured).expanduser()
+        if not storage_root.is_absolute():
+            storage_root = PROJECT_ROOT / storage_root
+        return storage_root / "branding"
+    return Path(__file__).resolve().parents[2] / "storage" / "branding"
+
+
+LOGO_STORAGE_DIR = _logo_storage_dir()
 MAX_LOGO_BYTES = 2 * 1024 * 1024
 MAX_LOGO_DIMENSION = 1024
 MAX_LOGO_PIXELS = 25_000_000

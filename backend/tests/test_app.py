@@ -37,6 +37,32 @@ def test_health_check_allows_frontend_local_origin() -> None:
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
+def test_production_disables_openapi_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("API_DOCS_ENABLED", raising=False)
+
+    application = create_app()
+    client = TestClient(application)
+
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
+def test_cors_origins_are_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("CORS_ORIGINS", "https://erp.example, https://admin.example")
+
+    application = create_app()
+    response = TestClient(application).get(
+        "/api/health",
+        headers={"Origin": "https://erp.example"},
+    )
+
+    assert response.headers["access-control-allow-origin"] == "https://erp.example"
+
+
 def test_validation_errors_do_not_expose_input_details() -> None:
     application = create_app()
 

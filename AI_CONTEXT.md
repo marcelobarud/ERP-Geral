@@ -1227,3 +1227,17 @@ O Dashboard passou a oferecer atalhos de configuração de aparência e módulos
 O caminho completo está descrito em `docs/ONBOARDING.md`, incluindo revisão de
 depósito, unidades, condições de pagamento e categorias antes da primeira
 operação. Validação: frontend `79 passed`, typecheck e build aprovados.
+
+## Atualização — Plano 07, Fase 4 em 2026-09-12
+
+Os defaults de distribuição foram reforçados. CORS agora é configurável por
+`CORS_ORIGINS`, documentação OpenAPI pode ser desligada por
+`API_DOCS_ENABLED` e fica desativada por padrão em produção, e `STORAGE_DIR`
+permite apontar branding/uploads para armazenamento persistente fora do código.
+Foi criado `docs/SECURITY.md` com o checklist de secrets, HTTPS, PostgreSQL,
+permissões, uploads, rate limiting e backups. A validação da configuração de
+produção continua rejeitando secrets ausentes, curtos ou com marcadores de
+exemplo.
+
+Validação: backend `ruff check app` aprovado; testes focados `16 passed, 9
+skipped`; frontend permanece com `79 passed`, typecheck e build aprovados.

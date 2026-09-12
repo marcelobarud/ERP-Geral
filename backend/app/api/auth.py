@@ -10,8 +10,8 @@ from app.db.session import get_db_session
 from app.models import Usuario
 from app.schemas.auth import (
     AuthConfigRead,
-    BootstrapStatusRead,
     BootstrapRequest,
+    BootstrapStatusRead,
     LoginRequest,
     LoginResponse,
     UsuarioRead,

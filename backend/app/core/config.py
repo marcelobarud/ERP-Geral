@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     auth_secret: str | None = None
     auth_token_expiration_minutes: int = Field(default=60, ge=5, le=1440)
     auth_bootstrap_token: str | None = None
+    cors_origins: str = ""
+    api_docs_enabled: bool | None = None
+    storage_dir: str | None = None
 
     model_config = SettingsConfigDict(
         # O .env oficial fica na raiz do monorepo, independentemente do CWD.

@@ -61,6 +61,11 @@ As variáveis principais são:
 - `AUTH_SECRET`: segredo usado para assinar sessões; mantenha fora do Git.
 - `AUTH_TOKEN_EXPIRATION_MINUTES`: duração dos tokens de sessão.
 - `AUTH_BOOTSTRAP_TOKEN`: token temporário para criar o primeiro administrador.
+- `CORS_ORIGINS`: origens permitidas separadas por vírgula; em produção, deixe
+  vazio quando frontend e API usarem a mesma origem.
+- `API_DOCS_ENABLED`: controla `/docs`, `/redoc` e `/openapi.json`; o padrão de
+  produção é desativado.
+- `STORAGE_DIR`: diretório persistente opcional para uploads e branding.
 
 Ambas devem usar o formato `postgresql+psycopg://...`.
 

@@ -1,3 +1,6 @@
+import os
+
+from dotenv import dotenv_values
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -22,11 +25,54 @@ from app.api.reports import router as reports_router
 from app.api.sales import router as sales_router
 from app.api.suppliers import router as suppliers_router
 from app.api.users import router as users_router
+from app.core.config import PROJECT_ROOT
 from app.core.errors import register_exception_handlers
+
+_PUBLIC_ENV_VALUES = dotenv_values(PROJECT_ROOT / ".env")
+
+
+def _runtime_env(name: str, default: str = "") -> str:
+    return os.getenv(name) or str(_PUBLIC_ENV_VALUES.get(name) or default)
+
+
+def _runtime_bool(name: str, default: bool) -> bool:
+    value = _runtime_env(name)
+    if not value:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on", "sim"}
+
+
+def _cors_origins() -> list[str]:
+    configured = [
+        origin.strip()
+        for origin in _runtime_env("CORS_ORIGINS").split(",")
+        if origin.strip()
+    ]
+    if configured:
+        return configured
+    if _runtime_env("ENVIRONMENT", "development").strip().lower() == "production":
+        return []
+    return [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://192.168.1.107:5174",
+    ]
 
 
 def create_app() -> FastAPI:
-    application = FastAPI(title="ERP Geral", version="0.1.0")
+    production = (
+        _runtime_env("ENVIRONMENT", "development").strip().lower() == "production"
+    )
+    docs_enabled = _runtime_bool("API_DOCS_ENABLED", not production)
+    application = FastAPI(
+        title="ERP Geral",
+        version="0.1.0",
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
+    )
 
     @application.middleware("http")
     async def security_headers(request: Request, call_next):
@@ -43,13 +89,7 @@ def create_app() -> FastAPI:
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:5174",
-            "http://192.168.1.107:5174",
-        ],
+        allow_origins=_cors_origins(),
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Accept", "Authorization", "Content-Type"],
