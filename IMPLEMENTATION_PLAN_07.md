@@ -561,7 +561,7 @@ Componentes compartilhados e tokens produzem comportamento visual previsível.
 
 # 13. Fase 7 — Redesign seletivo com Impeccable
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA — refinamento equivalente aplicado por inspeção do código; skill Impeccable não está instalada  
 **Commit esperado:** `refactor: redesenha telas prioritárias do ERP`
 
 ## Objetivo

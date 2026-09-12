@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.api.sales import router as sales_router
 from app.core.config import Settings, get_settings
 from app.db.session import create_engine_from_settings, create_session_factory
 from app.main import app, create_app
@@ -62,6 +63,14 @@ def test_cors_origins_are_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     assert response.headers["access-control-allow-origin"] == "https://erp.example"
+
+
+def test_static_sales_return_routes_precede_sale_id_route() -> None:
+    paths = [route.path for route in sales_router.routes]
+    returns_index = paths.index("/api/sales/returns")
+    sale_id_index = paths.index("/api/sales/{sale_id}")
+
+    assert returns_index < sale_id_index
 
 
 def test_validation_errors_do_not_expose_input_details() -> None:

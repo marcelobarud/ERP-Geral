@@ -165,6 +165,29 @@ def list_sales(
     )
 
 
+@router.get("/returns/{return_id}", response_model=ReturnRead)
+def get_sale_return_endpoint(
+    return_id: int, db: Session = Depends(get_db_session)
+) -> ReturnRead:
+    record = get_return(db, return_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Devolução não encontrada.")
+    return return_to_read(record)
+
+
+@router.get("/returns", response_model=list[ReturnRead])
+def list_sale_returns(
+    status_filter: str | None = Query(default=None, alias="status"),
+    db: Session = Depends(get_db_session),
+) -> list[ReturnRead]:
+    query = select(DevolucaoVenda).options(
+        selectinload(DevolucaoVenda.itens)
+    ).order_by(DevolucaoVenda.created_at.desc(), DevolucaoVenda.id.desc())
+    if status_filter:
+        query = query.where(DevolucaoVenda.status == status_filter)
+    return [return_to_read(record) for record in db.scalars(query).all()]
+
+
 @router.get("/{sale_id}", response_model=VendaRead)
 def get_sale_endpoint(
     sale_id: int,
@@ -268,29 +291,6 @@ def create_sale_return_endpoint(
         return return_to_read(create_return(db, sale_id, payload))
     except SalesStockConflict as exception:
         raise HTTPException(status_code=409, detail=str(exception)) from None
-
-
-@router.get("/returns/{return_id}", response_model=ReturnRead)
-def get_sale_return_endpoint(
-    return_id: int, db: Session = Depends(get_db_session)
-) -> ReturnRead:
-    record = get_return(db, return_id)
-    if record is None:
-        raise HTTPException(status_code=404, detail="Devolução não encontrada.")
-    return return_to_read(record)
-
-
-@router.get("/returns", response_model=list[ReturnRead])
-def list_sale_returns(
-    status_filter: str | None = Query(default=None, alias="status"),
-    db: Session = Depends(get_db_session),
-) -> list[ReturnRead]:
-    query = select(DevolucaoVenda).options(
-        selectinload(DevolucaoVenda.itens)
-    ).order_by(DevolucaoVenda.created_at.desc(), DevolucaoVenda.id.desc())
-    if status_filter:
-        query = query.where(DevolucaoVenda.status == status_filter)
-    return [return_to_read(record) for record in db.scalars(query).all()]
 
 
 @router.post(

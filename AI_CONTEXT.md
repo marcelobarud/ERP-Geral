@@ -1265,3 +1265,15 @@ breakpoints de 900px/560px foram alinhados para filtros e métricas.
 
 Validação: a suíte frontend permanece `79 passed`, typecheck e build aprovados;
 Ruff do backend segue aprovado.
+
+## Atualização — Plano 07, Fase 7 em 2026-09-12
+
+Foi corrigida a causa da tela quebrada de Devoluções: as rotas estáticas
+`/api/sales/returns` e `/api/sales/returns/{return_id}` agora precedem a rota
+dinâmica `/{sale_id}`. Um teste protege essa ordem. Nos relatórios, a toolbar
+foi separada em filtros e ações, as métricas ganharam grade própria e as ações
+de tabela receberam área mínima de interação. A base visual foi preservada;
+não há skill Impeccable instalada neste ambiente.
+
+Validação: backend `ruff check app` e `16 passed`; frontend `79 passed`,
+typecheck e build aprovados.
