@@ -1304,3 +1304,27 @@ foi feito.
 Validação final: backend `58 passed, 65 skipped`; frontend `79 passed`, lint
 com exit 0 e oito avisos preexistentes, typecheck e build aprovados; Ruff de
 `app`, scripts PowerShell, refresh de SPA, health e auditoria visual aprovados.
+
+## Gate operacional final — Plano 07 em 2026-09-12
+
+O gate operacional foi executado exclusivamente em `D:\Codex\ERP Geral`, na
+branch `main`, contra o remote oficial do ERP Geral. O backend passou a suíte
+completa PostgreSQL com `TEST_DATABASE_URL`: **123 passed, 0 skipped**. Uma
+base isolada foi migrada do zero até `20260911_0012 (head)`; bootstrap, login,
+idempotência do bootstrap, `/api/health` e `/api/system-info` foram validados.
+
+O frontend passou com **79 testes**, typecheck e build; lint terminou com exit
+0 e oito avisos preexistentes. O onboarding `/setup` foi verificado
+visualmente antes do primeiro administrador, e o estado pós-bootstrap foi
+verificado como login. O backend de produção local foi reiniciado sem reload
+e respondeu `status=ok` com banco/schema saudáveis.
+
+O Ruff completo foi aprovado. A configuração passou a ignorar `E501` somente
+nas migrations históricas, e o teste de migration teve seu bloco de imports
+formatado; nenhuma migration histórica foi reescrita.
+
+O dump/restauração real permanece como preparação operacional porque
+`pg_dump` e `pg_restore` não estão disponíveis nesta máquina. O banco
+principal não recebeu operações destrutivas. A classificação permanece
+**SIM, COM PREPARAÇÃO OPERACIONAL**. Nenhuma credencial foi registrada em
+código, documentação ou contexto.
