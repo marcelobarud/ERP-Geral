@@ -1,9 +1,13 @@
 import type { ApiErrorPayload, HealthResponse } from '../types/api'
 
 const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+const sameOriginBaseUrl =
+  typeof window !== 'undefined' ? window.location.origin : ''
+const developmentBaseUrl = 'http://127.0.0.1:8000'
 
 export const API_BASE_URL = (
-  configuredBaseUrl || 'http://127.0.0.1:8000'
+  configuredBaseUrl ||
+    (import.meta.env.DEV ? developmentBaseUrl : sameOriginBaseUrl)
 ).replace(/\/+$/, '')
 
 const AUTH_TOKEN_KEY = 'erp_geral_access_token'

@@ -282,7 +282,7 @@ pré-requisitos
 
 # 7. Fase 1 — Execução de produção
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA  
 **Commit esperado:** `feat: prepara execução web de produção do ERP`
 
 ## Objetivo

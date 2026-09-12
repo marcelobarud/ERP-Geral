@@ -1186,3 +1186,17 @@ A validação online de uma instalação nova com PostgreSQL descartável não f
 executada neste ambiente porque as ferramentas de administração PostgreSQL não
 estão disponíveis e não se deve tocar no banco principal. O runbook deixa essa
 prova operacional explícita para o primeiro ambiente isolado do cliente.
+
+## Atualização — Plano 07, Fase 1 em 2026-09-12
+
+O ERP agora tem execução web de produção documentada em
+`docs/PRODUCTION.md`. Foram adicionados `scripts/start-backend.ps1` para
+Uvicorn sem reload, `scripts/serve-frontend.ps1` e
+`scripts/static_server.py`, que serve o build Vite com fallback de SPA. Também
+foram incluídos modelos de unidade systemd e reverse proxy Nginx em `deploy/`.
+
+O cliente HTTP usa `VITE_API_BASE_URL` quando configurado; no build sem esse
+override, usa a origem atual, permitindo frontend e API sob o mesmo domínio.
+O link de impressão comercial passou a usar o mesmo resolvedor de origem.
+Validação: frontend `79 passed`, typecheck e build aprovados; refresh de
+`/customers` respondeu `200`; scripts PowerShell parseados.

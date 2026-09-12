@@ -1,0 +1,17 @@
+[Unit]
+Description=ERP Geral backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=erp-geral
+WorkingDirectory=/opt/erp-geral/backend
+Environment=PATH=/opt/erp-geral/backend/.venv/bin
+ExecStart=/opt/erp-geral/backend/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
