@@ -1253,3 +1253,15 @@ retorna somente versão, ambiente e estado de migrations.
 Validação: backend `ruff check app` aprovado; testes focados `15 passed`; script
 de diagnóstico parseado; frontend permanece com `79 passed`, typecheck e build
 aprovados. O fluxo não lê nem exibe o `.env`.
+
+## Atualização — Plano 07, Fase 6 em 2026-09-12
+
+O sistema visual foi formalizado em `docs/DESIGN_SYSTEM.md`, com tokens de
+espaçamento, altura de controle e foco visível no `frontend/src/index.css`.
+Relatórios agora usam `report-toolbar`, `report-filter-bar` e
+`report-metrics-grid`, evitando a toolbar sem estilo e a grade quebrada em
+telas intermediárias. Ações de tabela receberam alvo mínimo de teclado e os
+breakpoints de 900px/560px foram alinhados para filtros e métricas.
+
+Validação: a suíte frontend permanece `79 passed`, typecheck e build aprovados;
+Ruff do backend segue aprovado.

@@ -55,6 +55,10 @@
   --appearance-text: #1e293b;
   --appearance-control-radius: 0.75rem;
   --appearance-card-radius: 1.5rem;
+  --space-page: clamp(1.15rem, 3vw, 3.5rem);
+  --space-section: clamp(1.5rem, 3vw, 2.75rem);
+  --control-height: 2.7rem;
+  --focus-ring: 0 0 0 0.2rem rgba(72, 122, 152, 0.2);
 }
 
 * {

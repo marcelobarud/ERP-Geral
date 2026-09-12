@@ -450,7 +450,7 @@ Não criar observabilidade enterprise.
 
 # 12. Fase 6 — Design system formal
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA  
 **Commit esperado:** `refactor: formaliza design system do ERP`
 
 ## Objetivo
