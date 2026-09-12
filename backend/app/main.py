@@ -24,6 +24,7 @@ from app.api.purchases import router as purchases_router
 from app.api.reports import router as reports_router
 from app.api.sales import router as sales_router
 from app.api.suppliers import router as suppliers_router
+from app.api.system import router as system_router
 from app.api.users import router as users_router
 from app.core.config import PROJECT_ROOT
 from app.core.errors import register_exception_handlers
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     )
     register_exception_handlers(application)
     application.include_router(health_router)
+    application.include_router(system_router)
     application.include_router(auth_router)
     application.include_router(users_router)
     application.include_router(audit_router)

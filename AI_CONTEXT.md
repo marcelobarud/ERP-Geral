@@ -1241,3 +1241,15 @@ exemplo.
 
 Validação: backend `ruff check app` aprovado; testes focados `16 passed, 9
 skipped`; frontend permanece com `79 passed`, typecheck e build aprovados.
+
+## Atualização — Plano 07, Fase 5 em 2026-09-12
+
+Foi criada a fonte de versão em `backend/app/core/version.py`, o
+`CHANGELOG.md`, os runbooks `docs/RELEASE.md` e `docs/SUPPORT.md`, e o script
+sanitizado `scripts/diagnostic.ps1`. `/api/health` informa a versão junto dos
+estados de processo, banco e schema; `/api/system-info` exige autenticação e
+retorna somente versão, ambiente e estado de migrations.
+
+Validação: backend `ruff check app` aprovado; testes focados `15 passed`; script
+de diagnóstico parseado; frontend permanece com `79 passed`, typecheck e build
+aprovados. O fluxo não lê nem exibe o `.env`.

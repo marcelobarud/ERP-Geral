@@ -23,6 +23,7 @@ def test_health_check_returns_minimal_contract() -> None:
     assert "database" in payload
     assert "schema" in payload
     assert "expected_migration" in payload
+    assert payload["version"] == "0.1.0"
 
 
 def test_health_check_allows_frontend_local_origin() -> None:

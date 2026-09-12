@@ -5,6 +5,7 @@ from alembic.script import ScriptDirectory
 from fastapi import APIRouter
 from sqlalchemy import text
 
+from app.core.version import PRODUCT_VERSION
 from app.db.session import get_engine
 
 router = APIRouter(prefix="/api", tags=["technical"])
@@ -15,6 +16,7 @@ def health_check() -> dict[str, str | None]:
     expected_migration = _expected_migration()
     result: dict[str, str | None] = {
         "status": "ok",
+        "version": PRODUCT_VERSION,
         "process": "ok",
         "database": "ok",
         "schema": "ok",

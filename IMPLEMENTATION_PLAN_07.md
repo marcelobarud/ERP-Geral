@@ -423,7 +423,7 @@ Configuração de produção insegura deve falhar ou alertar claramente.
 
 # 11. Fase 5 — Release, suporte e observabilidade leve
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA  
 **Commit esperado:** `feat: estrutura release e suporte operacional do ERP`
 
 ## Escopo
