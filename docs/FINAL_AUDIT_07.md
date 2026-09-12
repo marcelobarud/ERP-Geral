@@ -1,71 +1,109 @@
-# Auditoria operacional final do Plano 07
+# Último gate operacional do ERP Geral
 
 Data: 2026-09-12
 Workspace: `D:\Codex\ERP Geral`
 Branch: `main`
 Remote: `https://github.com/marcelobarud/ERP-Geral.git`
-Classificação: **SIM, COM PREPARAÇÃO OPERACIONAL**
+Classificação: **SIM**
 
-## Resultado
+## Conclusão
 
-O ERP Geral passou pelas verificações locais de execução, banco, migrations,
-bootstrap, frontend, produção e suporte. O banco principal não foi usado em
-testes destrutivos; as verificações de banco usaram somente bases isoladas.
+O ERP Geral foi certificado em um ciclo completo com dados artificiais:
 
-O único ponto que impede a classificação `SIM` plena é a ausência dos clientes
-administrativos PostgreSQL (`pg_dump` e `pg_restore`) nesta máquina. Portanto,
-os scripts de backup e restore estão implementados e protegidos, mas um ciclo
-real de dump/restauração ainda precisa ser executado em ambiente operacional
-com essas ferramentas instaladas.
+```text
+backup → restore → health → login → dados → storage
+```
 
-## Evidências executadas
+Conclusão operacional: **ERP Geral pronto para primeira implantação
+controlada.** Isso não representa alta disponibilidade, operação em larga
+escala, certificação fiscal ou SaaS.
+
+## Ferramentas PostgreSQL
+
+| Ferramenta | Versão | Resultado |
+|---|---:|---|
+| PostgreSQL Server | 18.6 | ativo em `D:\PostGre` |
+| `psql` | 18.6 | disponível em `D:\PostGre\bin` |
+| `pg_dump` | 18.6 | backup real aprovado |
+| `pg_restore` | 18.6 | validação e restore real aprovados |
+
+As ferramentas estavam instaladas, mas fora do `PATH`; foram usadas por
+caminho absoluto/`PATH` temporário de sessão. O PATH global não foi alterado.
+
+## Ambiente de teste
+
+- origem: `erp_geral_backup_test`;
+- restore: `erp_geral_restore_test`;
+- ambos isolados e recriados exclusivamente para este gate;
+- migration em ambos: `20260911_0012 (head)`;
+- banco principal `erp_geral`: não recebeu restore, DROP, limpeza ou operação
+  destrutiva.
+
+## Dados de prova
+
+Foram criados somente dados artificiais:
+
+- `Cliente Backup Gate Final`;
+- `Fornecedor Backup Gate Final`;
+- `Produto Backup Gate Final`, vinculado ao fornecedor;
+- arquivo artificial `gate-final-proof.txt` no storage.
+
+Os bancos, o arquivo e o backup temporário foram removidos após a validação.
+
+## Backup
 
 | Verificação | Resultado |
 |---|---|
-| Backend `pytest -q` com `TEST_DATABASE_URL` | **123 passed, 0 skipped**, 4 warnings de dependências |
-| Migrations em banco vazio | `erp_geral_install_test` chegou de zero a `20260911_0012 (head)` |
-| Bootstrap e login | primeiro administrador criado, login validado e segundo bootstrap retornou `409` |
-| `/api/health` | `status=ok`, versão `0.1.0`, banco/schema `ok`, migration atual/esperada `20260911_0012` |
-| `/api/system-info` | autenticado, retornou produto ERP Geral, ambiente e estado de migrations |
-| Frontend Vitest | **79 passed** em 18 arquivos |
-| Frontend typecheck | aprovado |
-| Frontend lint | exit 0; 8 avisos preexistentes de `react(set-state-in-effect)` |
-| Frontend build | aprovado com `VITE_API_BASE_URL` apontando para o backend de produção local |
-| Ruff completo | `ruff check .` aprovado |
-| Onboarding visual | `/setup` mostrou configuração inicial antes do bootstrap; após bootstrap, a aplicação encaminhou para login |
-| Produção local | Uvicorn sem reload foi reiniciado na porta 8000 e respondeu saudável |
-| SPA fallback | servidor estático respondeu `200` para rota profunda |
-| Scripts PowerShell | parseados sem erro; guardas de restore exigem confirmação explícita |
-| Git | 10 commits do Plano 07 presentes; nenhum push, tag ou deploy realizado |
+| Script oficial `scripts/backup.ps1` | aprovado |
+| `database.dump` | criado, 181.494 bytes |
+| `storage.zip` | criado, 336 bytes |
+| `pg_restore --list` | dump válido, 486 entradas |
+| `.env` e secrets no artefato | não encontrados |
+| storage arquivado | `storage/gate-final-proof.txt` presente |
 
-## Backup e restore
+## Restore
 
-Não foi executado dump/restauração real porque `pg_dump` e `pg_restore` não
-estão disponíveis no PATH desta máquina. Não foi usado `erp_geral` para
-qualquer ação destrutiva, e nenhuma credencial foi persistida no código,
-documentação ou arquivos de contexto.
+| Verificação | Resultado |
+|---|---|
+| Script oficial `scripts/restore.ps1 -ConfirmRestore` | aprovado |
+| destino | `erp_geral_restore_test` |
+| `pg_restore` | restore real aprovado |
+| migration pós-restore | `20260911_0012 (head)` |
+| health | `status`, `process`, `database` e `schema` em `ok` |
+| login | usuário restaurado autenticou com sucesso; papel `ADMIN` |
+| dados | cliente, fornecedor e produto encontrados; vínculo produto-fornecedor preservado |
+| storage | arquivo restaurado e servido por `/uploads` com HTTP 200 |
 
-Antes do primeiro cliente, instalar o PostgreSQL Client Tools e executar o
-ciclo descrito em `docs/BACKUP.md` usando uma base de restauração isolada.
+## Smoke pós-restore
 
-## Commits do Plano 07
+Foram validados com a instalação restaurada:
 
-```text
-3a5ef6e feat: cria instalação reproduzível do ERP
-2a96c61 feat: prepara execução web de produção do ERP
-94f0a0f feat: adiciona operação segura de backup e atualização
-d158b43 feat: adiciona onboarding inicial do ERP
-e0cf461 chore: reforça segurança para distribuição do ERP
-c72c37e feat: adiciona diagnóstico e operação de suporte do ERP
-09bcc8a refactor: formaliza design system do ERP
-0bec8cc refactor: redesenha telas prioritárias do ERP
-4c4ba58 fix: conclui polimento visual e responsivo do ERP
-23583e8 chore: consolida prontidão do ERP para primeiro cliente
-```
+- login e sessão autenticada;
+- clientes;
+- fornecedores;
+- produtos;
+- dashboard/relatório HTTP 200;
+- `/api/health`;
+- `/api/system-info`;
+- arquivo persistente do storage.
 
-## Preparação operacional restante
+## Proteções do restore
 
-1. Disponibilizar `pg_dump` e `pg_restore` no ambiente operacional.
-2. Executar e registrar um backup real e uma restauração real em base isolada.
-3. Repetir o procedimento de instalação documentado no host definitivo, com
-   secrets fornecidos pelo operador sem registrá-los no repositório.
+O restore sem `-ConfirmRestore` foi recusado com mensagem explícita de
+operação destrutiva. O destino foi informado explicitamente e permaneceu
+isolado durante todo o ensaio.
+
+## Testes de regressão anteriores preservados
+
+- backend: **123 passed, 0 skipped**;
+- frontend: **79 passed**;
+- typecheck e build frontend: aprovados;
+- Ruff completo: aprovado;
+- Git: limpo após o gate.
+
+## Git
+
+Nenhum push, tag ou deploy foi realizado. A atualização desta auditoria e do
+contexto do projeto deve ser registrada em um único commit local do gate.
+
+Nenhuma credencial temporária foi persistida.

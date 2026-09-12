@@ -1328,3 +1328,27 @@ O dump/restauração real permanece como preparação operacional porque
 principal não recebeu operações destrutivas. A classificação permanece
 **SIM, COM PREPARAÇÃO OPERACIONAL**. Nenhuma credencial foi registrada em
 código, documentação ou contexto.
+
+## Último gate operacional — backup e restore em 2026-09-12
+
+O ciclo real `backup → restore → health → login → dados → storage` foi
+certificado exclusivamente em bancos isolados. `psql`, `pg_dump` e
+`pg_restore` 18.6 foram encontrados em `D:\PostGre\bin`, fora do PATH global,
+e usados sem alteração permanente do ambiente.
+
+A origem `erp_geral_backup_test` recebeu dados artificiais de cliente,
+fornecedor e produto, com vínculo produto-fornecedor, além de um arquivo
+artificial no storage. `scripts/backup.ps1` produziu dump custom válido e
+`storage.zip`; `pg_restore --list` confirmou o dump. `scripts/restore.ps1`
+restaurou tudo em `erp_geral_restore_test`, que terminou em
+`20260911_0012 (head)`. Health, login do usuário restaurado, permissões,
+clientes, fornecedores, produtos, dashboard, `system-info` e serviço do
+arquivo em `/uploads` responderam corretamente.
+
+O restore sem `-ConfirmRestore` foi recusado. Os bancos artificiais, o arquivo
+de prova e o backup temporário foram removidos após a validação. O banco
+principal `erp_geral` não recebeu operação destrutiva.
+
+A classificação operacional foi promovida para **SIM**: **ERP Geral pronto
+para primeira implantação controlada**. Nenhuma credencial temporária foi
+persistida.
