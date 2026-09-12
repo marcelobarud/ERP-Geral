@@ -1200,3 +1200,17 @@ override, usa a origem atual, permitindo frontend e API sob o mesmo domínio.
 O link de impressão comercial passou a usar o mesmo resolvedor de origem.
 Validação: frontend `79 passed`, typecheck e build aprovados; refresh de
 `/customers` respondeu `200`; scripts PowerShell parseados.
+
+## Atualização — Plano 07, Fase 2 em 2026-09-12
+
+Foram adicionados `scripts/backup.ps1`, `scripts/restore.ps1` e
+`scripts/update.ps1`, além do runbook `docs/BACKUP.md`. O backup inclui dump
+custom do PostgreSQL e `backend/storage` em arquivo separado; o restore exige
+`-ConfirmRestore` e destino explícito; o update segue backup → migrations →
+build, deixando stop/start sob controle do operador. Nenhum script destrutivo
+foi executado contra o banco principal.
+
+Validação: os três scripts PowerShell foram parseados sem erros e
+`git diff --check` foi executado. O ensaio real de restore permanece pendente
+de um PostgreSQL isolado, por segurança e pela ausência dos clientes
+administrativos PostgreSQL neste ambiente.

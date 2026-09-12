@@ -309,7 +309,7 @@ ERP opera sem dev server, possui processo previsível e pode reiniciar de forma 
 
 # 8. Fase 2 — Backup, restore, atualização e rollback
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA — scripts e runbook prontos; restore real requer ambiente isolado de PostgreSQL  
 **Commit esperado:** `feat: adiciona operação segura de backup e atualização`
 
 ## Objetivo
