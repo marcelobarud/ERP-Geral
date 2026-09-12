@@ -1289,3 +1289,18 @@ existentes de 900px e 560px empilham filtros, ações e métricas sem corte.
 
 Validação: frontend `79 passed`, typecheck e build aprovados; backend
 `ruff check app` e `16 passed` aprovados.
+
+## Marco final — Plano 07 em 2026-09-12
+
+O Plano 07 foi implementado nas Fases 0–9 e consolidado em
+`docs/FINAL_AUDIT_07.md`. A classificação é **SIM, COM PREPARAÇÃO
+OPERACIONAL**: a distribuição web, operação, segurança, onboarding, suporte e
+refinamento visual estão no código e nos runbooks; fresh install e restore
+real ainda precisam ser ensaiados em um PostgreSQL isolado, pois não há
+`TEST_DATABASE_URL` nem clientes PostgreSQL administrativos disponíveis neste
+ambiente. Nenhum deploy, push, reset ou alteração destrutiva no banco principal
+foi feito.
+
+Validação final: backend `58 passed, 65 skipped`; frontend `79 passed`, lint
+com exit 0 e oito avisos preexistentes, typecheck e build aprovados; Ruff de
+`app`, scripts PowerShell, refresh de SPA, health e auditoria visual aprovados.
