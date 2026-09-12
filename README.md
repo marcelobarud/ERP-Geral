@@ -33,15 +33,23 @@ novos domínios antes de integrar os existentes.
 
 ## Requisitos
 
+- Git;
 - Python 3.11 ou superior;
-- Node.js e npm;
+- Node.js 20.19 ou superior (22.12+ recomendado);
+- npm;
 - PostgreSQL;
 - um banco de desenvolvimento e, preferencialmente, um banco separado para testes.
+
+Para preparar uma instalação reproduzível, siga
+[docs/INSTALLATION.md](docs/INSTALLATION.md). A execução de produção está em
+[docs/PRODUCTION.md](docs/PRODUCTION.md).
 
 ## Configuração
 
 Copie `.env.example` para um arquivo `.env` na raiz do projeto e ajuste as
-URLs para as credenciais locais do PostgreSQL. Não versione o arquivo `.env`.
+URLs e secrets. O backend encontra esse arquivo pela raiz do monorepo, mesmo
+quando o comando é executado dentro de `backend/`. Não versione o arquivo
+`.env`.
 
 As variáveis principais são:
 
@@ -55,6 +63,10 @@ As variáveis principais são:
 - `AUTH_BOOTSTRAP_TOKEN`: token temporário para criar o primeiro administrador.
 
 Ambas devem usar o formato `postgresql+psycopg://...`.
+
+Em desenvolvimento local controlado, altere explicitamente
+`ENVIRONMENT=development` e `AUTH_REQUIRED=false`. Nunca use essa configuração
+em uma instalação exposta a usuários reais.
 
 Para executar a suíte PostgreSQL, configure `TEST_DATABASE_URL` para um banco
 separado com sufixo `_test`. A fixture valida o PostgreSQL real, mantém os

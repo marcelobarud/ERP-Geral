@@ -1,7 +1,10 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -14,7 +17,8 @@ class Settings(BaseSettings):
     auth_bootstrap_token: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # O .env oficial fica na raiz do monorepo, independentemente do CWD.
+        env_file=str(PROJECT_ROOT / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -42,6 +46,22 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "AUTH_BOOTSTRAP_TOKEN deve possuir pelo menos 16 "
                     "caracteres em produção"
+                )
+            placeholder_values = (
+                "change-me",
+                "change_me",
+                "dev-only",
+                "replace-",
+                "substitua",
+            )
+            if any(
+                marker in self.auth_secret.lower() for marker in placeholder_values
+            ) or any(
+                marker in self.auth_bootstrap_token.lower()
+                for marker in placeholder_values
+            ):
+                raise ValueError(
+                    "Secrets de produção não podem usar valores de exemplo"
                 )
         elif self.auth_required and (
             not self.auth_secret or len(self.auth_secret) < 32

@@ -1171,3 +1171,18 @@ Classificação do marco: **SIM, COM AJUSTES**. Fiscal, NF-e, SPED,
 contabilidade, folha, CRM, BI avançado e integrações bancárias automáticas
 continuam fora do escopo e são evoluções futuras, não bloqueadores da V1
 operacional.
+
+## Atualização — Plano 07, Fase 0 em 2026-09-12
+
+O Plano 07 passou a ter um caminho oficial de instalação reproduzível. A
+configuração `.env` é resolvida pela raiz do monorepo, o exemplo assume
+produção protegida e a instalação técnica está documentada em
+`docs/INSTALLATION.md`. Foi adicionado o script `scripts/install.ps1`.
+
+Validação: scripts PowerShell parseados; backend `ruff check app` e testes
+focados `13 passed` aprovados; `git diff --check` aprovado.
+
+A validação online de uma instalação nova com PostgreSQL descartável não foi
+executada neste ambiente porque as ferramentas de administração PostgreSQL não
+estão disponíveis e não se deve tocar no banco principal. O runbook deixa essa
+prova operacional explícita para o primeiro ambiente isolado do cliente.
