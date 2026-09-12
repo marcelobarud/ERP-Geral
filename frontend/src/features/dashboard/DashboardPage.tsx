@@ -163,6 +163,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <div className="dashboard-actions-grid">
               <QuickAction label="Nova venda" description="Registre uma venda com um ou mais produtos." icon="+" href="/sales/new" onNavigate={onNavigate} customizationKey="dashboard.quick_action.new_sale" />
               <QuickAction label="Abrir vendas" description="Consulte o histórico e os preços aplicados." icon="↗" href="/sales" onNavigate={onNavigate} customizationKey="dashboard.quick_action.sales" />
+              <QuickAction label="Configurar aparência" description="Ajuste nome, logo e identidade visual." icon="◌" href="/settings/appearance" onNavigate={onNavigate} customizationKey="dashboard.quick_action.appearance" />
+              <QuickAction label="Revisar módulos" description="Escolha as áreas ativas nesta instalação." icon="◈" href="/settings/modules" onNavigate={onNavigate} customizationKey="dashboard.quick_action.modules" />
             </div>
           </section>
 

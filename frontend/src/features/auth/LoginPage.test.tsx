@@ -18,9 +18,11 @@ describe('LoginPage', () => {
     vi.mocked(authContext.useAuth).mockReturnValue({
       loading: false,
       authRequired: true,
+      bootstrapAvailable: false,
       user: null,
       error: 'Credenciais inválidas.',
       login,
+      bootstrap: vi.fn(),
       logout: vi.fn(),
     })
 

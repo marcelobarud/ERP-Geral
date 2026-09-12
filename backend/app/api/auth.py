@@ -10,6 +10,7 @@ from app.db.session import get_db_session
 from app.models import Usuario
 from app.schemas.auth import (
     AuthConfigRead,
+    BootstrapStatusRead,
     BootstrapRequest,
     LoginRequest,
     LoginResponse,
@@ -35,6 +36,13 @@ def _user_read(user: Usuario) -> UsuarioRead:
 @router.get("/config", response_model=AuthConfigRead)
 def auth_config() -> AuthConfigRead:
     return AuthConfigRead(auth_required=get_settings().auth_required)
+
+
+@router.get("/bootstrap-status", response_model=BootstrapStatusRead)
+def bootstrap_status(db: Session = Depends(get_db_session)) -> BootstrapStatusRead:
+    return BootstrapStatusRead(
+        available=db.scalar(select(func.count()).select_from(Usuario)) == 0
+    )
 
 
 @router.post("/bootstrap", response_model=LoginResponse, status_code=201)

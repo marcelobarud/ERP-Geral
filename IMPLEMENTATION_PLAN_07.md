@@ -364,7 +364,7 @@ Rollback deve considerar restore de backup, não apenas `alembic downgrade`.
 
 # 9. Fase 3 — Bootstrap e onboarding
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA  
 **Commit esperado:** `feat: adiciona onboarding inicial do ERP`
 
 ## Objetivo

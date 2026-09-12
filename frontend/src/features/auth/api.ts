@@ -17,6 +17,10 @@ export type AuthConfig = {
   auth_required: boolean
 }
 
+export type BootstrapStatus = {
+  available: boolean
+}
+
 type LoginResponse = {
   access_token: string
   token_type: 'bearer'
@@ -26,6 +30,24 @@ type LoginResponse = {
 
 export function getAuthConfig(): Promise<AuthConfig> {
   return request<AuthConfig>('/api/auth/config')
+}
+
+export function getBootstrapStatus(): Promise<BootstrapStatus> {
+  return request<BootstrapStatus>('/api/auth/bootstrap-status')
+}
+
+export function bootstrap(
+  nome: string,
+  email: string,
+  senha: string,
+  token: string,
+): Promise<LoginResponse> {
+  return requestJson<LoginResponse>('/api/auth/bootstrap', 'POST', {
+    nome,
+    email,
+    senha,
+    token: token || null,
+  })
 }
 
 export function login(email: string, senha: string): Promise<LoginResponse> {

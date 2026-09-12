@@ -70,6 +70,10 @@ class AuthConfigRead(APIModel):
     auth_required: bool
 
 
+class BootstrapStatusRead(APIModel):
+    available: bool
+
+
 class AuditLogRead(ReadModel):
     id: int
     usuario_id: int | None

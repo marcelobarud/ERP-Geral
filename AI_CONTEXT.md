@@ -1214,3 +1214,16 @@ Validação: os três scripts PowerShell foram parseados sem erros e
 `git diff --check` foi executado. O ensaio real de restore permanece pendente
 de um PostgreSQL isolado, por segurança e pela ausência dos clientes
 administrativos PostgreSQL neste ambiente.
+
+## Atualização — Plano 07, Fase 3 em 2026-09-12
+
+O primeiro acesso agora possui status explícito em
+`GET /api/auth/bootstrap-status` e uma tela `/setup` que cria o primeiro
+administrador usando o token configurado, grava a sessão e encaminha a pessoa
+para o ERP. O bootstrap continua protegido no backend, limitado por taxa e
+irrepetível depois da criação do primeiro usuário.
+
+O Dashboard passou a oferecer atalhos de configuração de aparência e módulos.
+O caminho completo está descrito em `docs/ONBOARDING.md`, incluindo revisão de
+depósito, unidades, condições de pagamento e categorias antes da primeira
+operação. Validação: frontend `79 passed`, typecheck e build aprovados.

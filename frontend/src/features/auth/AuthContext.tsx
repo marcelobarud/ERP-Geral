@@ -1,14 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { getApiErrorMessage, clearAuthToken, getAuthToken, setAuthToken } from '../../services/httpClient'
-import { getAuthConfig, getCurrentUser, login as loginRequest, logout as logoutRequest, type AuthUser } from './api'
+import { bootstrap as bootstrapRequest, getAuthConfig, getBootstrapStatus, getCurrentUser, login as loginRequest, logout as logoutRequest, type AuthUser } from './api'
 
 type AuthContextValue = {
   loading: boolean
   authRequired: boolean
+  bootstrapAvailable: boolean
   user: AuthUser | null
   error: string | null
   login: (email: string, senha: string) => Promise<void>
+  bootstrap: (nome: string, email: string, senha: string, token: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [authRequired, setAuthRequired] = useState(false)
+  const [bootstrapAvailable, setBootstrapAvailable] = useState(false)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,6 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(async (config) => {
         if (!active) return
         setAuthRequired(config.auth_required)
+        if (config.auth_required) {
+          try {
+            setBootstrapAvailable((await getBootstrapStatus()).available)
+          } catch {
+            setBootstrapAvailable(false)
+          }
+        }
         const token = getAuthToken()
         if (config.auth_required && token) {
           try {
@@ -75,7 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ loading, authRequired, user, error, login, logout }), [authRequired, error, loading, login, logout, user])
+  const bootstrap = useCallback(async (nome: string, email: string, senha: string, token: string) => {
+    setError(null)
+    try {
+      const response = await bootstrapRequest(nome, email, senha, token)
+      setAuthToken(response.access_token)
+      setUser(response.usuario)
+      setBootstrapAvailable(false)
+    } catch (bootstrapError) {
+      const message = getApiErrorMessage(bootstrapError, 'Não foi possível concluir a configuração inicial.')
+      setError(message)
+      throw bootstrapError
+    }
+  }, [])
+
+  const value = useMemo(() => ({ loading, authRequired, bootstrapAvailable, user, error, login, bootstrap, logout }), [authRequired, bootstrap, bootstrapAvailable, error, loading, login, logout, user])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

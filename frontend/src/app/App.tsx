@@ -11,6 +11,7 @@ import { AppearancePage } from '../features/settings/AppearancePage'
 import { AppearanceProvider, useAppearance } from '../features/settings/AppearanceContext'
 import { AuthProvider, useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
+import { SetupPage } from '../features/auth/SetupPage'
 import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
 import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
@@ -159,12 +160,14 @@ function App() {
 }
 
 function AuthenticatedApp() {
-  const { authRequired, loading, user } = useAuth()
+  const { authRequired, bootstrapAvailable, loading, user } = useAuth()
 
   if (loading) {
     return <div className="auth-loading" role="status">Carregando acesso...</div>
   }
-  if (authRequired && !user) return <LoginPage />
+  if (authRequired && !user) {
+    return window.location.pathname === '/setup' && bootstrapAvailable ? <SetupPage /> : <LoginPage />
+  }
 
   return <AppearanceProvider><VisualCustomizationProvider><AppContent /></VisualCustomizationProvider></AppearanceProvider>
 }
