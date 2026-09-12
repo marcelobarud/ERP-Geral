@@ -122,6 +122,11 @@
   color: var(--blue);
 }
 
+.nav-link:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
 .sidebar-note {
   display: flex;
   align-items: flex-start;

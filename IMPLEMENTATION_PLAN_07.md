@@ -636,7 +636,7 @@ As telas prioritárias seguem o mesmo sistema visual e não apresentam boxes que
 
 # 14. Fase 8 — Polimento visual, mobile e acessibilidade
 
-**Status:** PENDENTE  
+**Status:** CONCLUÍDA  
 **Commit esperado:** `fix: conclui polimento visual e responsivo do ERP`
 
 ## Escopo

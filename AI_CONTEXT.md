@@ -1277,3 +1277,15 @@ não há skill Impeccable instalada neste ambiente.
 
 Validação: backend `ruff check app` e `16 passed`; frontend `79 passed`,
 typecheck e build aprovados.
+
+## Atualização — Plano 07, Fase 8 em 2026-09-12
+
+A navegação diferencia agora **Pedidos de venda** e **Pedidos de compra**.
+Modais passaram a focar o botão de fechamento ao abrir e a associar descrição
+com `aria-describedby`; links, botões e ações de tabela têm foco visível. Os
+relatórios foram verificados visualmente no navegador com API online, métricas
+carregadas, filtros separados e navegação sem rótulos ambíguos. Os breakpoints
+existentes de 900px e 560px empilham filtros, ações e métricas sem corte.
+
+Validação: frontend `79 passed`, typecheck e build aprovados; backend
+`ruff check app` e `16 passed` aprovados.

@@ -50,7 +50,7 @@ describe('navegação comercial', () => {
 
   it('resolve as rotas comerciais com descrição própria', () => {
     expect(getRoute('/commercial/quotes').label).toBe('Orçamentos')
-    expect(getRoute('/commercial/orders').label).toBe('Pedidos')
+    expect(getRoute('/commercial/orders').label).toBe('Pedidos de venda')
     expect(getRoute('/commercial/returns').description).toContain('devoluções')
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
     expect(getRoute('/inventory/balances').label).toBe('Saldos')

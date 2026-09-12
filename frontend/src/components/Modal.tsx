@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
 
 type ModalProps = {
@@ -16,10 +16,12 @@ export function Modal({
   onClose,
   size = 'small',
 }: ModalProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const surfaceCustomization = useCustomizable({ key: 'global.modal.surface', type: 'SURFACE', group: 'modal', label: title })
   const titleCustomization = useCustomizable({ key: 'global.modal.title', type: 'TEXT', group: 'modal-title', label: title })
   const closeCustomization = useCustomizable({ key: 'global.modal.close', type: 'BUTTON', group: 'modal-action', label: 'Fechar' })
   useEffect(() => {
+    closeButtonRef.current?.focus()
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
@@ -36,15 +38,17 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        aria-describedby={description ? 'modal-description' : undefined}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <div>
             <h2 id="modal-title" {...titleCustomization}>{title}</h2>
-            {description ? <p>{description}</p> : null}
+            {description ? <p id="modal-description">{description}</p> : null}
           </div>
           <button
             className="icon-button"
+            ref={closeButtonRef}
             {...closeCustomization}
             type="button"
             aria-label="Fechar"

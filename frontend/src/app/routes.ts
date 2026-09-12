@@ -42,7 +42,7 @@ export function getNavigationGroups(
         { path: '/sales/new', label: labels.newSale, icon: '+' },
         { path: '/sales', label: labels.sales, icon: '↗' },
         { path: '/commercial/quotes', label: 'Orçamentos', icon: '▤' },
-        { path: '/commercial/orders', label: 'Pedidos', icon: '▥' },
+        { path: '/commercial/orders', label: 'Pedidos de venda', icon: '▥' },
         { path: '/commercial/returns', label: 'Devoluções', icon: '↩' },
       ],
     },
@@ -50,7 +50,7 @@ export function getNavigationGroups(
       label: 'Compras',
       moduleCode: 'purchases',
       items: [
-        { path: '/purchases', label: 'Pedidos', icon: '▧' },
+        { path: '/purchases', label: 'Pedidos de compra', icon: '▧' },
         { path: '/purchases/receipts', label: 'Recebimentos', icon: '⇩' },
       ],
     },
