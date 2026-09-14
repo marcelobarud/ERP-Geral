@@ -22,7 +22,6 @@ type SummaryCardProps = {
   label: string
   count: number | null
   description: string
-  icon: string
   href: string
   onNavigate: (path: string) => void
   customizationKey: string
@@ -31,7 +30,6 @@ type SummaryCardProps = {
 type QuickActionProps = {
   label: string
   description: string
-  icon: string
   href: string
   onNavigate: (path: string) => void
   customizationKey: string
@@ -58,7 +56,6 @@ function SummaryCard({
   label,
   count,
   description,
-  icon,
   href,
   onNavigate,
   customizationKey,
@@ -67,20 +64,17 @@ function SummaryCard({
   const valueCustomization = useCustomizable({ key: `${customizationKey}.value`, type: 'TEXT', group: 'summary-value', page: 'dashboard', label: `${label} valor` })
   return (
     <a
-      className="dashboard-summary-card"
+      className="dashboard-metric"
       {...surfaceCustomization}
       href={href}
       onClick={(event) => navigateFromLink(event, href, onNavigate)}
     >
-      <span className="dashboard-card-icon" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="dashboard-card-label">{label}</span>
-      <strong className="dashboard-card-value" {...valueCustomization}>
+      <span className="dashboard-metric-label">{label}</span>
+      <strong className="dashboard-metric-value" {...valueCustomization}>
         {count === null ? '—' : count}
       </strong>
-      <span className="dashboard-card-description">{description}</span>
-      <span className="dashboard-card-link">Acessar área →</span>
+      <span className="dashboard-metric-context">{description}</span>
+      <span className="dashboard-metric-link">Acessar área <span aria-hidden="true">→</span></span>
     </a>
   )
 }
@@ -88,7 +82,6 @@ function SummaryCard({
 function QuickAction({
   label,
   description,
-  icon,
   href,
   onNavigate,
   customizationKey,
@@ -101,10 +94,7 @@ function QuickAction({
       href={href}
       onClick={(event) => navigateFromLink(event, href, onNavigate)}
     >
-      <span className="dashboard-action-icon" aria-hidden="true">
-        {icon}
-      </span>
-      <span>
+      <span className="dashboard-quick-action-copy">
         <strong>{label}</strong>
         <span>{description}</span>
       </span>
@@ -112,6 +102,28 @@ function QuickAction({
         →
       </span>
     </a>
+  )
+}
+
+function DashboardLoading() {
+  return (
+    <div className="dashboard-loading-layout">
+      <LoadingState label="Carregando resumo operacional..." />
+      <div className="dashboard-loading-skeleton" aria-hidden="true">
+        <div className="dashboard-loading-section">
+          <span className="dashboard-skeleton-heading" />
+          <div className="dashboard-skeleton-metrics">
+            {Array.from({ length: 5 }, (_, index) => <span className="dashboard-skeleton-metric" key={index} />)}
+          </div>
+        </div>
+        <div className="dashboard-loading-section">
+          <span className="dashboard-skeleton-heading dashboard-skeleton-heading-short" />
+          <div className="dashboard-skeleton-actions">
+            {Array.from({ length: 4 }, (_, index) => <span className="dashboard-skeleton-action" key={index} />)}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -143,46 +155,47 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     <div className="dashboard-page">
       <PageHeader
         eyebrow="Visão geral"
-        title="Olá, que bom ter você aqui."
-        description="Acompanhe o estado atual do ERP e acesse rapidamente o que precisa ser feito."
+        title="Visão geral do ERP"
+        description="Entenda o estado atual da operação e escolha onde investigar ou agir."
         pageId="dashboard"
       />
 
-      {loading ? <LoadingState label="Carregando resumo operacional..." /> : null}
-      {loadError ? <ErrorState description={loadError} onRetry={() => void loadDashboard()} /> : null}
+      {loading ? <DashboardLoading /> : null}
 
       {!loading ? (
         <>
-          <section className="dashboard-section dashboard-actions-section" aria-labelledby="dashboard-actions-title">
+          <section className="dashboard-section dashboard-overview" aria-labelledby="dashboard-summary-title">
             <div className="dashboard-section-heading">
               <div>
-                <p className="eyebrow">Atalhos</p>
-                <h2 id="dashboard-actions-title">Próximos passos</h2>
+                <p className="eyebrow">Estado geral</p>
+                <h2 id="dashboard-summary-title">Resumo operacional</h2>
               </div>
+              <span className="dashboard-section-note">Contagens das listagens atuais</span>
             </div>
-            <div className="dashboard-actions-grid">
-              <QuickAction label="Nova venda" description="Registre uma venda com um ou mais produtos." icon="+" href="/sales/new" onNavigate={onNavigate} customizationKey="dashboard.quick_action.new_sale" />
-              <QuickAction label="Abrir vendas" description="Consulte o histórico e os preços aplicados." icon="↗" href="/sales" onNavigate={onNavigate} customizationKey="dashboard.quick_action.sales" />
-              <QuickAction label="Configurar aparência" description="Ajuste nome, logo e identidade visual." icon="◌" href="/settings/appearance" onNavigate={onNavigate} customizationKey="dashboard.quick_action.appearance" />
-              <QuickAction label="Revisar módulos" description="Escolha as áreas ativas nesta instalação." icon="◈" href="/settings/modules" onNavigate={onNavigate} customizationKey="dashboard.quick_action.modules" />
+            {loadError ? <ErrorState description={loadError} onRetry={() => void loadDashboard()} /> : null}
+            <div className="dashboard-metrics">
+              <SummaryCard label="Clientes" count={counts.customers} description={counts.customers === null ? 'Indisponível no momento' : counts.customers === 0 ? 'Nenhum cliente cadastrado' : 'Pessoas cadastradas'} href="/customers" onNavigate={onNavigate} customizationKey="dashboard.summary.customers.card" />
+              <SummaryCard label="Produtos" count={counts.products} description={counts.products === null ? 'Indisponível no momento' : counts.products === 0 ? 'Nenhum produto cadastrado' : 'Itens no catálogo'} href="/products" onNavigate={onNavigate} customizationKey="dashboard.summary.products.card" />
+              <SummaryCard label="Fornecedores" count={counts.suppliers} description={counts.suppliers === null ? 'Indisponível no momento' : counts.suppliers === 0 ? 'Nenhum fornecedor cadastrado' : 'Parceiros cadastrados'} href="/suppliers" onNavigate={onNavigate} customizationKey="dashboard.summary.suppliers.card" />
+              <SummaryCard label="Funcionários" count={counts.employees} description={counts.employees === null ? 'Indisponível no momento' : counts.employees === 0 ? 'Nenhum funcionário cadastrado' : 'Equipe cadastrada'} href="/employees" onNavigate={onNavigate} customizationKey="dashboard.summary.employees.card" />
+              <SummaryCard label="Vendas" count={counts.sales} description={counts.sales === null ? 'Indisponível no momento' : counts.sales === 0 ? 'Nenhuma venda registrada' : 'Vendas no histórico'} href="/sales" onNavigate={onNavigate} customizationKey="dashboard.summary.sales.card" />
             </div>
           </section>
 
-          <section className="dashboard-section" aria-labelledby="dashboard-summary-title">
+          <section className="dashboard-section dashboard-actions-section" aria-labelledby="dashboard-actions-title">
             <div className="dashboard-section-heading">
               <div>
-                <p className="eyebrow">Agora</p>
-                <h2 id="dashboard-summary-title">Resumo operacional</h2>
+                <p className="eyebrow">Navegação</p>
+                <h2 id="dashboard-actions-title">Próximos passos</h2>
               </div>
-              <span className="dashboard-section-note">Dados das listagens atuais</span>
+              <span className="dashboard-section-note">Acesso rápido a áreas do ERP</span>
             </div>
-            <div className="dashboard-summary-grid">
-              <SummaryCard label="Clientes" count={counts.customers} description={counts.customers === 0 ? 'Nenhum cliente cadastrado' : 'Pessoas cadastradas'} icon="◎" href="/customers" onNavigate={onNavigate} customizationKey="dashboard.summary.customers.card" />
-              <SummaryCard label="Produtos" count={counts.products} description={counts.products === 0 ? 'Nenhum produto cadastrado' : 'Itens no catálogo'} icon="▦" href="/products" onNavigate={onNavigate} customizationKey="dashboard.summary.products.card" />
-              <SummaryCard label="Fornecedores" count={counts.suppliers} description={counts.suppliers === 0 ? 'Nenhum fornecedor cadastrado' : 'Parceiros cadastrados'} icon="◈" href="/suppliers" onNavigate={onNavigate} customizationKey="dashboard.summary.suppliers.card" />
-              <SummaryCard label="Funcionários" count={counts.employees} description={counts.employees === 0 ? 'Nenhum funcionário cadastrado' : 'Equipe cadastrada'} icon="♙" href="/employees" onNavigate={onNavigate} customizationKey="dashboard.summary.employees.card" />
-              <SummaryCard label="Vendas" count={counts.sales} description={counts.sales === 0 ? 'Nenhuma venda registrada' : 'Vendas no histórico'} icon="↗" href="/sales" onNavigate={onNavigate} customizationKey="dashboard.summary.sales.card" />
-            </div>
+            <nav className="dashboard-actions-grid" aria-label="Atalhos do dashboard">
+              <QuickAction label="Nova venda" description="Registre uma venda com um ou mais produtos." href="/sales/new" onNavigate={onNavigate} customizationKey="dashboard.quick_action.new_sale" />
+              <QuickAction label="Abrir vendas" description="Consulte o histórico e os preços aplicados." href="/sales" onNavigate={onNavigate} customizationKey="dashboard.quick_action.sales" />
+              <QuickAction label="Configurar aparência" description="Ajuste nome, logo e identidade visual." href="/settings/appearance" onNavigate={onNavigate} customizationKey="dashboard.quick_action.appearance" />
+              <QuickAction label="Revisar módulos" description="Escolha as áreas ativas nesta instalação." href="/settings/modules" onNavigate={onNavigate} customizationKey="dashboard.quick_action.modules" />
+            </nav>
           </section>
         </>
       ) : null}

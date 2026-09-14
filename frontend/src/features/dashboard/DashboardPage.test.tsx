@@ -30,10 +30,11 @@ describe('DashboardPage', () => {
     expect(screen.getByRole('link', { name: /Funcionários/ }).textContent).toContain('4')
     expect(screen.getByRole('link', { name: /Vendas/ }).textContent).toContain('5')
     expect(screen.getByRole('link', { name: /Nova vendaRegistre uma venda com um ou mais produtos/ })).toBeTruthy()
+    expect(screen.getByRole('navigation', { name: 'Atalhos do dashboard' })).toBeTruthy()
 
     const sections = Array.from(document.querySelectorAll('.dashboard-section'))
-    expect(sections[0]?.classList.contains('dashboard-actions-section')).toBe(true)
-    expect(sections[1]?.querySelector('#dashboard-summary-title')).toBeTruthy()
+    expect(sections[0]?.querySelector('#dashboard-summary-title')).toBeTruthy()
+    expect(sections[1]?.classList.contains('dashboard-actions-section')).toBe(true)
   })
 
   it('shows a consistent loading state while list requests are pending', () => {
@@ -42,6 +43,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage onNavigate={vi.fn()} />)
 
     expect(screen.getByRole('status').textContent).toContain('Carregando resumo operacional...')
+    expect(document.querySelector('.dashboard-loading-skeleton')).toBeTruthy()
     expect(screen.queryByText('Resumo operacional')).toBeNull()
   })
 
