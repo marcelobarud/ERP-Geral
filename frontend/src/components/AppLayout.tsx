@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { getNavigationGroups, type RouteDefinition } from '../app/routes'
 import { useHealthStatus } from '../app/useHealthStatus'
@@ -73,6 +73,9 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
   const { preview } = useAppearance()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const sidebarWasOpen = useRef(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
   const pageCustomization = useCustomizable({
     key: `${pageIdForPath(route.path)}.page`,
     type: 'PAGE',
@@ -85,6 +88,23 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
     setSidebarOpen(false)
   }
 
+  useEffect(() => {
+    if (!sidebarOpen && sidebarWasOpen.current && window.matchMedia?.('(max-width: 900px)').matches) {
+      menuButtonRef.current?.focus()
+    }
+    sidebarWasOpen.current = sidebarOpen
+  }, [sidebarOpen])
+
+  useEffect(() => {
+    if (!sidebarOpen || !window.matchMedia?.('(max-width: 900px)').matches) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [sidebarOpen])
+
   return (
     <div className="app-frame">
       <Sidebar
@@ -94,6 +114,7 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
         currentPath={route.path === '/not-found' ? '' : route.path}
         isOpen={sidebarOpen}
         onNavigate={navigate}
+        onClose={closeSidebar}
       />
       {sidebarOpen ? (
         <button
@@ -109,6 +130,7 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
           <div className="topbar-leading">
             <button
               className="menu-button"
+              ref={menuButtonRef}
               type="button"
               aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
               aria-expanded={sidebarOpen}
@@ -116,10 +138,7 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
             >
               <span aria-hidden="true">☰</span>
             </button>
-            <div>
-              <p className="topbar-kicker">Área administrativa</p>
-              <strong>{route.label}</strong>
-            </div>
+            <p className="topbar-kicker">Área administrativa</p>
           </div>
           <div className="topbar-actions">
             {user ? <span className="topbar-user">{user.nome}</span> : null}

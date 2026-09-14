@@ -8,6 +8,11 @@ describe('navegação comercial', () => {
     const groups = getNavigationGroups(appearanceLabels(defaultAppearance))
     const commercial = groups.find((group) => group.label === 'Comercial')
 
+    expect(commercial?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Estoque')?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Relatórios')?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Compras')?.collapsible).toBeUndefined()
+
     expect(commercial?.items.map((item) => item.path)).toEqual([
       '/sales/new',
       '/sales',

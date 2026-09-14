@@ -10,6 +10,7 @@ export type NavigationGroup = {
   label: string
   items: NavigationItem[]
   moduleCode?: string
+  collapsible?: boolean
 }
 
 export type RouteDefinition = NavigationItem & {
@@ -38,6 +39,7 @@ export function getNavigationGroups(
     {
       label: 'Comercial',
       moduleCode: 'commercial',
+      collapsible: true,
       items: [
         { path: '/sales/new', label: labels.newSale, icon: '+' },
         { path: '/sales', label: labels.sales, icon: '↗' },
@@ -57,6 +59,7 @@ export function getNavigationGroups(
     {
       label: 'Estoque',
       moduleCode: 'inventory',
+      collapsible: true,
       items: [
         { path: '/inventory/balances', label: 'Saldos', icon: '▦' },
         { path: '/inventory/movements', label: 'Movimentações', icon: '⇄' },
@@ -77,6 +80,7 @@ export function getNavigationGroups(
     {
       label: 'Relatórios',
       moduleCode: 'reports',
+      collapsible: true,
       items: [
         { path: '/reports/dashboard', label: 'Dashboard ERP', icon: '▥' },
         { path: '/reports/commercial', label: 'Comercial', icon: '↗' },
