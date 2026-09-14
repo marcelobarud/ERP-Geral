@@ -2130,6 +2130,179 @@ a,
   align-items: flex-start;
 }
 
+.cadastros-family-page .crud-page-header {
+  align-items: flex-start;
+}
+
+.cadastros-filter-toolbar {
+  margin-top: 1.5rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cadastros-family-page .active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.cadastros-family-page .active-filters-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.cadastros-family-page .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  max-width: 100%;
+  padding: 0.35rem 0.55rem 0.35rem 0.7rem;
+  border: 1px solid var(--color-table-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cadastros-family-page .filter-chip span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cadastros-family-page .filter-chip span:nth-child(2) {
+  color: var(--color-link);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.cadastros-family-page .filter-chip:hover {
+  border-color: var(--color-link);
+  color: var(--color-heading);
+}
+
+.cadastros-family-page .filter-chip:focus-visible,
+.cadastros-family-page .clear-filters:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+.cadastros-family-page .clear-filters {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.cadastros-table {
+  margin-top: 0;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.cadastros-table .data-table th,
+.cadastros-table .data-table td {
+  padding: 0.75rem 0.9rem;
+}
+
+.cadastros-table .data-table th {
+  background: transparent;
+}
+
+.cadastros-family-page .data-primary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cadastros-family-page .data-table td {
+  overflow-wrap: anywhere;
+}
+
+.cadastros-family-page .data-table td:last-child {
+  white-space: nowrap;
+}
+
+.cadastros-family-page .table-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.cadastros-family-page .pagination-controls {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cadastros-family-page .detail-grid {
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.cadastros-family-page .detail-grid div {
+  padding: 0.75rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.cadastros-loading-layout {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cadastros-table-skeleton {
+  display: grid;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cadastros-table-skeleton span {
+  min-height: 3.65rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(90deg, transparent 25%, var(--color-surface-soft) 50%, transparent 75%);
+  background-size: 220% 100%;
+  animation: cadastros-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.cadastros-table-skeleton span:last-child {
+  border-bottom: 0;
+}
+
+.products-table .money-cell,
+.products-table .data-table th:nth-child(4),
+.products-table .data-table th:nth-child(5) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@keyframes cadastros-skeleton-pulse {
+  0%,
+  100% {
+    background-position: 100% 0;
+    opacity: 0.65;
+  }
+
+  50% {
+    background-position: 0 0;
+    opacity: 1;
+  }
+}
+
 .customers-filter-toolbar {
   margin-top: 1.5rem;
   margin-bottom: 0.85rem;
@@ -2786,6 +2959,15 @@ a,
     flex: 1 1 20rem;
   }
 
+  .cadastros-family-page .cadastros-filter-toolbar {
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .cadastros-family-page .cadastros-filter-toolbar > .search-input {
+    flex: 1 1 20rem;
+  }
+
   .dashboard-metrics,
   .dashboard-skeleton-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3006,6 +3188,98 @@ a,
     padding: 0.35rem 0.45rem;
   }
 
+  .cadastros-family-page .active-filters {
+    align-items: flex-start;
+  }
+
+  .cadastros-family-page .clear-filters {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .cadastros-family-page .cadastros-table .data-table {
+    table-layout: fixed;
+  }
+
+  .products-page .products-table .data-table th:nth-child(2),
+  .products-page .products-table .data-table td:nth-child(2),
+  .products-page .products-table .data-table th:nth-child(3),
+  .products-page .products-table .data-table td:nth-child(3),
+  .products-page .products-table .data-table th:nth-child(4),
+  .products-page .products-table .data-table td:nth-child(4),
+  .suppliers-page .suppliers-table .data-table th:nth-child(2),
+  .suppliers-page .suppliers-table .data-table td:nth-child(2),
+  .employees-page .employees-table .data-table th:nth-child(3),
+  .employees-page .employees-table .data-table td:nth-child(3),
+  .employees-page .employees-table .data-table th:nth-child(4),
+  .employees-page .employees-table .data-table td:nth-child(4) {
+    display: none;
+  }
+
+  .products-page .products-table .data-table th:first-child,
+  .products-page .products-table .data-table td:first-child {
+    width: 58%;
+  }
+
+  .products-page .products-table .data-table th:nth-child(5),
+  .products-page .products-table .data-table td:nth-child(5) {
+    width: 20%;
+  }
+
+  .products-page .products-table .data-table th:last-child,
+  .products-page .products-table .data-table td:last-child {
+    width: 22%;
+  }
+
+  .suppliers-page .suppliers-table .data-table th:first-child,
+  .suppliers-page .suppliers-table .data-table td:first-child {
+    width: 52%;
+  }
+
+  .suppliers-page .suppliers-table .data-table th:nth-child(3),
+  .suppliers-page .suppliers-table .data-table td:nth-child(3) {
+    width: 26%;
+  }
+
+  .suppliers-page .suppliers-table .data-table th:last-child,
+  .suppliers-page .suppliers-table .data-table td:last-child {
+    width: 22%;
+  }
+
+  .employees-page .employees-table .data-table th:first-child,
+  .employees-page .employees-table .data-table td:first-child {
+    width: 58%;
+  }
+
+  .employees-page .employees-table .data-table th:nth-child(2),
+  .employees-page .employees-table .data-table td:nth-child(2) {
+    width: 18%;
+  }
+
+  .employees-page .employees-table .data-table th:last-child,
+  .employees-page .employees-table .data-table td:last-child {
+    width: 24%;
+  }
+
+  .cadastros-family-page .cadastros-table .data-table th,
+  .cadastros-family-page .cadastros-table .data-table td {
+    padding: 0.75rem 0.65rem;
+    vertical-align: top;
+  }
+
+  .cadastros-family-page .cadastros-table .table-actions {
+    flex-wrap: wrap;
+    gap: 0.15rem;
+    justify-content: flex-end;
+    white-space: normal;
+  }
+
+  .cadastros-family-page .cadastros-table .table-action {
+    min-height: 2.5rem;
+    padding: 0.35rem 0.45rem;
+  }
+
   .pagination-controls {
     align-items: stretch;
     flex-direction: column;
@@ -3188,7 +3462,8 @@ a,
   .dashboard-quick-action,
   .dashboard-skeleton-metric,
   .dashboard-skeleton-action,
-  .customers-table-skeleton span {
+  .customers-table-skeleton span,
+  .cadastros-table-skeleton span {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
