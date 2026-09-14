@@ -24,11 +24,11 @@ describe('DashboardPage', () => {
     render(<DashboardPage onNavigate={onNavigate} />)
 
     expect(await screen.findByText('Resumo operacional')).toBeTruthy()
-    expect(screen.getByRole('link', { name: /Clientes/ }).textContent).toContain('2')
-    expect(screen.getByRole('link', { name: /Produtos/ }).textContent).toContain('3')
-    expect(screen.getByRole('link', { name: /Fornecedores/ }).textContent).toContain('1')
-    expect(screen.getByRole('link', { name: /Funcionários/ }).textContent).toContain('4')
-    expect(screen.getByRole('link', { name: /Vendas/ }).textContent).toContain('5')
+    expect(screen.getByText('Clientes').closest('.dashboard-metric')?.textContent).toContain('2')
+    expect(screen.getByText('Produtos').closest('.dashboard-metric')?.textContent).toContain('3')
+    expect(screen.getByText('Fornecedores').closest('.dashboard-metric')?.textContent).toContain('1')
+    expect(screen.getByText('Funcionários').closest('.dashboard-metric')?.textContent).toContain('4')
+    expect(screen.getByText('Vendas').closest('.dashboard-metric')?.textContent).toContain('5')
     expect(screen.getByRole('link', { name: /Nova vendaRegistre uma venda com um ou mais produtos/ })).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Atalhos do dashboard' })).toBeTruthy()
 

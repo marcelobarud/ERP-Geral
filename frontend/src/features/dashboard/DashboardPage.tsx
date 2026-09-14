@@ -63,19 +63,22 @@ function SummaryCard({
   const surfaceCustomization = useCustomizable({ key: customizationKey, type: 'SURFACE', group: 'summary-card', page: 'dashboard', label })
   const valueCustomization = useCustomizable({ key: `${customizationKey}.value`, type: 'TEXT', group: 'summary-value', page: 'dashboard', label: `${label} valor` })
   return (
-    <a
+    <article
       className="dashboard-metric"
       {...surfaceCustomization}
-      href={href}
-      onClick={(event) => navigateFromLink(event, href, onNavigate)}
     >
-      <span className="dashboard-metric-label">{label}</span>
+      <a
+        className="dashboard-metric-label"
+        href={href}
+        onClick={(event) => navigateFromLink(event, href, onNavigate)}
+      >
+        {label}
+      </a>
       <strong className="dashboard-metric-value" {...valueCustomization}>
         {count === null ? '—' : count}
       </strong>
       <span className="dashboard-metric-context">{description}</span>
-      <span className="dashboard-metric-link">Acessar área <span aria-hidden="true">→</span></span>
-    </a>
+    </article>
   )
 }
 
@@ -188,7 +191,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <p className="eyebrow">Navegação</p>
                 <h2 id="dashboard-actions-title">Próximos passos</h2>
               </div>
-              <span className="dashboard-section-note">Acesso rápido a áreas do ERP</span>
             </div>
             <nav className="dashboard-actions-grid" aria-label="Atalhos do dashboard">
               <QuickAction label="Nova venda" description="Registre uma venda com um ou mais produtos." href="/sales/new" onNavigate={onNavigate} customizationKey="dashboard.quick_action.new_sale" />

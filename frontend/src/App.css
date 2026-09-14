@@ -413,6 +413,19 @@
   margin: 0 auto;
 }
 
+.dashboard-page .page-header h1 {
+  font-size: clamp(1.85rem, 3vw, 2.7rem);
+  line-height: 1.1;
+}
+
+.dashboard-page .page-description {
+  margin-top: 0.85rem;
+}
+
+.dashboard-overview {
+  margin-top: 2.5rem;
+}
+
 .dashboard-section {
   margin-top: 3.25rem;
 }
@@ -465,21 +478,33 @@
   border-right: 0;
 }
 
-.dashboard-metric:hover,
-.dashboard-metric:focus-visible {
+.dashboard-metric:hover {
   background: var(--color-surface-soft);
 }
 
-.dashboard-metric:focus-visible,
 .dashboard-quick-action:focus-visible {
   outline: 0;
   box-shadow: var(--focus-ring);
 }
 
 .dashboard-metric-label {
+  width: fit-content;
   color: var(--muted);
   font-size: 0.77rem;
   font-weight: 750;
+  text-decoration: none;
+}
+
+.dashboard-metric-label:hover {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.dashboard-metric-label:focus-visible {
+  outline: 0;
+  border-radius: 0.2rem;
+  box-shadow: var(--focus-ring);
 }
 
 .dashboard-metric-value {
@@ -496,14 +521,6 @@
   color: var(--soft-muted);
   font-size: 0.72rem;
   line-height: 1.45;
-}
-
-.dashboard-metric-link {
-  margin-top: auto;
-  padding-top: 0.7rem;
-  color: var(--blue);
-  font-size: 0.72rem;
-  font-weight: 800;
 }
 
 .dashboard-actions-section {
@@ -1368,6 +1385,22 @@
   color: var(--color-text-primary);
 }
 
+.dashboard-overview > .state-card-error {
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border-color: color-mix(in srgb, var(--color-danger) 28%, var(--line));
+  background: color-mix(in srgb, var(--color-danger-soft) 58%, var(--color-surface));
+}
+
+.dashboard-overview > .state-card-error p {
+  margin-top: 0.15rem;
+}
+
+.dashboard-overview > .state-card-error .text-button {
+  margin-top: 0.45rem;
+}
+
 .page-header h1,
 .dashboard-section-heading h2,
 .settings-card-heading h2,
@@ -1379,8 +1412,7 @@
 
 a,
 .table-action,
-.text-button,
-.dashboard-metric-link {
+.text-button {
   color: var(--color-link);
 }
 
@@ -2680,6 +2712,10 @@ a,
 
   .main-content {
     padding: 2.5rem 1.15rem 3rem;
+  }
+
+  .dashboard-page .page-header h1 {
+    font-size: 2rem;
   }
 
   .dashboard-section-heading {
