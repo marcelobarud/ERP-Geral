@@ -95,6 +95,28 @@ describe('CustomersPage', () => {
     expect(await screen.findByText('Nenhum produto comprado.')).toBeTruthy()
   })
 
+  it('distinguishes the natural empty state from an empty filtered result', async () => {
+    render(<CustomersPage />)
+
+    expect(await screen.findByText('Nenhum cliente cadastrado ainda')).toBeTruthy()
+    expect(screen.getByText('Crie o primeiro cliente usando a ação Novo cliente acima.')).toBeTruthy()
+
+    vi.mocked(customersApi.listCustomers).mockImplementation((filters = {}) => Promise.resolve(filters.search ? [] : [customer]))
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Pesquisar clientes' }), { target: { value: 'inexistente' } })
+
+    await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith(expect.objectContaining({ search: 'inexistente', page: 1, pageSize: 20 })))
+    expect(await screen.findByText('Nenhum resultado encontrado para os filtros aplicados.')).toBeTruthy()
+    expect(screen.getByText('Filtros ativos')).toBeTruthy()
+  })
+
+  it('keeps the list geometry during loading', () => {
+    vi.mocked(customersApi.listCustomers).mockImplementation(() => new Promise<never>(() => {}))
+    render(<CustomersPage />)
+
+    expect(screen.getByRole('status').textContent).toContain('Carregando clientes...')
+    expect(document.querySelector('.customers-table-skeleton')).toBeTruthy()
+  })
+
   it('applies and clears the visible customer filters', async () => {
     vi.mocked(customersApi.listCustomers).mockResolvedValue([customer])
     render(<CustomersPage />)
@@ -111,8 +133,10 @@ describe('CustomersPage', () => {
 
     await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith(expect.objectContaining({ search: 'Ana', city: 'São Paulo', state: 'SP', page: 1, pageSize: 20 })))
     expect(screen.queryByRole('dialog', { name: 'Filtros detalhados' })).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: /Filtros \(2\)/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
+    expect(screen.getByText('Filtros ativos')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Busca: Ana/ })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Filtros \(3\)/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Limpar filtros' })[0])
     await waitFor(() => expect(customersApi.listCustomers).toHaveBeenCalledWith(expect.objectContaining({ page: 1, pageSize: 20 })))
   })
 })
