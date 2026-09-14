@@ -173,7 +173,7 @@ function SaleItemRow({
         <strong>{selectedProduct ? formatMoney(subtotal) : '—'}</strong>
         <span className="sale-item-note">Confirmado pelo backend</span>
       </div>
-      <button className="table-action table-action-danger sale-remove" type="button" onClick={onRemove}>
+      <button className="table-action table-action-danger sale-remove" type="button" aria-label={selectedProduct ? `Remover ${selectedProduct.nome}` : `Remover item ${item.key}`} onClick={onRemove}>
         Remover
       </button>
     </div>
@@ -330,13 +330,12 @@ export function NewSalePage() {
   }
 
   return (
-    <div className="sales-page">
+    <div className="sales-page new-sale-page">
       <div className="sales-page-header">
         <PageHeader eyebrow="Vendas" title="Nova venda" description="Monte uma venda com segurança e acompanhe os valores antes de confirmar." pageId="new_sale" />
         <a className="button button-secondary" href="/sales">Ver vendas</a>
       </div>
       {feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}
-      {submitError ? <FeedbackBanner kind="error" message={submitError} onDismiss={() => setSubmitError(null)} /> : null}
       {loadError ? <ErrorState description={loadError} onRetry={() => void loadSaleDependencies()} /> : null}
       {createdSale ? (
         <div className="sale-created-card">
@@ -347,7 +346,7 @@ export function NewSalePage() {
           <a className="button button-primary" href="/sales">Abrir lista de vendas</a>
         </div>
       ) : null}
-      {loading ? <LoadingState label="Carregando clientes, funcionários e produtos..." /> : (
+      {loading ? <div className="new-sale-loading"><LoadingState label="Carregando clientes, funcionários e produtos..." /><div className="sale-layout sale-loading-layout" aria-hidden="true"><div className="sale-loading-main"><span /><span /><span /></div><div className="sale-loading-summary"><span /><span /><span /></div></div></div> : (
         <form className="sale-layout" onSubmit={submitSale}>
           <section className="sale-card" {...contextCustomization}>
             <div className="sale-section-heading">
@@ -399,11 +398,13 @@ export function NewSalePage() {
             </div>
           </section>
 
-          <aside className="sale-summary-card">
+          <aside className="sale-summary-card" aria-label="Resumo da venda">
             <p className="eyebrow">Resumo</p>
             <h2>Total da venda</h2>
+            <div className="sale-summary-count"><span>Itens adicionados</span><strong>{items.length}</strong></div>
             <strong className="sale-total">{formatMoney(visualTotal)}</strong>
             <p>Estimativa visual com o preço atual do catálogo. O total definitivo será retornado pelo backend.</p>
+            {submitError ? <FeedbackBanner kind="error" message={submitError} onDismiss={() => setSubmitError(null)} /> : null}
             <button className="button button-primary sale-submit" type="submit" {...submitCustomization} disabled={saving || !prerequisitesReady || items.length === 0}>
               {saving ? 'Salvando venda...' : 'Salvar venda'}
             </button>
