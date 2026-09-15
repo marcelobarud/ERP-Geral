@@ -19,6 +19,7 @@ import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, Movements
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
 import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
 import { ModulesPage } from '../features/settings/ModulesPage'
+import { SettingsHubPage } from '../features/settings/SettingsHubPage'
 import { UsersPage } from '../features/settings/UsersPage'
 import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
@@ -33,9 +34,11 @@ function currentPathname(): string {
 function PageForRoute({
   route,
   onNavigate,
+  canManageUsers,
 }: {
   route: RouteDefinition
   onNavigate: (path: string) => void
+  canManageUsers: boolean
 }) {
   switch (route.path) {
     case '/':
@@ -90,6 +93,8 @@ function PageForRoute({
       return <StockReportPage />
     case '/reports/finance':
       return <FinanceReportPage />
+    case '/settings':
+      return <SettingsHubPage canManageUsers={canManageUsers} />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':
@@ -143,14 +148,15 @@ function AppContent() {
   const moduleDisabled = modules.length > 0 && moduleCode !== null && !activeModules.has(moduleCode)
   const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: '!', description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
   const pageId = pageIdForPath(pathname)
+  const canManageUsers = !authRequired || user?.role === 'ADMIN'
 
   useEffect(() => {
     void loadPageAppearance(pageId)
   }, [loadPageAppearance, pageId])
 
   return (
-      <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={!authRequired || user?.role === 'ADMIN'} pageTheme={pageAppearances[pageId]?.resolved}>
-      <PageForRoute route={route} onNavigate={navigate} />
+      <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={canManageUsers} pageTheme={pageAppearances[pageId]?.resolved}>
+      <PageForRoute route={route} onNavigate={navigate} canManageUsers={canManageUsers} />
     </AppLayout>
   )
 }

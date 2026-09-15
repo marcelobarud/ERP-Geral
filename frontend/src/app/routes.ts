@@ -92,6 +92,7 @@ export function getNavigationGroups(
     {
       label: 'Configurações',
       items: [
+        { path: '/settings', label: 'Visão geral', icon: '⌂' },
         { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
         { path: '/settings/custom-fields', label: 'Campos personalizados', icon: '✦' },
         { path: '/settings/modules', label: 'Módulos', icon: '◈' },
@@ -133,6 +134,7 @@ const routeDescriptions: Record<string, string> = {
   '/reports/stock': 'Analise saldos e produtos abaixo do mínimo.',
   '/reports/finance': 'Analise títulos, vencimentos e fluxo financeiro.',
   '/settings/modules': 'Ative ou desative áreas disponíveis no ERP.',
+  '/settings': 'Encontre as definições do ERP organizadas por finalidade.',
   '/settings/users': 'Administre acessos, papéis e vínculos com a equipe.',
   '/settings/appearance': 'Personalize a identidade visual e os rótulos do sistema.',
   '/settings/custom-fields': 'Defina campos extras para os cadastros operacionais.',

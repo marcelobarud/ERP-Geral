@@ -1352,3 +1352,12 @@ principal `erp_geral` não recebeu operação destrutiva.
 A classificação operacional foi promovida para **SIM**: **ERP Geral pronto
 para primeira implantação controlada**. Nenhuma credencial temporária foi
 persistida.
+
+## Regra de crescimento de Configurações
+
+Configurações relacionadas devem compartilhar uma Settings Page enquanto
+mantiverem o mesmo contexto e consequência. Quando um domínio crescer ou
+possuir estados e permissões próprios, ele deve ganhar uma página dedicada;
+várias páginas do mesmo domínio entram no Hub de Configurações. Funcionalidades
+operacionais permanecem no módulo correspondente, e não devem ser deslocadas
+para Settings apenas por conveniência de navegação.

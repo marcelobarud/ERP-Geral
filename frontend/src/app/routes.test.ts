@@ -48,6 +48,7 @@ describe('navegação comercial', () => {
       '/reports/finance',
     ])
     expect(groups.find((group) => group.label === 'Configurações')?.items.map((item) => item.path)).toContain('/settings/modules')
+    expect(groups.find((group) => group.label === 'Configurações')?.items.map((item) => item.path)).toContain('/settings')
     const onlyFinance = getNavigationGroups(appearanceLabels(defaultAppearance), new Set(['finance']))
     expect(onlyFinance.find((group) => group.label === 'Financeiro')).toBeTruthy()
     expect(onlyFinance.find((group) => group.label === 'Estoque')).toBeUndefined()
@@ -61,5 +62,6 @@ describe('navegação comercial', () => {
     expect(getRoute('/inventory/balances').label).toBe('Saldos')
     expect(getRoute('/finance/receivables').label).toBe('Contas a receber')
     expect(getRoute('/reports/dashboard').label).toBe('Dashboard ERP')
+    expect(getRoute('/settings').label).toBe('Visão geral')
   })
 })
