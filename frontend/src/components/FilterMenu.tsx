@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 import { FilterActions } from './FilterActions'
+import { focusWithoutScroll, getFocusableElements } from './focusManagement'
 
 type FilterMenuProps = {
   activeCount: number
@@ -24,7 +25,19 @@ export function FilterMenu({
   open,
 }: FilterMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const wasOpenRef = useRef(false)
   const panelId = useId()
+
+  useEffect(() => {
+    if (open) {
+      focusWithoutScroll(getFocusableElements(panelRef.current ?? document.body)[0] ?? panelRef.current)
+    } else if (wasOpenRef.current) {
+      focusWithoutScroll(triggerRef.current)
+    }
+    wasOpenRef.current = open
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -35,7 +48,11 @@ export function FilterMenu({
       }
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        onClose()
+      }
     }
 
     document.addEventListener('pointerdown', handlePointerDown)
@@ -50,6 +67,7 @@ export function FilterMenu({
     <div className="filter-menu-wrap" ref={menuRef}>
       <button
         className="filter-menu-trigger"
+        ref={triggerRef}
         type="button"
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -60,7 +78,7 @@ export function FilterMenu({
         <span className="filter-menu-chevron" aria-hidden="true">▾</span>
       </button>
       {open ? (
-        <div className="filter-menu-panel" id={panelId} role="dialog" aria-label="Filtros detalhados">
+        <div ref={panelRef} className="filter-menu-panel" id={panelId} role="dialog" aria-label="Filtros detalhados">
           <div className="filter-menu-heading">Filtros detalhados</div>
           <div className="filter-menu-fields">{children}</div>
           <FilterActions canClear={canClear} onApply={onApply} onClear={onClear} />
