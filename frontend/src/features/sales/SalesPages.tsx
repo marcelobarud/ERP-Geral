@@ -159,19 +159,17 @@ function SaleItemRow({
           placeholder="1.000"
           type="text"
           value={item.quantidade}
+          aria-describedby="sale-items-help"
           onChange={(event) => onChange({ quantidade: event.target.value })}
         />
-        <span className="form-help">Aceita até três casas decimais.</span>
       </div>
       <div className="sale-item-value">
         <span className="sale-item-label">Preço unitário</span>
         <strong>{selectedProduct ? formatMoney(selectedProduct.preco_venda) : '—'}</strong>
-        <span className="sale-item-note">Definido pelo catálogo</span>
       </div>
       <div className="sale-item-value">
         <span className="sale-item-label">Subtotal visual</span>
         <strong>{selectedProduct ? formatMoney(subtotal) : '—'}</strong>
-        <span className="sale-item-note">Confirmado pelo backend</span>
       </div>
       <button className="table-action table-action-danger sale-remove" type="button" aria-label={selectedProduct ? `Remover ${selectedProduct.nome}` : `Remover item ${item.key}`} onClick={onRemove}>
         Remover
@@ -383,19 +381,19 @@ export function NewSalePage() {
 
           <section className="sale-card sale-items-card" {...itemsCustomization}>
             <div className="sale-section-heading">
-              <div><p className="eyebrow">Composição</p><h2>Itens da venda</h2><p className="sale-section-description">O preço unitário é somente informativo e será confirmado pelo backend.</p></div>
+              <div><p className="eyebrow">Composição</p><h2>Itens da venda</h2><p className="sale-section-description" id="sale-items-help">O preço unitário e o subtotal são informativos e serão confirmados pelo backend. A quantidade aceita até três casas decimais.</p></div>
               <span className="sale-step">2</span>
             </div>
             {products.length === 0 ? <div className="sale-prerequisite"><strong>Nenhum produto disponível</strong><span>Cadastre um produto antes de criar uma venda.</span></div> : null}
-            {items.length === 0 ? <div className="sale-items-empty"><strong>Adicione o primeiro produto</strong><span>Você poderá incluir vários produtos, alterar quantidades e remover itens antes de salvar.</span></div> : (
+            {items.length === 0 ? <div className="sale-items-empty"><strong>Adicione o primeiro produto</strong><span>Você poderá incluir vários produtos, alterar quantidades e remover itens antes de salvar.</span><button className="button button-secondary" type="button" onClick={addItem} disabled={products.length === 0 || selectedProductIds.length >= products.length}>+ Adicionar produto</button></div> : (
               <div className="sale-item-list">
                 {items.map((item) => <SaleItemRow key={item.key} item={item} products={products} selectedProductIds={selectedProductIds.filter((id) => id !== item.produtoId)} onChange={(patch) => updateItem(item.key, patch)} onRemove={() => removeItem(item.key)} />)}
               </div>
             )}
-            <div className="sale-items-actions">
+            {items.length > 0 ? <div className="sale-items-actions">
               <button className="button button-secondary" type="button" onClick={addItem} disabled={products.length === 0 || selectedProductIds.length >= products.length}>+ Adicionar produto</button>
               {selectedProductIds.length >= products.length && products.length > 0 ? <span className="form-help">Todos os produtos disponíveis já foram adicionados.</span> : null}
-            </div>
+            </div> : null}
           </section>
 
           <aside className="sale-summary-card" aria-label="Resumo da venda">

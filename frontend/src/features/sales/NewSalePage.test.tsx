@@ -114,6 +114,19 @@ describe('NewSalePage', () => {
     expect(screen.queryByRole('option', { name: inactiveEmployee.nome_completo })).toBeNull()
   })
 
+  it('keeps the add action inside the empty state and shares item guidance', async () => {
+    await renderReadyPage()
+
+    const emptyState = screen.getByText('Adicione o primeiro produto').closest('.sale-items-empty')
+    expect(emptyState).not.toBeNull()
+    expect(within(emptyState as HTMLElement).getByRole('button', { name: '+ Adicionar produto' })).toBeTruthy()
+
+    fireEvent.click(within(emptyState as HTMLElement).getByRole('button', { name: '+ Adicionar produto' }))
+    expect(screen.queryByText('Adicione o primeiro produto')).toBeNull()
+    expect(screen.getAllByText(/A quantidade aceita até três casas decimais/)).toHaveLength(1)
+    expect(screen.getByLabelText('Quantidade', { selector: '#sale-quantity-1' }).getAttribute('aria-describedby')).toBe('sale-items-help')
+  })
+
   it('prevents duplicate products in item selectors', async () => {
     await renderReadyPage()
     fireEvent.click(screen.getByRole('button', { name: '+ Adicionar produto' }))
