@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { ErrorState } from '../../components/ErrorState'
 import { EmptyState } from '../../components/EmptyState'
@@ -24,6 +24,22 @@ const initialFilters: ReportFilters = { dateFrom: '', dateTo: '' }
 
 function money(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
+}
+
+function quantity(value: number) {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(value || 0)
+}
+
+function formatDate(value: string) {
+  const [year, month, day] = value.split('-')
+  return `${day}/${month}/${year}`
+}
+
+function formatPeriod(filters: ReportFilters) {
+  if (filters.dateFrom && filters.dateTo) return `Período: ${formatDate(filters.dateFrom)} a ${formatDate(filters.dateTo)}`
+  if (filters.dateFrom) return `Período: desde ${formatDate(filters.dateFrom)}`
+  if (filters.dateTo) return `Período: até ${formatDate(filters.dateTo)}`
+  return 'Período: todo o histórico'
 }
 
 function Metric({ label, value, detail }: { label: string; value: string | number; detail?: string }) {
@@ -63,8 +79,69 @@ export function CommercialReportPage() {
   const [error, setError] = useState<string | null>(null)
   const load = useCallback(async () => { try { setError(null); setData(await getCommercialReport(filters)) } catch (cause) { setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório comercial.')) } }, [filters])
   useEffect(() => { void load() }, [load])
-  const rows = data ? [{ produto: 'Resumo', quantidade: data.completed_sales, total: data.sales }, ...data.by_product.map((item) => ({ produto: item.product_id, quantidade: item.quantity, total: item.total }))] : []
-  return <ReportLayout pageId="reports_commercial" loaded={data !== null} eyebrow="Relatórios" title="Relatório comercial" description="Vendas, cancelamentos, devoluções e agregações por produto." filters={filters} setFilters={setFilters} onSubmit={() => void load()} rows={rows} filename="relatorio-comercial.csv" error={error} onRetry={() => void load()}><div className="report-metrics-grid">{data ? <><Metric label="Vendas no período" value={data.sales} /><Metric label="Concluídas" value={data.completed_sales} /><Metric label="Canceladas" value={data.cancelled_sales} /><Metric label="Devoluções aprovadas" value={data.approved_returns} /></> : null}</div></ReportLayout>
+  const rows = data && data.sales > 0 ? [{ produto: 'Resumo', quantidade: data.completed_sales, total: data.sales }, ...data.by_product.map((item) => ({ produto: item.product_id, quantidade: item.quantity, total: item.total }))] : []
+  const hasPeriodFilter = Boolean(filters.dateFrom || filters.dateTo)
+  return <ReportLayout pageId="reports_commercial" loaded={data !== null} eyebrow="Relatórios" title="Relatório comercial" description="Vendas, cancelamentos, devoluções e agregações por produto." filters={filters} setFilters={setFilters} onSubmit={() => void load()} rows={rows} filename="relatorio-comercial.csv" error={error} onRetry={() => void load()} emptyTitle={hasPeriodFilter ? 'Nenhuma venda encontrada neste recorte' : 'Não houve vendas no período selecionado'} emptyDescription={hasPeriodFilter ? 'Ajuste ou remova o período para ampliar a análise.' : 'Selecione um período para investigar outra janela de vendas.'}><CommercialReportContent data={data} filters={filters} /></ReportLayout>
+}
+
+function CommercialReportContent({ data, filters }: { data: CommercialReport | null; filters: ReportFilters }) {
+  if (!data) return null
+
+  return (
+    <>
+      <section className="report-metric-group" aria-labelledby="commercial-metrics-title">
+        <div className="report-section-heading">
+          <div>
+            <p className="eyebrow">Resumo do período</p>
+            <h2 id="commercial-metrics-title">Estado comercial</h2>
+          </div>
+          <p className="report-section-context">{formatPeriod(filters)}</p>
+        </div>
+        <div className="report-metric-layout">
+          <article className="report-primary-metric">
+            <span className="dashboard-card-label">Vendas no período</span>
+            <strong className="report-primary-metric-value">{data.sales}</strong>
+            <span className="dashboard-card-description">Vendas registradas no recorte selecionado.</span>
+          </article>
+          <div className="report-supporting-metrics">
+            <Metric label="Concluídas" value={data.completed_sales} detail="Status concluída" />
+            <Metric label="Canceladas" value={data.cancelled_sales} detail="Status cancelada" />
+            <Metric label="Devoluções aprovadas" value={data.approved_returns} detail="Status aprovada" />
+          </div>
+        </div>
+      </section>
+
+      <section className="report-analysis-section" aria-labelledby="commercial-products-title">
+        <div className="report-section-heading">
+          <div>
+            <p className="eyebrow">Evidência principal</p>
+            <h2 id="commercial-products-title">Vendas por produto</h2>
+            <p>Compare quantidade e valor das vendas concluídas no período.</p>
+          </div>
+        </div>
+        {data.by_product.length ? <CommercialProductsTable items={data.by_product} /> : <div className="data-card report-detail-empty"><p>Não há vendas concluídas para detalhar neste recorte.</p></div>}
+      </section>
+
+      <section className="report-supporting-section" aria-labelledby="commercial-customers-title">
+        <div className="report-section-heading">
+          <div>
+            <p className="eyebrow">Informação de apoio</p>
+            <h2 id="commercial-customers-title">Vendas por cliente</h2>
+            <p>Use esta lista para investigar quais clientes compõem o resultado.</p>
+          </div>
+        </div>
+        {data.by_customer.length ? <CommercialCustomersTable items={data.by_customer} /> : <div className="data-card report-detail-empty"><p>Não há vendas concluídas por cliente para este recorte.</p></div>}
+      </section>
+    </>
+  )
+}
+
+function CommercialProductsTable({ items }: { items: CommercialReport['by_product'] }) {
+  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por produto</caption><thead><tr><th scope="col">Produto</th><th scope="col">Quantidade</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item) => <tr key={item.product_id}><td className="data-primary">Produto #{item.product_id}</td><td className="report-number-cell">{quantity(item.quantity)}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
+}
+
+function CommercialCustomersTable({ items }: { items: CommercialReport['by_customer'] }) {
+  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por cliente</caption><thead><tr><th scope="col">Cliente</th><th scope="col">Vendas</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item, index) => <tr key={item.customer_id ?? `unknown-${index}`}><td className="data-primary">{item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente'}</td><td className="report-number-cell">{item.sales}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
 }
 
 export function PurchasesReportPage() {
@@ -94,6 +171,6 @@ export function FinanceReportPage() {
   return <ReportLayout pageId="reports_finance" loaded={data !== null} eyebrow="Relatórios" title="Relatório financeiro" description="Títulos, vencimentos e fluxo previsto versus realizado." rows={rows} filename="relatorio-financeiro.csv" error={error} onRetry={() => void load()}><div className="report-metrics-grid">{data ? <><Metric label="Contas a receber" value={data.receivable_titles} /><Metric label="Contas a pagar" value={data.payable_titles} /><Metric label="Vencidos" value={data.overdue_installments} /><Metric label="Previsto a receber" value={money(data.previsto_receber)} /><Metric label="Previsto a pagar" value={money(data.previsto_pagar)} /><Metric label="Realizado a receber" value={money(data.realizado_receber)} /></> : null}</div></ReportLayout>
 }
 
-function ReportLayout({ pageId, loaded, eyebrow, title, description, filters, setFilters, onSubmit, rows, filename, error, onRetry, children }: { pageId: string; loaded: boolean; eyebrow: string; title: string; description: string; filters?: ReportFilters; setFilters?: (filters: ReportFilters) => void; onSubmit?: () => void; rows: Array<Record<string, string | number>>; filename: string; error: string | null; onRetry: () => void; children: React.ReactNode }) {
-  return <div className="page-stack"><PageHeader eyebrow={eyebrow} title={title} description={description} pageId={pageId} /><div className="report-toolbar"><div>{filters && setFilters && onSubmit ? <FilterBar filters={filters} onChange={setFilters} onSubmit={onSubmit} /> : null}</div><ExportButton rows={rows} filename={filename} /></div>{error ? <ErrorState description={error} onRetry={onRetry} /> : null}{!error && !loaded ? <LoadingState label="Carregando relatório..." /> : null}{!error && loaded && !rows.length ? <div className="data-card"><EmptyState title="Nenhum dado encontrado" description="Não há registros para os filtros ou período selecionado." /></div> : null}{!error && loaded && rows.length ? children : null}</div>
+function ReportLayout({ pageId, loaded, eyebrow, title, description, filters, setFilters, onSubmit, rows, filename, error, onRetry, emptyTitle = 'Nenhum dado encontrado', emptyDescription = 'Não há registros para os filtros ou período selecionado.', children }: { pageId: string; loaded: boolean; eyebrow: string; title: string; description: string; filters?: ReportFilters; setFilters?: (filters: ReportFilters) => void; onSubmit?: () => void; rows: Array<Record<string, string | number>>; filename: string; error: string | null; onRetry: () => void; emptyTitle?: string; emptyDescription?: string; children: ReactNode }) {
+  return <div className="page-stack"><PageHeader eyebrow={eyebrow} title={title} description={description} pageId={pageId} /><div className="report-toolbar"><div>{filters && setFilters && onSubmit ? <FilterBar filters={filters} onChange={setFilters} onSubmit={onSubmit} /> : null}</div><ExportButton rows={rows} filename={filename} /></div>{filters ? <div className="report-active-scope" aria-label={`Escopo ativo: ${formatPeriod(filters)}`}><strong>Escopo ativo</strong><span>{formatPeriod(filters)}</span></div> : null}{error ? <ErrorState description={error} onRetry={onRetry} /> : null}{!error && !loaded ? <LoadingState label="Carregando relatório..." /> : null}{!error && loaded && !rows.length ? <div className="data-card"><EmptyState title={emptyTitle} description={emptyDescription} /></div> : null}{!error && loaded && rows.length ? children : null}</div>
 }
