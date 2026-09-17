@@ -3944,7 +3944,7 @@ a,
   }
 
   .data-card {
-    border-radius: 1rem;
+    border-radius: var(--radius-surface);
   }
 
   .empty-state {
