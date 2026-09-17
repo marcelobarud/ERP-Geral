@@ -15,8 +15,10 @@ complementam essa camada sem substituir o branding do cliente.
 
 ### Fundação semântica
 
-Os papéis semânticos da fundação visual ficam em `frontend/src/index.css` e
-preservam os valores visuais atuais. A camada inclui `--color-canvas`,
+Os papéis semânticos da fundação visual ficam em `frontend/src/index.css`. A
+calibragem atual usa uma escala tipográfica mais administrativa, radius
+moderado para superfícies, `elevation-0` em cards comuns e elevação reservada
+para camadas flutuantes. A camada inclui `--color-canvas`,
 `--color-surface-muted`, `--color-surface-elevated`, os papéis de borda,
 estado, foco, tipografia, spacing, radius, elevation, motion e z-index.
 

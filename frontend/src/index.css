@@ -13,7 +13,7 @@
   --color-accent: #2f8065;
   --color-background: #eef4f8;
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fbfd;
+  --color-surface-soft: #f8fafb;
   --color-text-primary: #1e293b;
   --color-text-secondary: #4b6575;
   --color-text-muted: #718096;
@@ -36,12 +36,12 @@
 
   /* Semantic visual roles. Existing appearance variables remain the source
      of truth so page themes and element overrides keep their precedence. */
-  --color-canvas: var(--color-background);
+  --color-canvas: color-mix(in srgb, var(--color-background) 85%, var(--color-surface) 15%);
   --color-surface-muted: var(--color-surface-soft);
   --color-surface-elevated: var(--color-surface);
   --color-border-subtle: var(--color-table-border);
-  --color-border-default: var(--color-table-border);
-  --color-border-strong: var(--color-table-border);
+  --color-border-default: color-mix(in srgb, var(--color-table-border) 85%, var(--color-text-muted) 15%);
+  --color-border-strong: color-mix(in srgb, var(--color-table-border) 70%, var(--color-text-muted) 30%);
   --color-accent-hover: var(--color-accent);
   --color-accent-foreground: var(--color-on-accent);
   --color-error: var(--color-danger);
@@ -53,12 +53,12 @@
   --border-width-default: 1px;
 
   /* Typography roles preserve the current rendered scale. */
-  --text-page-title-size: clamp(2rem, 4vw, 3.25rem);
-  --text-page-title-line-height: 1.08;
-  --text-page-title-weight: 750;
-  --text-page-title-tracking: -0.055em;
-  --text-section-title-size: 1.1rem;
-  --text-section-title-line-height: 1.3;
+  --text-page-title-size: clamp(1.75rem, 3vw, 2.75rem);
+  --text-page-title-line-height: 1.15;
+  --text-page-title-weight: 700;
+  --text-page-title-tracking: -0.035em;
+  --text-section-title-size: 1.05rem;
+  --text-section-title-line-height: 1.35;
   --text-section-title-weight: 700;
   --text-card-title-size: 1.1rem;
   --text-card-title-weight: 700;
@@ -74,9 +74,9 @@
   --text-metadata-size: 0.72rem;
   --text-numeric-size: 1rem;
   --text-numeric-weight: 700;
-  --text-eyebrow-size: 0.72rem;
-  --text-eyebrow-weight: 800;
-  --text-eyebrow-tracking: 0.15em;
+  --text-eyebrow-size: 0.68rem;
+  --text-eyebrow-weight: 750;
+  --text-eyebrow-tracking: 0.12em;
 
   /* Small, reusable spacing scale; contextual values remain local. */
   --space-1: 0.25rem;
@@ -105,12 +105,12 @@
   --shadow-soft: 0 1rem 3rem rgba(52, 86, 111, 0.08);
   --radius-control: var(--appearance-control-radius);
   --radius-surface: var(--appearance-card-radius);
-  --radius-overlay: 1.25rem;
-  --radius-popover: 0.9rem;
+  --radius-overlay: 1.125rem;
+  --radius-popover: 0.75rem;
   --radius-pill: 999px;
   --elevation-0: none;
-  --elevation-1: var(--shadow-soft);
-  --elevation-2: 0 1.5rem 5rem rgba(28, 53, 70, 0.2);
+  --elevation-1: 0 0.5rem 1.25rem rgba(52, 86, 111, 0.06);
+  --elevation-2: 0 1.5rem 5rem rgba(28, 53, 70, 0.16);
   --appearance-primary: #487a98;
   --appearance-secondary: #2f5975;
   --appearance-accent: #2f8065;
