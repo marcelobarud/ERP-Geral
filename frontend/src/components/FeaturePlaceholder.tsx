@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { EmptyState } from './EmptyState'
 import { PageHeader } from './PageHeader'
 
@@ -7,7 +9,7 @@ type FeaturePlaceholderProps = {
   description: string
   emptyTitle: string
   emptyDescription: string
-  icon: string
+  icon: ReactNode
 }
 
 export function FeaturePlaceholder({

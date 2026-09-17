@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
 import { focusPageFallback, focusWithoutScroll, getFocusableElements } from './focusManagement'
+
+const CloseIcon = actionIcons.close
 
 const modalStack: symbol[] = []
 let modalScrollLockDepth = 0
@@ -139,7 +142,7 @@ export function Modal({
             aria-label="Fechar"
             onClick={onClose}
           >
-            ×
+            <CloseIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" />
           </button>
         </div>
         {children}

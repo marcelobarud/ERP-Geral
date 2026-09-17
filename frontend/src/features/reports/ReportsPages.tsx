@@ -4,6 +4,7 @@ import { ErrorState } from '../../components/ErrorState'
 import { EmptyState } from '../../components/EmptyState'
 import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
+import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 import { getApiErrorMessage } from '../../services/httpClient'
 import {
   getCommercialReport,
@@ -19,6 +20,8 @@ import {
 } from './api'
 
 type ReportFilters = { dateFrom: string; dateTo: string }
+
+const ExportIcon = actionIcons.export
 
 const initialFilters: ReportFilters = { dateFrom: '', dateTo: '' }
 
@@ -58,7 +61,7 @@ function ExportButton({ rows, filename }: { rows: Array<Record<string, string | 
     link.click()
     URL.revokeObjectURL(url)
   }
-  return <button className="button button-secondary" type="button" onClick={exportCsv} disabled={!rows.length}>Exportar CSV</button>
+  return <button className="button button-secondary" type="button" onClick={exportCsv} disabled={!rows.length}><ExportIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" /> Exportar CSV</button>
 }
 
 function FilterBar({ filters, onChange, onSubmit }: { filters: ReportFilters; onChange: (filters: ReportFilters) => void; onSubmit: () => void }) {

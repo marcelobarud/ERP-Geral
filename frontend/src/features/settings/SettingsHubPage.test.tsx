@@ -25,7 +25,7 @@ describe('hub de configurações', () => {
     render(<SettingsHubPage />)
 
     expect(screen.getByText('Escolha quais áreas do ERP ficam disponíveis na navegação.')).toBeTruthy()
-    expect(screen.getAllByText('→')).toHaveLength(settingsHubGroups.reduce((total, group) => total + group.destinations.length, 0))
+    expect(document.querySelectorAll('.settings-destination-arrow svg')).toHaveLength(settingsHubGroups.reduce((total, group) => total + group.destinations.length, 0))
   })
 
   it('não apresenta Usuários quando a permissão de administração não está disponível', () => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorState } from '../../components/ErrorState'
 import { FeedbackBanner } from '../../components/FeedbackBanner'
@@ -24,6 +25,8 @@ import {
 } from './api'
 import type { Customer, CustomerDetails, CustomerPayload } from './types'
 import type { CustomerListFilters } from './api'
+
+const RemoveFilterIcon = actionIcons.close
 
 const emptyCustomer: CustomerPayload = {
   nome: '',
@@ -235,7 +238,7 @@ export function CustomersPage() {
           {activeFilters.map((filter) => (
             <button className="customers-filter-chip" type="button" key={filter.key} onClick={() => removeFilter(filter.key)}>
               <span>{filter.label}: {filter.value}</span>
-              <span aria-hidden="true">×</span>
+              <span aria-hidden="true"><RemoveFilterIcon size={iconSizes.status} stroke={iconStroke} focusable="false" /></span>
               <span className="sr-only">Remover filtro {filter.label}</span>
             </button>
           ))}

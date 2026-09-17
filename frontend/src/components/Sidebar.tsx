@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { NavigationGroup } from '../app/routes'
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+
+const ChevronDownIcon = actionIcons.chevronDown
+const CloseIcon = actionIcons.close
 
 type SidebarProps = {
   groups: NavigationGroup[]
@@ -102,7 +106,7 @@ export function Sidebar({
       <div className="sidebar-mobile-header">
         <span>Menu principal</span>
         <button className="sidebar-close" ref={closeButtonRef} type="button" aria-label="Fechar menu" onClick={onClose}>
-          ×
+          <CloseIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" />
         </button>
       </div>
 
@@ -118,13 +122,16 @@ export function Sidebar({
                 onClick={() => setExpandedGroups((current) => ({ ...current, [group.label]: !isGroupExpanded(group) }))}
               >
                 <span className="nav-group-label">{group.label}</span>
-                <span className="nav-group-chevron" aria-hidden="true">⌄</span>
+                <span className="nav-group-chevron" aria-hidden="true">
+                  <ChevronDownIcon size={iconSizes.action} stroke={iconStroke} focusable="false" />
+                </span>
               </button>
             ) : <p className="nav-group-label">{group.label}</p>}
             {isGroupExpanded(group) ? (
               <div className="nav-group-items" id={`nav-group-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                 {group.items.map((item) => {
                   const active = isActivePath(currentPath, item.path)
+                  const NavigationIcon = item.icon
 
                   return (
                     <a
@@ -138,7 +145,7 @@ export function Sidebar({
                       }}
                     >
                       <span className="nav-icon" aria-hidden="true">
-                        {item.icon}
+                        <NavigationIcon size={iconSizes.nav} stroke={iconStroke} focusable="false" />
                       </span>
                       <span>{item.label}</span>
                     </a>

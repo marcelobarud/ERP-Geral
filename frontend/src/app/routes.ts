@@ -1,9 +1,10 @@
 import { appearanceLabels, defaultAppearance, type AppearanceLabels } from '../features/settings/types'
+import { navigationIcons, type AppIcon } from './iconography'
 
 export type NavigationItem = {
   path: string
   label: string
-  icon: string
+  icon: AppIcon
 }
 
 export type NavigationGroup = {
@@ -25,15 +26,15 @@ export function getNavigationGroups(
   const groups: NavigationGroup[] = [
     {
       label: 'Visão geral',
-      items: [{ path: '/', label: labels.dashboard, icon: '⌂' }],
+      items: [{ path: '/', label: labels.dashboard, icon: navigationIcons.dashboard }],
     },
     {
       label: 'Cadastros',
       items: [
-        { path: '/customers', label: labels.customers, icon: '◎' },
-        { path: '/products', label: labels.products, icon: '▦' },
-        { path: '/suppliers', label: labels.suppliers, icon: '◈' },
-        { path: '/employees', label: labels.employees, icon: '♙' },
+        { path: '/customers', label: labels.customers, icon: navigationIcons.customers },
+        { path: '/products', label: labels.products, icon: navigationIcons.products },
+        { path: '/suppliers', label: labels.suppliers, icon: navigationIcons.suppliers },
+        { path: '/employees', label: labels.employees, icon: navigationIcons.employees },
       ],
     },
     {
@@ -41,19 +42,19 @@ export function getNavigationGroups(
       moduleCode: 'commercial',
       collapsible: true,
       items: [
-        { path: '/sales/new', label: labels.newSale, icon: '+' },
-        { path: '/sales', label: labels.sales, icon: '↗' },
-        { path: '/commercial/quotes', label: 'Orçamentos', icon: '▤' },
-        { path: '/commercial/orders', label: 'Pedidos de venda', icon: '▥' },
-        { path: '/commercial/returns', label: 'Devoluções', icon: '↩' },
+        { path: '/sales/new', label: labels.newSale, icon: navigationIcons.newSale },
+        { path: '/sales', label: labels.sales, icon: navigationIcons.sales },
+        { path: '/commercial/quotes', label: 'Orçamentos', icon: navigationIcons.quotes },
+        { path: '/commercial/orders', label: 'Pedidos de venda', icon: navigationIcons.orders },
+        { path: '/commercial/returns', label: 'Devoluções', icon: navigationIcons.returns },
       ],
     },
     {
       label: 'Compras',
       moduleCode: 'purchases',
       items: [
-        { path: '/purchases', label: 'Pedidos de compra', icon: '▧' },
-        { path: '/purchases/receipts', label: 'Recebimentos', icon: '⇩' },
+        { path: '/purchases', label: 'Pedidos de compra', icon: navigationIcons.purchases },
+        { path: '/purchases/receipts', label: 'Recebimentos', icon: navigationIcons.receipts },
       ],
     },
     {
@@ -61,20 +62,20 @@ export function getNavigationGroups(
       moduleCode: 'inventory',
       collapsible: true,
       items: [
-        { path: '/inventory/balances', label: 'Saldos', icon: '▦' },
-        { path: '/inventory/movements', label: 'Movimentações', icon: '⇄' },
-        { path: '/inventory/adjustments', label: 'Ajustes', icon: '±' },
-        { path: '/inventory/inventories', label: 'Inventários', icon: '☷' },
-        { path: '/inventory/deposits', label: 'Depósitos', icon: '⌂' },
+        { path: '/inventory/balances', label: 'Saldos', icon: navigationIcons.inventoryBalances },
+        { path: '/inventory/movements', label: 'Movimentações', icon: navigationIcons.inventoryMovements },
+        { path: '/inventory/adjustments', label: 'Ajustes', icon: navigationIcons.inventoryAdjustments },
+        { path: '/inventory/inventories', label: 'Inventários', icon: navigationIcons.inventories },
+        { path: '/inventory/deposits', label: 'Depósitos', icon: navigationIcons.deposits },
       ],
     },
     {
       label: 'Financeiro',
       moduleCode: 'finance',
       items: [
-        { path: '/finance/receivables', label: 'Contas a receber', icon: '↗' },
-        { path: '/finance/payables', label: 'Contas a pagar', icon: '↙' },
-        { path: '/finance/cashflow', label: 'Caixa e fluxo', icon: '◫' },
+        { path: '/finance/receivables', label: 'Contas a receber', icon: navigationIcons.receivables },
+        { path: '/finance/payables', label: 'Contas a pagar', icon: navigationIcons.payables },
+        { path: '/finance/cashflow', label: 'Caixa e fluxo', icon: navigationIcons.cashflow },
       ],
     },
     {
@@ -82,22 +83,22 @@ export function getNavigationGroups(
       moduleCode: 'reports',
       collapsible: true,
       items: [
-        { path: '/reports/dashboard', label: 'Dashboard ERP', icon: '▥' },
-        { path: '/reports/commercial', label: 'Comercial', icon: '↗' },
-        { path: '/reports/purchases', label: 'Compras', icon: '▧' },
-        { path: '/reports/stock', label: 'Estoque', icon: '▦' },
-        { path: '/reports/finance', label: 'Financeiro', icon: '◫' },
+        { path: '/reports/dashboard', label: 'Dashboard ERP', icon: navigationIcons.reports },
+        { path: '/reports/commercial', label: 'Comercial', icon: navigationIcons.commercialReport },
+        { path: '/reports/purchases', label: 'Compras', icon: navigationIcons.purchases },
+        { path: '/reports/stock', label: 'Estoque', icon: navigationIcons.inventoryBalances },
+        { path: '/reports/finance', label: 'Financeiro', icon: navigationIcons.financeReport },
       ],
     },
     {
       label: 'Configurações',
       items: [
-        { path: '/settings', label: 'Visão geral', icon: '⌂' },
-        { path: '/settings/appearance', label: 'Aparência', icon: '◌' },
-        { path: '/settings/custom-fields', label: 'Campos personalizados', icon: '✦' },
-        { path: '/settings/modules', label: 'Módulos', icon: '◈' },
-        ...(canManageUsers ? [{ path: '/settings/users', label: 'Usuários', icon: '♙' }] : []),
-        { path: '/settings/payment-conditions', label: 'Condições de pagamento', icon: '◫' },
+        { path: '/settings', label: 'Visão geral', icon: navigationIcons.settings },
+        { path: '/settings/appearance', label: 'Aparência', icon: navigationIcons.appearance },
+        { path: '/settings/custom-fields', label: 'Campos personalizados', icon: navigationIcons.customFields },
+        { path: '/settings/modules', label: 'Módulos', icon: navigationIcons.settings },
+        ...(canManageUsers ? [{ path: '/settings/users', label: 'Usuários', icon: navigationIcons.users }] : []),
+        { path: '/settings/payment-conditions', label: 'Condições de pagamento', icon: navigationIcons.paymentConditions },
       ],
     },
   ]
@@ -153,7 +154,7 @@ export function getModuleForPath(pathname: string): string | null {
 export const notFoundRoute: RouteDefinition = {
   path: '/not-found',
   label: 'Página não encontrada',
-  icon: '?',
+  icon: navigationIcons.alert,
   description: 'A página que você tentou acessar não existe.',
 }
 

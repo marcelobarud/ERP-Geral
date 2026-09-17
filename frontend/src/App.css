@@ -4155,3 +4155,199 @@ a,
   outline: 0;
   box-shadow: var(--focus-ring);
 }
+
+/* Fase 2D — Shell e iconografia */
+.brand-mark {
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 22%, transparent);
+  border-radius: var(--radius-control);
+  box-shadow: var(--elevation-0);
+}
+
+.brand-logo {
+  box-shadow: var(--elevation-0);
+}
+
+.nav-group-toggle:hover,
+.nav-group-toggle:focus-visible {
+  background: var(--color-control-hover);
+}
+
+.nav-group-chevron,
+.nav-icon,
+.filter-menu-chevron,
+.settings-destination-arrow,
+.dashboard-action-arrow,
+.button > svg,
+.feedback > span,
+.state-icon,
+.placeholder-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-group-chevron {
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0;
+}
+
+.nav-group-chevron svg,
+.nav-icon svg,
+.filter-menu-chevron svg,
+.settings-destination-arrow svg,
+.dashboard-action-arrow svg,
+.button > svg,
+.feedback > span svg,
+.state-icon svg,
+.placeholder-icon svg,
+.visual-editor-bar strong svg,
+.visual-editor-hierarchy button svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.nav-link {
+  border-radius: var(--radius-control);
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+
+.nav-link:hover {
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+  transform: none;
+}
+
+.nav-link-active {
+  color: var(--color-heading);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-muted));
+  border-left-color: var(--color-primary);
+}
+
+.nav-icon {
+  flex: 0 0 1.35rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: initial;
+}
+
+.nav-link-active .nav-icon {
+  color: var(--color-primary);
+}
+
+.sidebar-note {
+  border-color: var(--color-border-default);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.topbar {
+  min-height: 4.5rem;
+  border-bottom-color: var(--color-border-default);
+  background: var(--color-surface);
+}
+
+.topbar-kicker {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.health-indicator {
+  gap: 0.4rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+}
+
+.health-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+.health-online {
+  color: var(--color-success);
+}
+
+.health-offline {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border-default));
+  color: var(--color-danger);
+  background: var(--color-error-surface);
+}
+
+.health-degraded {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, var(--color-border-default));
+  color: var(--color-warning-text);
+  background: var(--color-warning-surface);
+}
+
+.health-offline:focus-visible,
+.health-degraded:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+.menu-button,
+.sidebar-close {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  color: var(--color-link);
+  background: var(--color-surface);
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.menu-button:hover,
+.sidebar-close:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+}
+
+.menu-button:focus-visible,
+.sidebar-close:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+.sidebar-open {
+  box-shadow: var(--elevation-0);
+}
+
+.placeholder-icon,
+.state-icon,
+.feedback > span {
+  font-size: 0;
+}
+
+.state-icon-loading svg {
+  animation: none;
+}
+
+.settings-destination-arrow,
+.dashboard-action-arrow,
+.filter-menu-chevron {
+  font-size: 0;
+}
+
+.visual-editor-bar strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.visual-editor-hierarchy button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+@media (max-width: 560px) {
+  .health-indicator {
+    font-size: 0;
+  }
+
+  .health-indicator .health-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+  }
+}

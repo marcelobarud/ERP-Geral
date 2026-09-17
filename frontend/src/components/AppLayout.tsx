@@ -11,6 +11,9 @@ import type { PageAppearanceTheme } from '../features/settings/types'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
 import { useAuth } from '../features/auth/AuthContext'
 import { resolveBackendAssetUrl } from '../services/httpClient'
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+
+const MenuIcon = actionIcons.menu
 
 type AppLayoutProps = {
   route: RouteDefinition
@@ -136,7 +139,7 @@ export function AppLayout({ route, onNavigate, children, pageTheme, activeModule
               aria-expanded={sidebarOpen}
               onClick={() => setSidebarOpen((isOpen) => !isOpen)}
             >
-              <span aria-hidden="true">☰</span>
+              <MenuIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" />
             </button>
             <p className="topbar-kicker">Área administrativa</p>
           </div>

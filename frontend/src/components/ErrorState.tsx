@@ -1,3 +1,8 @@
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+
+const ErrorIcon = actionIcons.alert
+
 type ErrorStateProps = {
   title?: string
   description: string
@@ -16,7 +21,7 @@ export function ErrorState({
   return (
     <div className="state-card state-card-error" {...rootCustomization} role="alert">
       <span className="state-icon" aria-hidden="true">
-        !
+        <ErrorIcon size={iconSizes.status} stroke={iconStroke} focusable="false" />
       </span>
       <div>
         <strong {...titleCustomization}>{title}</strong>
@@ -30,4 +35,3 @@ export function ErrorState({
     </div>
   )
 }
-import { useCustomizable } from '../features/settings/VisualCustomizationContext'

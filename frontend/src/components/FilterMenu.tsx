@@ -2,6 +2,9 @@ import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 import { FilterActions } from './FilterActions'
 import { focusWithoutScroll, getFocusableElements } from './focusManagement'
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+
+const ChevronDownIcon = actionIcons.chevronDown
 
 type FilterMenuProps = {
   activeCount: number
@@ -75,7 +78,9 @@ export function FilterMenu({
         onClick={onToggle}
       >
         Filtros{activeCount > 0 ? ` (${activeCount})` : ''}
-        <span className="filter-menu-chevron" aria-hidden="true">▾</span>
+        <span className="filter-menu-chevron" aria-hidden="true">
+          <ChevronDownIcon size={iconSizes.action} stroke={iconStroke} focusable="false" />
+        </span>
       </button>
       {open ? (
         <div ref={panelRef} className="filter-menu-panel" id={panelId} role="dialog" aria-label="Filtros detalhados">

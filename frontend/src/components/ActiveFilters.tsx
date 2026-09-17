@@ -1,3 +1,7 @@
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+
+const RemoveFilterIcon = actionIcons.close
+
 export type ActiveFilterItem = {
   key: string
   label: string
@@ -19,7 +23,7 @@ export function ActiveFilters({ filters, onRemove, onClear }: ActiveFiltersProps
       {filters.map((filter) => (
         <button className="filter-chip" type="button" key={filter.key} onClick={() => onRemove(filter.key)}>
           <span>{filter.label}: {filter.value}</span>
-          <span aria-hidden="true">×</span>
+          <span aria-hidden="true"><RemoveFilterIcon size={iconSizes.action} stroke={iconStroke} focusable="false" /></span>
           <span className="sr-only">Remover filtro {filter.label}</span>
         </button>
       ))}

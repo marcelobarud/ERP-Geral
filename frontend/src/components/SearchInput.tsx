@@ -2,6 +2,9 @@ import { useEffect, useId, useRef } from 'react'
 
 import type { AppearancePageId } from '../features/settings/types'
 import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+
+const ClearIcon = actionIcons.searchClear
 
 type SearchInputProps = {
   value: string
@@ -74,7 +77,7 @@ export function SearchInput({
             }}
             disabled={disabled}
           >
-            ×
+            <ClearIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" />
           </button>
         ) : null}
       </div>

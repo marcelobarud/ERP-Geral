@@ -73,3 +73,17 @@ podem rolar horizontalmente em telas estreitas; o conteúdo não deve ser cortad
 
 Nos breakpoints de 900px e 560px, grids passam para duas e uma coluna quando
 necessário, toolbars empilham e ações de formulário ocupam a largura disponível.
+
+### Shell e iconografia
+
+O Shell usa `@tabler/icons-react` como biblioteca única de ícones funcionais.
+O mapeamento compartilhado fica em `frontend/src/app/iconography.tsx`: a
+navegação usa ícones de 18px, ações usam 17px e estados usam 16px, todos com
+`currentColor` e traço consistente. Ícones não recebem cor própria nem
+substituem labels, nomes acessíveis ou texto de status.
+
+Sidebar e Topbar mantêm contraste por superfície, borda e cor de estado. A
+navegação ativa usa uma única ênfase de tema, enquanto hover e chevrons são
+tratamentos discretos. No mobile, os controles de menu e fechamento preservam
+alvos de toque e o texto de saúde fica resumido visualmente, mantendo o estado
+disponível para tecnologias assistivas.

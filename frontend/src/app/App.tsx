@@ -25,6 +25,7 @@ import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { ModuleDisabledPage, NotFoundPage } from '../pages/NotFoundPage'
+import { navigationIcons } from './iconography'
 import { getModuleForPath, getRoute, type RouteDefinition } from './routes'
 
 function currentPathname(): string {
@@ -146,7 +147,7 @@ function AppContent() {
 
   const moduleCode = getModuleForPath(pathname)
   const moduleDisabled = modules.length > 0 && moduleCode !== null && !activeModules.has(moduleCode)
-  const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: '!', description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
+  const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: navigationIcons.alert, description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
   const pageId = pageIdForPath(pathname)
   const canManageUsers = !authRequired || user?.role === 'ADMIN'
 

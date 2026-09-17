@@ -5,6 +5,9 @@ import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
 import { getDashboardSummary } from './api'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
+import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
+
+const ArrowRightIcon = actionIcons.arrowRight
 
 type DashboardPageProps = {
   onNavigate: (path: string) => void
@@ -102,7 +105,7 @@ function QuickAction({
         <span>{description}</span>
       </span>
       <span className="dashboard-action-arrow" aria-hidden="true">
-        →
+        <ArrowRightIcon size={iconSizes.action} stroke={iconStroke} focusable="false" />
       </span>
     </a>
   )

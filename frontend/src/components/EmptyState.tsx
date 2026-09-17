@@ -1,3 +1,8 @@
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+
+const EmptyIcon = actionIcons.empty
+
 type EmptyStateProps = {
   title: string
   description: string
@@ -10,11 +15,10 @@ export function EmptyState({ title, description }: EmptyStateProps) {
   return (
     <div className="empty-state" {...rootCustomization}>
       <span className="empty-state-mark" aria-hidden="true">
-        ✦
+        <EmptyIcon size={iconSizes.status} stroke={iconStroke} focusable="false" />
       </span>
       <strong {...titleCustomization}>{title}</strong>
       <p {...descriptionCustomization}>{description}</p>
     </div>
   )
 }
-import { useCustomizable } from '../features/settings/VisualCustomizationContext'

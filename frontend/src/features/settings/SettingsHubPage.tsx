@@ -1,5 +1,8 @@
 import { PageHeader } from '../../components/PageHeader'
+import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 import { settingsHubGroups } from './settingsHub'
+
+const ArrowRightIcon = actionIcons.arrowRight
 
 export function SettingsHubPage({ canManageUsers = true }: { canManageUsers?: boolean }) {
   const visibleGroups = settingsHubGroups
@@ -26,7 +29,9 @@ export function SettingsHubPage({ canManageUsers = true }: { canManageUsers?: bo
                     <strong>{destination.label}</strong>
                     <span>{destination.description}</span>
                   </span>
-                  <span className="settings-destination-arrow" aria-hidden="true">→</span>
+                  <span className="settings-destination-arrow" aria-hidden="true">
+                    <ArrowRightIcon size={iconSizes.action} stroke={iconStroke} focusable="false" />
+                  </span>
                 </a>
               ))}
             </nav>
