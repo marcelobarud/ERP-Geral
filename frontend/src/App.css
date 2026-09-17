@@ -768,18 +768,29 @@
 }
 
 .text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
   margin-top: 0.65rem;
-  padding: 0;
+  padding: 0.25rem;
   border: 0;
+  border-radius: var(--radius-control);
   color: var(--blue);
   background: transparent;
   font-size: 0.8rem;
   font-weight: 700;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
 }
 
 .text-button:hover {
   color: var(--blue-deep);
+  background: var(--color-control-hover);
   text-decoration: underline;
+}
+
+.text-button:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }
 
 .crud-page {
@@ -822,43 +833,61 @@
   border-radius: var(--radius-control);
   font-size: var(--text-button-size);
   font-weight: var(--text-button-weight);
-  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 .button:disabled,
 .icon-button:disabled {
-  cursor: wait;
-  opacity: 0.6;
+  cursor: not-allowed;
+  opacity: 1;
+  color: var(--color-control-disabled-text);
+  border-color: var(--color-border-default);
+  background: var(--color-control-disabled-background);
+  box-shadow: none;
 }
 
 .button-primary {
   color: var(--color-on-primary);
   background: var(--appearance-primary);
-  box-shadow: 0 0.45rem 1rem rgba(72, 122, 152, 0.18);
+  border-color: color-mix(in srgb, var(--appearance-primary) 82%, var(--color-text-primary) 18%);
+  box-shadow: none;
 }
 
 .button-primary:hover {
-  background: var(--appearance-secondary);
+  background: var(--color-button-primary-hover);
+  border-color: var(--color-button-primary-hover);
+}
+
+.button-primary:active,
+.button-secondary:active,
+.button-danger:active,
+.filter-menu-trigger:active {
+  transform: translateY(1px);
 }
 
 .button-secondary {
-  color: var(--blue-deep);
-  border-color: var(--line);
-  background: var(--surface);
+  color: var(--color-button-secondary-text);
+  border-color: var(--color-border-default);
+  background: var(--color-control-background);
+  box-shadow: none;
 }
 
 .button-secondary:hover {
-  border-color: var(--color-table-border);
-  background: var(--blue-soft);
+  border-color: var(--color-border-strong);
+  background: var(--color-control-hover);
 }
 
 .button-danger {
-  color: var(--color-on-primary);
-  background: var(--red);
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 70%, var(--color-border-default) 30%);
+  background: var(--color-button-danger-surface);
+  box-shadow: none;
 }
 
 .button-danger:hover {
-  background: var(--color-danger);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: var(--color-button-danger-hover);
 }
 
 .feedback {
@@ -950,9 +979,9 @@
 .data-table th {
   color: var(--custom-table-header-text, var(--color-table-header-text));
   background: var(--custom-table-header-bg, var(--color-table-background));
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: var(--text-caption-size);
+  font-weight: 750;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
@@ -1004,33 +1033,34 @@
 .table-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.35rem;
+  gap: 0.2rem;
   white-space: nowrap;
 }
 
 .table-action {
   min-height: 2.25rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.55rem;
   border: 0;
-  border-radius: 0.5rem;
-  color: var(--blue);
+  border-radius: var(--radius-control);
+  color: var(--color-link);
   background: transparent;
   font-size: 0.75rem;
   font-weight: 700;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 
 .table-action:hover {
-  background: var(--blue-soft);
-  color: var(--blue-deep);
+  background: var(--color-control-hover);
+  color: var(--color-heading);
 }
 
 .table-action-danger {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .table-action-danger:hover {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-button-danger-surface);
+  color: var(--color-danger);
 }
 
 .pagination-controls {
@@ -1106,21 +1136,23 @@
 
 .icon-button {
   display: grid;
-  flex: 0 0 2rem;
-  width: 2rem;
-  height: 2rem;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 0.6rem;
-  color: var(--muted);
-  background: var(--surface-soft);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  color: var(--color-text-secondary);
+  background: var(--color-control-disabled-background);
   font-size: 1.25rem;
   line-height: 1;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 
 .icon-button:hover {
-  color: var(--blue-deep);
-  background: var(--blue-soft);
+  color: var(--color-heading);
+  border-color: var(--color-border-strong);
+  background: var(--color-control-hover);
 }
 
 .form-grid {
@@ -1145,7 +1177,8 @@
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   width: 100%;
   min-height: 2.7rem;
   padding: 0.65rem 0.75rem;
@@ -1153,19 +1186,22 @@
   border-radius: var(--radius-control);
   outline: 0;
   color: var(--ink);
-  background: var(--color-surface);
+  background: var(--color-control-background);
+  font: inherit;
   font-size: 0.85rem;
-  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease;
 }
 
 .form-field input:focus,
-.form-field select:focus {
-  border-color: var(--blue);
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--color-focus);
   box-shadow: var(--focus-ring);
 }
 
-.form-field input::placeholder {
-  color: var(--color-text-muted);
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: var(--color-control-placeholder);
 }
 
 .form-help {
@@ -1217,9 +1253,9 @@
   gap: 0.85rem;
   margin-bottom: 1rem;
   padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  background: var(--surface);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-popover);
+  background: var(--color-control-background);
 }
 
 .report-toolbar {
@@ -1240,9 +1276,9 @@
   align-items: flex-end;
   gap: var(--space-3);
   padding: 0.85rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-popover);
+  background: var(--color-control-background);
 }
 
 .report-filter-bar label {
@@ -1261,7 +1297,7 @@
   border: var(--border-width-default) solid var(--color-border-default);
   border-radius: var(--radius-control);
   color: var(--ink);
-  background: var(--surface);
+  background: var(--color-control-background);
 }
 
 .report-filter-bar input:focus,
@@ -1764,7 +1800,6 @@ a,
 }
 
 .button-primary,
-.button-danger,
 .button-success,
 .brand-mark {
   color: var(--color-on-primary);
@@ -2146,7 +2181,7 @@ a,
 }
 
 .button-danger {
-  color: var(--color-on-primary);
+  color: var(--color-danger);
 }
 
 .custom-fields-layout {
@@ -2239,7 +2274,8 @@ a,
   border-radius: var(--radius-control);
   outline: 0;
   color: var(--ink);
-  background: var(--color-surface);
+  background: var(--color-control-background);
+  font: inherit;
   font-size: 0.85rem;
 }
 
@@ -2263,19 +2299,20 @@ a,
   padding: 0.65rem 0.9rem;
   border: var(--border-width-default) solid var(--color-border-default);
   border-radius: var(--radius-control);
-  color: var(--blue-deep);
-  background: var(--surface);
+  color: var(--color-button-secondary-text);
+  background: var(--color-control-background);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 .filter-menu-trigger:hover,
 .filter-menu-trigger[aria-expanded='true'] {
-  border-color: var(--color-table-border);
-  background: var(--blue-soft);
+  border-color: var(--color-border-strong);
+  background: var(--color-control-hover);
 }
 
 .filter-menu-trigger:focus-visible {
@@ -2339,7 +2376,8 @@ a,
   border-radius: var(--radius-control);
   outline: 0;
   color: var(--ink);
-  background: var(--color-surface);
+  background: var(--color-control-background);
+  font: inherit;
   font-size: 0.85rem;
   appearance: none;
 }
@@ -2358,20 +2396,26 @@ a,
   position: absolute;
   top: 50%;
   right: 0.45rem;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2rem;
+  height: 2rem;
   transform: translateY(-50%);
   border: 0;
-  border-radius: 0.5rem;
-  color: var(--muted);
+  border-radius: var(--radius-control);
+  color: var(--color-text-secondary);
   background: transparent;
   font-size: 1.1rem;
   line-height: 1;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 
 .search-input-clear:hover {
-  color: var(--blue-deep);
-  background: var(--blue-soft);
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+}
+
+.search-input-clear:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }
 
 .filter-checkbox {
@@ -2385,7 +2429,13 @@ a,
 .filter-checkbox input {
   width: 1rem;
   height: 1rem;
-  accent-color: var(--blue);
+  accent-color: var(--color-primary);
+}
+
+.checkbox-field input:focus-visible,
+.filter-checkbox input:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }
 
 .filter-actions {
@@ -3983,4 +4033,125 @@ a,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Fase 2C: controles e leitura operacional. A regra permanece baseada nas
+   classes existentes para manter os contratos de customização intactos. */
+:where(.form-field input, .form-field select, .form-field textarea, .filter-field input, .filter-field select, .report-filter-bar input, .search-input input) {
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+  background: var(--color-control-background);
+}
+
+:where(.form-field input, .form-field select, .form-field textarea, .filter-field input, .filter-field select, .report-filter-bar input, .search-input input):focus-visible {
+  outline: 0;
+  border-color: var(--color-focus);
+  box-shadow: var(--focus-ring);
+}
+
+:where(.form-field input, .form-field textarea, .filter-field input, .report-filter-bar input, .search-input input)::placeholder {
+  color: var(--color-control-placeholder);
+}
+
+:where(.form-field input, .form-field select, .form-field textarea, .filter-field input, .filter-field select, .report-filter-bar input, .search-input input):disabled {
+  cursor: not-allowed;
+  color: var(--color-control-disabled-text);
+  border-color: var(--color-border-default);
+  background: var(--color-control-disabled-background);
+}
+
+:where(.form-field input, .form-field select, .form-field textarea, .filter-field input, .filter-field select, .report-filter-bar input, .search-input input)[aria-invalid='true'] {
+  border-color: var(--color-danger);
+  background: var(--color-error-surface);
+}
+
+.button-secondary:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+}
+
+.table-action:hover {
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+}
+
+.table-action-danger:hover {
+  color: var(--color-danger);
+  background: var(--color-button-danger-surface);
+}
+
+.button-secondary:active,
+.table-action:active,
+.filter-menu-trigger:active {
+  background: var(--color-control-active);
+}
+
+.button-primary:active {
+  background: color-mix(in srgb, var(--color-button-primary-hover) 86%, var(--color-text-primary) 14%);
+}
+
+.button-danger:active {
+  background: color-mix(in srgb, var(--color-button-danger-hover) 80%, var(--color-danger) 20%);
+}
+
+.data-card.data-table-wrap {
+  border-color: var(--color-border-default);
+  border-radius: var(--radius-control);
+  box-shadow: var(--elevation-0);
+}
+
+.data-table th,
+.data-table td {
+  border-bottom-color: var(--custom-table-border, var(--color-border-subtle));
+}
+
+.data-table th {
+  font-variant-numeric: normal;
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-table-row-hover);
+}
+
+.table-actions {
+  align-items: center;
+}
+
+.table-action:focus-visible,
+.text-button:focus-visible,
+.filter-chip:focus-visible,
+.customers-filter-chip:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+.cadastros-family-page .filter-chip,
+.customers-page .customers-filter-chip {
+  border-color: var(--color-border-default);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.cadastros-family-page .filter-chip:hover,
+.customers-page .customers-filter-chip:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-heading);
+  background: var(--color-control-hover);
+}
+
+.filter-menu-trigger[aria-expanded='true'] {
+  color: var(--color-heading);
+}
+
+.search-input-clear:disabled {
+  cursor: not-allowed;
+  color: var(--color-control-disabled-text);
+  background: transparent;
+}
+
+.feedback button:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }

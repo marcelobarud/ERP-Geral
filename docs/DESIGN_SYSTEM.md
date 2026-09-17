@@ -46,6 +46,24 @@ customização persistida ou temas específicos de página.
 - `LoadingState`, `EmptyState`, `ErrorState` e `FeedbackBanner` para estados;
 - `sr-only` e labels visíveis/associados para conteúdo acessível.
 
+### Interações e leitura operacional
+
+O Primary usa cor e contraste para indicar a ação dominante, sem elevação
+decorativa. Secondary usa borda e superfície; Danger permanece explícito, mas
+discreto, com cor e superfície de risco. Ações leves continuam em padrões
+link-like/textuais e ações de linha não devem parecer três botões primários:
+`Ver` e `Editar` são ações leves, enquanto `Excluir` usa o tratamento
+destrutivo contido.
+
+Inputs, selects, textareas, busca e filtros compartilham borda, superfície,
+radius e foco visível. Placeholder, disabled e erro mantêm contraste útil; um
+erro pode usar `aria-invalid` e não depende apenas da cor.
+
+Tabelas preservam a densidade compacta e a semântica atual. O container usa
+elevação zero e borda clara, o cabeçalho tem contraste e tracking contidos e o
+hover da linha é sutil. Overrides de tabela continuam prevalecendo sobre os
+valores de fallback da fundação.
+
 ## Regras de composição
 
 Cada tela deve ter uma ação primária clara, uma hierarquia de título única,

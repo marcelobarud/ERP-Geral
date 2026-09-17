@@ -52,6 +52,20 @@
   --color-error-surface: var(--color-danger-soft);
   --border-width-default: 1px;
 
+  /* Interactive controls stay quiet by default and become clearer through
+     border, focus and state changes rather than decorative elevation. */
+  --color-control-background: var(--color-surface);
+  --color-control-hover: var(--color-surface-muted);
+  --color-control-active: color-mix(in srgb, var(--color-surface-muted) 76%, var(--color-text-primary) 24%);
+  --color-control-placeholder: var(--color-text-muted);
+  --color-control-disabled-background: color-mix(in srgb, var(--color-surface-muted) 76%, var(--color-surface) 24%);
+  --color-control-disabled-text: var(--color-text-muted);
+  --color-button-primary-hover: var(--appearance-secondary);
+  --color-button-secondary-text: var(--color-link);
+  --color-button-danger-surface: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface) 90%);
+  --color-button-danger-hover: color-mix(in srgb, var(--color-danger) 17%, var(--color-surface) 83%);
+  --color-table-row-hover: var(--color-surface-muted);
+
   /* Typography roles preserve the current rendered scale. */
   --text-page-title-size: clamp(1.75rem, 3vw, 2.75rem);
   --text-page-title-line-height: 1.15;
