@@ -92,3 +92,19 @@ navegação ativa usa uma única ênfase de tema, enquanto hover e chevrons são
 tratamentos discretos. No mobile, os controles de menu e fechamento preservam
 alvos de toque e o texto de saúde fica resumido visualmente, mantendo o estado
 disponível para tecnologias assistivas.
+
+## Data visualization
+
+O Dashboard usa MUI X Charts Community (`@mui/x-charts`) somente para
+visualizações analíticas; a biblioteca não substitui o Design System do ERP.
+Use `LineChart` para tendências contínuas e `BarChart` para comparações ou
+rankings claros. Cada gráfico deve responder a uma pergunta operacional real,
+usar dados agregados no backend e manter título, período, unidade e contexto
+textual compreensíveis.
+
+Charts devem consumir as variáveis semânticas da aparência, usar superfície,
+borda e `elevation-0`, evitar a paleta rainbow e permanecer responsivos dentro
+do container. A navegação por teclado e o comportamento de
+`prefers-reduced-motion` da biblioteca devem ser preservados. Não criar gráfico
+vazio sem explicar o estado nem adicionar Sparkline, Gauge ou PieChart apenas
+por ornamentação.

@@ -2,14 +2,15 @@ from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy import case, desc, func, literal, select
+from sqlalchemy.orm import Session, aliased
 
 from app.api.dependencies import require_authenticated
 from app.db.session import get_db_session
 from app.models import (
     Cliente,
     DevolucaoVenda,
+    LiquidacaoFinanceira,
     MovimentacaoEstoque,
     Orcamento,
     ParcelaFinanceira,
@@ -19,8 +20,19 @@ from app.models import (
     Venda,
     VendaItem,
 )
+from app.schemas.dashboard import (
+    DashboardAnalyticsGranularity,
+    DashboardAnalyticsPeriod,
+    DashboardAnalyticsRead,
+)
 from app.services.finance import cashflow_summary
-from app.services.inventory import InventoryNotFound, get_default_deposit, list_balances
+from app.services.inventory import (
+    NEGATIVE_TYPES,
+    POSITIVE_TYPES,
+    InventoryNotFound,
+    get_default_deposit,
+    list_balances,
+)
 
 router = APIRouter(
     prefix="/api/reports",
@@ -42,6 +54,60 @@ def date_filters(query, column, date_from: date | None, date_to: date | None):
             )
         )
     return query
+
+
+_DASHBOARD_PERIODS: dict[
+    DashboardAnalyticsPeriod, tuple[int, DashboardAnalyticsGranularity]
+] = {
+    "30d": (30, "day"),
+    "90d": (90, "week"),
+    "6m": (183, "month"),
+    "12m": (365, "month"),
+}
+
+
+def _dashboard_period(
+    period: DashboardAnalyticsPeriod,
+) -> tuple[date, date, DashboardAnalyticsGranularity]:
+    days, granularity = _DASHBOARD_PERIODS[period]
+    date_to = date.today()
+    return date_to - timedelta(days=days - 1), date_to, granularity
+
+
+def _bucket_start(value: date, granularity: DashboardAnalyticsGranularity) -> date:
+    if granularity == "day":
+        return value
+    if granularity == "week":
+        return value - timedelta(days=value.weekday())
+    return value.replace(day=1)
+
+
+def _next_bucket(value: date, granularity: DashboardAnalyticsGranularity) -> date:
+    if granularity == "day":
+        return value + timedelta(days=1)
+    if granularity == "week":
+        return value + timedelta(days=7)
+    if value.month == 12:
+        return date(value.year + 1, 1, 1)
+    return date(value.year, value.month + 1, 1)
+
+
+def _dashboard_buckets(
+    date_from: date,
+    date_to: date,
+    granularity: DashboardAnalyticsGranularity,
+) -> list[date]:
+    current = _bucket_start(date_from, granularity)
+    last = _bucket_start(date_to, granularity)
+    buckets: list[date] = []
+    while current <= last:
+        buckets.append(current)
+        current = _next_bucket(current, granularity)
+    return buckets
+
+
+def _bucket_date(value: date | datetime) -> date:
+    return value.date() if isinstance(value, datetime) else value
 
 
 @router.get("/commercial")
@@ -194,3 +260,174 @@ def erp_dashboard(db: Session = Depends(get_db_session)):
         "realized_receivable": cashflow.realizado_receber,
         "realized_payable": cashflow.realizado_pagar,
     }
+
+
+@router.get("/dashboard/analytics", response_model=DashboardAnalyticsRead)
+def dashboard_analytics(
+    period: DashboardAnalyticsPeriod = Query(default="12m"),
+    db: Session = Depends(get_db_session),
+) -> DashboardAnalyticsRead:
+    date_from, date_to, granularity = _dashboard_period(period)
+    buckets = _dashboard_buckets(date_from, date_to, granularity)
+    start_datetime = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+    end_datetime = datetime.combine(
+        date_to + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
+
+    sales_bucket = func.date_trunc(granularity, Venda.data_venda)
+    sales_rows = db.execute(
+        select(
+            sales_bucket,
+            func.coalesce(
+                func.sum(VendaItem.quantidade * VendaItem.preco_unitario),
+                Decimal("0.00"),
+            ),
+            func.count(func.distinct(Venda.id)),
+        )
+        .join(VendaItem, VendaItem.venda_id == Venda.id)
+        .where(
+            Venda.status == "CONCLUIDA",
+            Venda.data_venda >= start_datetime,
+            Venda.data_venda < end_datetime,
+        )
+        .group_by(sales_bucket)
+        .order_by(sales_bucket)
+    ).all()
+    sales_by_bucket = {
+        _bucket_date(row[0]): (row[1] or Decimal("0.00"), row[2] or 0)
+        for row in sales_rows
+    }
+
+    settled_by_installment = (
+        select(
+            LiquidacaoFinanceira.parcela_id.label("parcela_id"),
+            func.sum(LiquidacaoFinanceira.valor).label("settled"),
+        )
+        .where(LiquidacaoFinanceira.status == "CONFIRMADA")
+        .group_by(LiquidacaoFinanceira.parcela_id)
+        .subquery()
+    )
+    settled_value = func.coalesce(
+        settled_by_installment.c.settled, literal(Decimal("0.00"))
+    )
+    open_value = case(
+        (
+            ParcelaFinanceira.valor > settled_value,
+            ParcelaFinanceira.valor - settled_value,
+        ),
+        else_=literal(Decimal("0.00")),
+    )
+    finance_bucket = func.date_trunc(granularity, ParcelaFinanceira.vencimento)
+    finance_rows = db.execute(
+        select(finance_bucket, TituloFinanceiro.tipo, func.sum(open_value))
+        .join(
+            TituloFinanceiro,
+            TituloFinanceiro.id == ParcelaFinanceira.titulo_id,
+        )
+        .outerjoin(
+            settled_by_installment,
+            settled_by_installment.c.parcela_id == ParcelaFinanceira.id,
+        )
+        .where(
+            ParcelaFinanceira.vencimento >= date_from,
+            ParcelaFinanceira.vencimento <= date_to,
+        )
+        .group_by(finance_bucket, TituloFinanceiro.tipo)
+        .order_by(finance_bucket)
+    ).all()
+    finance_by_bucket: dict[date, dict[str, Decimal]] = {}
+    for bucket, title_type, amount in finance_rows:
+        values = finance_by_bucket.setdefault(
+            _bucket_date(bucket), {"RECEBER": Decimal("0.00"), "PAGAR": Decimal("0.00")}
+        )
+        values[title_type] += amount or Decimal("0.00")
+
+    reverse_source = aliased(MovimentacaoEstoque)
+    reverse_effect = case(
+        (reverse_source.tipo.in_(POSITIVE_TYPES), -reverse_source.quantidade),
+        (reverse_source.tipo.in_(NEGATIVE_TYPES), reverse_source.quantidade),
+        else_=literal(Decimal("0.00")),
+    )
+    movement_effect = case(
+        (MovimentacaoEstoque.tipo.in_(POSITIVE_TYPES), MovimentacaoEstoque.quantidade),
+        (MovimentacaoEstoque.tipo.in_(NEGATIVE_TYPES), -MovimentacaoEstoque.quantidade),
+        (MovimentacaoEstoque.tipo == "REVERSAO", reverse_effect),
+        else_=literal(Decimal("0.00")),
+    )
+    try:
+        deposit_id = get_default_deposit(db).id
+    except InventoryNotFound as exception:
+        raise HTTPException(status_code=409, detail=str(exception)) from None
+    balances = (
+        select(
+            MovimentacaoEstoque.produto_id.label("produto_id"),
+            func.sum(movement_effect).label("saldo"),
+        )
+        .outerjoin(
+            reverse_source,
+            reverse_source.id == MovimentacaoEstoque.movimento_origem_id,
+        )
+        .where(MovimentacaoEstoque.deposito_id == deposit_id)
+        .group_by(MovimentacaoEstoque.produto_id)
+        .subquery()
+    )
+    stock_balance = func.coalesce(balances.c.saldo, literal(Decimal("0.00")))
+    shortfall_percent = case(
+        (
+            Produto.estoque_minimo > 0,
+            (Produto.estoque_minimo - stock_balance) * 100 / Produto.estoque_minimo,
+        ),
+        else_=literal(Decimal("0.00")),
+    )
+    stock_rows = db.execute(
+        select(
+            Produto.id,
+            Produto.nome,
+            stock_balance,
+            Produto.estoque_minimo,
+            shortfall_percent,
+        )
+        .outerjoin(balances, balances.c.produto_id == Produto.id)
+        .where(Produto.ativo.is_(True), stock_balance < Produto.estoque_minimo)
+        .order_by(desc(shortfall_percent), Produto.id)
+        .limit(5)
+    ).all()
+
+    return DashboardAnalyticsRead(
+        period=period,
+        date_from=date_from,
+        date_to=date_to,
+        granularity=granularity,
+        sales_trend=[
+            {
+                "bucket": bucket,
+                "sales_value": float(
+                    sales_by_bucket.get(bucket, (Decimal("0.00"), 0))[0]
+                ),
+                "completed_sales": sales_by_bucket.get(bucket, (Decimal("0.00"), 0))[1],
+            }
+            for bucket in buckets
+        ],
+        finance_trend=[
+            {
+                "bucket": bucket,
+                "receivable": float(
+                    finance_by_bucket.get(bucket, {}).get("RECEBER", Decimal("0.00"))
+                ),
+                "payable": float(
+                    finance_by_bucket.get(bucket, {}).get("PAGAR", Decimal("0.00"))
+                ),
+            }
+            for bucket in buckets
+        ],
+        stock_attention=[
+            {
+                "product_id": row[0],
+                "product_name": row[1],
+                "saldo": float(row[2] or Decimal("0.00")),
+                "estoque_minimo": float(row[3] or Decimal("0.00")),
+                "shortfall_percent": float(row[4] or Decimal("0.00")),
+            }
+            for row in stock_rows
+        ],
+    )

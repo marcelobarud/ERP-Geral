@@ -1,13 +1,28 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '../../services/httpClient'
 import * as dashboardApi from './api'
 import { DashboardPage } from './DashboardPage'
 
-vi.mock('./api', () => ({ getDashboardSummary: vi.fn() }))
+vi.mock('./api', () => ({ getDashboardAnalytics: vi.fn(), getDashboardSummary: vi.fn() }))
+
+const analyticsFixture = {
+  period: '12m' as const,
+  date_from: '2025-09-18',
+  date_to: '2026-09-17',
+  granularity: 'month' as const,
+  sales_trend: [
+    { bucket: '2026-01-01', sales_value: 1200, completed_sales: 4 },
+    { bucket: '2026-02-01', sales_value: 1500, completed_sales: 5 },
+  ],
+  finance_trend: [
+    { bucket: '2026-02-01', receivable: 100, payable: 80 },
+  ],
+  stock_attention: [],
+}
 
 describe('DashboardPage', () => {
   afterEach(() => cleanup())
@@ -15,6 +30,7 @@ describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(dashboardApi.getDashboardSummary).mockResolvedValue({ customers: 0, products: 0, suppliers: 0, employees: 0, sales: 0 })
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockResolvedValue(analyticsFixture)
   })
 
   it('loads and renders operational counts and all shortcuts', async () => {
@@ -34,7 +50,10 @@ describe('DashboardPage', () => {
 
     const sections = Array.from(document.querySelectorAll('.dashboard-section'))
     expect(sections[0]?.querySelector('#dashboard-summary-title')).toBeTruthy()
-    expect(sections[1]?.classList.contains('dashboard-actions-section')).toBe(true)
+    expect(sections[1]?.classList.contains('dashboard-analytics')).toBe(true)
+    expect(sections[2]?.classList.contains('dashboard-actions-section')).toBe(true)
+    expect(screen.getByText('Vendas ao longo do tempo')).toBeTruthy()
+    expect(screen.getByText('Estoque dentro do mínimo')).toBeTruthy()
   })
 
   it('shows a consistent loading state while list requests are pending', () => {
@@ -80,5 +99,48 @@ describe('DashboardPage', () => {
 
     expect(onNavigate).toHaveBeenNthCalledWith(1, '/customers')
     expect(onNavigate).toHaveBeenNthCalledWith(2, '/sales/new')
+  })
+
+  it('changes only the analytical period and reloads the dashboard analytics', async () => {
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockResolvedValue({ ...analyticsFixture, period: '30d', date_from: '2026-08-19', granularity: 'day' })
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    await screen.findByText('Desempenho recente')
+    fireEvent.change(screen.getByRole('combobox', { name: 'Período da análise' }), { target: { value: '30d' } })
+
+    await waitFor(() => expect(dashboardApi.getDashboardAnalytics).toHaveBeenLastCalledWith('30d'))
+    expect(screen.getByText('Afeta apenas as visualizações analíticas.')).toBeTruthy()
+  })
+
+  it('keeps analytical context visible while chart data is loading', async () => {
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockImplementation(() => new Promise<never>(() => {}))
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    expect(await screen.findByText('Desempenho recente')).toBeTruthy()
+    expect(screen.getAllByText('Carregando análise...')).toHaveLength(3)
+    expect(screen.getByLabelText('Período da análise')).toBeTruthy()
+  })
+
+  it('shows a contextual analytical error with retry', async () => {
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockRejectedValue(new ApiError(503, 'Analytics indisponível.'))
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    expect((await screen.findAllByText('A leitura analítica não pôde ser carregada. Tente novamente.'))).toHaveLength(3)
+    const panel = screen.getByRole('heading', { name: 'Vendas ao longo do tempo' }).closest('section')
+    expect(panel ? within(panel).getByRole('button', { name: 'Tentar novamente' }) : null).toBeTruthy()
+  })
+
+  it('explains empty analytical periods without rendering empty charts', async () => {
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockResolvedValue({
+      ...analyticsFixture,
+      sales_trend: analyticsFixture.sales_trend.map((point) => ({ ...point, sales_value: 0, completed_sales: 0 })),
+      finance_trend: analyticsFixture.finance_trend.map((point) => ({ ...point, receivable: 0, payable: 0 })),
+    })
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    expect(await screen.findByText('Nenhuma venda no período')).toBeTruthy()
+    expect(screen.getByText('Nenhum compromisso no período')).toBeTruthy()
+    expect(screen.getByText('Estoque dentro do mínimo')).toBeTruthy()
+    expect(document.querySelectorAll('.dashboard-chart svg')).toHaveLength(0)
   })
 })

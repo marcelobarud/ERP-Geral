@@ -3,7 +3,9 @@ import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
-import { getDashboardSummary } from './api'
+import { DashboardAnalytics } from './DashboardAnalytics'
+import { getDashboardAnalytics, getDashboardSummary } from './api'
+import type { DashboardAnalyticsPeriod } from './analytics'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 
@@ -137,6 +139,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [counts, setCounts] = useState<DashboardCounts>(initialCounts)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [analytics, setAnalytics] = useState<Awaited<ReturnType<typeof getDashboardAnalytics>> | null>(null)
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<DashboardAnalyticsPeriod>('12m')
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
   const loadDashboard = useCallback(async () => {
     setLoading(true)
@@ -152,10 +158,28 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     setLoading(false)
   }, [])
 
+  const loadAnalytics = useCallback(async (period: DashboardAnalyticsPeriod) => {
+    setAnalyticsLoading(true)
+    setAnalyticsError(null)
+
+    try {
+      setAnalytics(await getDashboardAnalytics(period))
+    } catch {
+      setAnalyticsError('A leitura analítica não pôde ser carregada. Tente novamente.')
+    }
+
+    setAnalyticsLoading(false)
+  }, [])
+
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
     void loadDashboard()
   }, [loadDashboard])
+
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    void loadAnalytics(analyticsPeriod)
+  }, [analyticsPeriod, loadAnalytics])
 
   return (
     <div className="dashboard-page">
@@ -187,6 +211,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               <SummaryCard label="Vendas" count={counts.sales} description={counts.sales === null ? 'Indisponível no momento' : counts.sales === 0 ? 'Nenhuma venda registrada' : 'Vendas no histórico'} href="/sales" onNavigate={onNavigate} customizationKey="dashboard.summary.sales.card" />
             </div>
           </section>
+
+          <DashboardAnalytics
+            data={analytics}
+            period={analyticsPeriod}
+            loading={analyticsLoading}
+            error={analyticsError}
+            onPeriodChange={setAnalyticsPeriod}
+            onRetry={() => void loadAnalytics(analyticsPeriod)}
+            onNavigate={onNavigate}
+          />
 
           <section className="dashboard-section dashboard-actions-section" aria-labelledby="dashboard-actions-title">
             <div className="dashboard-section-heading">
