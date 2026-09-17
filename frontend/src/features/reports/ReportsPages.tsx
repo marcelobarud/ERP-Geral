@@ -106,7 +106,7 @@ function CommercialReportContent({ data, filters }: { data: CommercialReport | n
           <div className="report-supporting-metrics">
             <Metric label="Concluídas" value={data.completed_sales} detail="Status concluída" />
             <Metric label="Canceladas" value={data.cancelled_sales} detail="Status cancelada" />
-            <Metric label="Devoluções aprovadas" value={data.approved_returns} detail="Status aprovada" />
+            <Metric label="Devoluções aprovadas" value={data.approved_returns} detail="Todo o histórico" />
           </div>
         </div>
       </section>

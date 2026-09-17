@@ -36,6 +36,9 @@ describe('CommercialReportPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Estado comercial' })).toBeTruthy()
     expect(screen.getAllByText('Período: todo o histórico')).toHaveLength(2)
+    const returnsMetric = screen.getByText('Devoluções aprovadas').closest('article')
+    expect(returnsMetric?.textContent).toContain('Todo o histórico')
+    expect(returnsMetric?.textContent).toContain('1')
     expect(screen.getByText('Vendas por produto')).toBeTruthy()
     expect(screen.getByText('Produto #8')).toBeTruthy()
     expect(screen.getByText('Cliente #4')).toBeTruthy()
