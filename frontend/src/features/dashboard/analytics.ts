@@ -32,6 +32,11 @@ export const dashboardPeriodOptions: Array<{ value: DashboardAnalyticsPeriod; la
   { value: '12m', label: 'Últimos 12 meses' },
 ]
 
+export function getTickLabelInterval(pointCount: number, granularity: DashboardAnalyticsGranularity) {
+  const step = pointCount <= 8 ? 1 : granularity === 'day' ? 5 : Math.ceil(pointCount / 5)
+  return (_value: unknown, index: number) => index % step === 0 || index === pointCount - 1
+}
+
 function parseDate(value: string) {
   return new Date(`${value}T00:00:00`)
 }

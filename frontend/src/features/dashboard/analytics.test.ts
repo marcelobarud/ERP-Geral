@@ -4,6 +4,7 @@ import {
   formatBucketLabel,
   formatDateRange,
   formatMoney,
+  getTickLabelInterval,
   hasPositiveValue,
 } from './analytics'
 
@@ -22,5 +23,13 @@ describe('dashboard analytics formatting', () => {
   it('identifies whether a chart has real positive data', () => {
     expect(hasPositiveValue([0, 0, 0])).toBe(false)
     expect(hasPositiveValue([0, 80, 0])).toBe(true)
+  })
+
+  it('reduces tick labels without dropping data points', () => {
+    const interval = getTickLabelInterval(12, 'month')
+
+    expect(interval('2026-01-01', 0)).toBe(true)
+    expect(interval('2026-02-01', 1)).toBe(false)
+    expect(interval('2026-12-01', 11)).toBe(true)
   })
 })

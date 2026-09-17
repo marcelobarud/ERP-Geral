@@ -53,6 +53,9 @@ describe('DashboardPage', () => {
     expect(sections[1]?.classList.contains('dashboard-analytics')).toBe(true)
     expect(sections[2]?.classList.contains('dashboard-actions-section')).toBe(true)
     expect(screen.getByText('Vendas ao longo do tempo')).toBeTruthy()
+    expect(screen.getByText('Total vendido')).toBeTruthy()
+    expect(screen.getByText('A receber')).toBeTruthy()
+    expect(screen.getByText('A pagar')).toBeTruthy()
     expect(screen.getByText('Estoque dentro do mínimo')).toBeTruthy()
   })
 
@@ -142,5 +145,17 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Nenhum compromisso no período')).toBeTruthy()
     expect(screen.getByText('Estoque dentro do mínimo')).toBeTruthy()
     expect(document.querySelectorAll('.dashboard-chart svg')).toHaveLength(0)
+  })
+
+  it('switches the compact stock empty state to the planned chart when attention exists', async () => {
+    vi.mocked(dashboardApi.getDashboardAnalytics).mockResolvedValue({
+      ...analyticsFixture,
+      stock_attention: [{ product_id: 7, product_name: 'Produto crítico', shortfall_percent: 40, saldo: 3, estoque_minimo: 5 }],
+    })
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    expect(await screen.findByLabelText('Gráfico de barras com produtos abaixo do estoque mínimo')).toBeTruthy()
+    expect(screen.queryByText('Estoque dentro do mínimo')).toBeNull()
+    expect(document.querySelector('.dashboard-chart-panel-dashboard-stock-attention.dashboard-chart-panel-supporting')).toBeTruthy()
   })
 })

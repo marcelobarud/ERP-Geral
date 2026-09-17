@@ -4555,6 +4555,7 @@ a,
 
 .dashboard-analytics-grid {
   display: grid;
+  align-items: start;
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 1rem;
   margin-top: 1rem;
@@ -4711,5 +4712,162 @@ a,
   .dashboard-chart-link {
     justify-self: start;
     text-align: left;
+  }
+}
+
+/* Fase 2G.2 — Proporção e densidade do Dashboard analítico */
+.dashboard-chart-panel {
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 0.9rem;
+}
+
+.dashboard-chart-panel-header {
+  gap: 0.75rem;
+}
+
+.dashboard-chart-panel-header p:not(.eyebrow) {
+  margin-top: 0.3rem;
+}
+
+.dashboard-chart-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 0.15rem;
+  padding: 0 0 0.65rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.dashboard-chart-summary-item {
+  display: grid;
+  min-width: 8.5rem;
+  gap: 0.12rem;
+}
+
+.dashboard-chart-summary-item + .dashboard-chart-summary-item {
+  padding-left: 1rem;
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+.dashboard-chart-summary-label {
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard-chart-summary-value {
+  color: var(--color-heading);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.dashboard-chart-summary-context {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.dashboard-chart-panel-primary .dashboard-chart-panel-body > .state-card:not(.state-card-error) {
+  min-height: 10.5rem;
+}
+
+.dashboard-chart-panel-supporting .dashboard-chart-panel-body > .state-card:not(.state-card-error) {
+  min-height: 6rem;
+}
+
+.dashboard-chart-panel-body > .state-card,
+.dashboard-chart-panel-body > .empty-state {
+  min-height: 0;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.dashboard-chart-panel-body > .state-card-error {
+  border: var(--border-width-default) solid var(--color-danger-soft);
+  background: var(--color-error-surface);
+}
+
+.dashboard-chart-panel-body > .empty-state {
+  align-content: start;
+  gap: 0.3rem;
+}
+
+.dashboard-chart-panel-body > .empty-state strong {
+  font-size: 0.85rem;
+}
+
+.dashboard-chart-panel-body > .empty-state p {
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.dashboard-chart-panel-body > .state-card-error {
+  padding: 0.8rem 0.9rem;
+}
+
+.dashboard-chart-panel-supporting .dashboard-chart-panel-body > .state-card-error {
+  min-height: 0;
+}
+
+@media (max-width: 1080px) and (min-width: 561px) {
+  .dashboard-metrics,
+  .dashboard-skeleton-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-metric,
+  .dashboard-skeleton-metric {
+    border-bottom: 0;
+  }
+
+  .dashboard-metric:nth-child(3n),
+  .dashboard-skeleton-metric:nth-child(3n) {
+    border-right: 1px solid var(--line);
+  }
+
+  .dashboard-metric:nth-child(2n),
+  .dashboard-skeleton-metric:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .dashboard-metric:nth-child(-n + 2),
+  .dashboard-metric:nth-child(n + 3):nth-child(-n + 4),
+  .dashboard-skeleton-metric:nth-child(-n + 2),
+  .dashboard-skeleton-metric:nth-child(n + 3):nth-child(-n + 4) {
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-chart-summary {
+    gap: 0.7rem;
+  }
+
+  .dashboard-chart-summary-item {
+    min-width: 0;
+  }
+
+  .dashboard-chart-summary-item + .dashboard-chart-summary-item {
+    padding-left: 0.7rem;
+  }
+
+  .dashboard-chart-panel {
+    padding: 0.9rem 0.8rem 0.8rem;
+  }
+
+  .dashboard-metric,
+  .dashboard-skeleton-metric {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dashboard-metric:last-child,
+  .dashboard-skeleton-metric:last-child {
+    border-bottom: 0;
   }
 }

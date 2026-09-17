@@ -108,3 +108,9 @@ do container. A navegação por teclado e o comportamento de
 `prefers-reduced-motion` da biblioteca devem ser preservados. Não criar gráfico
 vazio sem explicar o estado nem adicionar Sparkline, Gauge ou PieChart apenas
 por ornamentação.
+
+No Dashboard, séries esparsas preservam todos os buckets e valores retornados
+pela API; apenas a exibição dos labels do eixo pode ser espaçada com
+`tickLabelInterval`. A interface não cria pontos sintéticos no frontend. O
+visual principal usa uma geometria maior, enquanto análises auxiliares e
+estados vazios usam variantes compactas próprias.
