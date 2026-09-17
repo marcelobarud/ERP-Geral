@@ -13,6 +13,26 @@ complementam essa camada sem substituir o branding do cliente.
 - foco visível usa `--focus-ring`;
 - espaçamento de página e seção usa `--space-page` e `--space-section`.
 
+### Fundação semântica
+
+Os papéis semânticos da fundação visual ficam em `frontend/src/index.css` e
+preservam os valores visuais atuais. A camada inclui `--color-canvas`,
+`--color-surface-muted`, `--color-surface-elevated`, os papéis de borda,
+estado, foco, tipografia, spacing, radius, elevation, motion e z-index.
+
+Aliases legados como `--line`, `--surface-soft`, `--blue`, `--green` e `--red`
+permanecem por compatibilidade e apontam para os papéis semânticos. Valores
+locais continuam permitidos quando representam uma exceção contextual real.
+
+A precedência de aparência é obrigatória:
+
+```text
+override do elemento → tema da página → aparência global → token/fallback
+```
+
+Tokens globais são a fundação e não devem substituir overrides inline,
+customização persistida ou temas específicos de página.
+
 ## Padrões compartilhados
 
 - `PageHeader` para títulos e descrições de páginas;
