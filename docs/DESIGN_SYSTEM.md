@@ -74,6 +74,11 @@ podem rolar horizontalmente em telas estreitas; o conteúdo não deve ser cortad
 Nos breakpoints de 900px e 560px, grids passam para duas e uma coluna quando
 necessário, toolbars empilham e ações de formulário ocupam a largura disponível.
 
+Filtros operacionais simples usam uma barra aberta, sem superfície própria. Um
+`FilterMenu` pode concentrar muitos parâmetros e o `report-filter-bar` mantém
+período e escopo analítico juntos. A escolha depende da tarefa; uma grande
+superfície não deve existir apenas para envolver controles.
+
 ### Shell e iconografia
 
 O Shell usa `@tabler/icons-react` como biblioteca única de ícones funcionais.

@@ -4351,3 +4351,126 @@ a,
     height: 0.6rem;
   }
 }
+
+/* Fase 2E — Consistência contextual */
+.filter-toolbar {
+  margin-top: 1.5rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.finance-page {
+  width: min(100%, 70rem);
+  margin: 0 auto;
+}
+
+.finance-section {
+  margin-top: 1.75rem;
+}
+
+.finance-section-heading {
+  max-width: 42rem;
+}
+
+.finance-section-heading h2 {
+  margin: 0;
+  color: var(--color-heading);
+  font-size: var(--text-section-title-size);
+  font-weight: var(--text-section-title-weight);
+  line-height: var(--text-section-title-line-height);
+}
+
+.finance-section-description {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.finance-summary-surface {
+  margin-top: 0.85rem;
+}
+
+.finance-metric-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.finance-metric {
+  display: grid;
+  min-width: 0;
+  gap: 0.45rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.finance-metric + .finance-metric {
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+.finance-metric-label {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.finance-metric-value {
+  color: var(--color-heading);
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.finance-metric-context {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.finance-accounts {
+  margin-top: 2.5rem;
+}
+
+.finance-accounts .data-card {
+  margin-top: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-toolbar > .search-input,
+  .filter-menu-wrap,
+  .filter-menu-trigger {
+    width: 100%;
+  }
+
+  .finance-metric-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-metric:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .finance-metric:nth-child(n + 3) {
+    border-top: 1px solid var(--color-border-subtle);
+  }
+}
+
+@media (max-width: 560px) {
+  .finance-metric-group {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-metric + .finance-metric {
+    border-top: 1px solid var(--color-border-subtle);
+    border-left: 0;
+  }
+}
