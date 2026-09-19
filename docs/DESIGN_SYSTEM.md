@@ -136,3 +136,10 @@ a série temporal compara contagens de eventos que aumentaram ou reduziram o
 saldo. O ranking de atenção usa percentual abaixo do mínimo apenas quando o
 mínimo é maior que zero, enquanto a tabela preserva saldo, mínimo, déficit e
 unidade por produto. A ausência de itens críticos é um estado positivo.
+
+No Relatório de Compras, a visualização é condicional ao valor analítico: com
+volume baixo, a composição prioriza período, status dos pedidos, pendências de
+recebimento e evidência detalhada, sem criar uma série temporal artificial.
+Valores financeiros usam somente o custo unitário registrado nos itens de
+compra. Orçamentos pertencentes ao fluxo Comercial não são tratados como
+compras.

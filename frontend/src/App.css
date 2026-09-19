@@ -1446,6 +1446,161 @@
   color: var(--color-warning-strong, var(--color-warning));
 }
 
+.report-purchases-refresh {
+  margin-top: 1rem;
+  padding: 0.7rem 0.8rem;
+  border-left: 2px solid var(--color-primary);
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  font-size: 0.72rem;
+}
+
+.report-purchases-situation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.report-purchases-status,
+.report-purchases-attention {
+  min-width: 0;
+  margin-top: 0;
+  padding: 1rem 1.1rem;
+}
+
+.report-purchases-status h3,
+.report-purchases-attention h3 {
+  margin: 0.35rem 0 0;
+  color: var(--color-heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.report-purchases-status ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-purchases-status li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.report-purchases-status li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.report-purchases-status li strong {
+  color: var(--color-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-purchases-muted {
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.report-purchases-attention-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1rem;
+  margin-top: 1rem;
+}
+
+.report-purchases-attention-summary > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.report-purchases-attention-summary span,
+.report-purchases-receipt-context {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+}
+
+.report-purchases-attention-summary strong {
+  color: var(--color-heading);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-purchases-attention-summary p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.report-purchases-positive-state {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.report-purchases-positive-state strong {
+  color: var(--color-heading);
+  font-size: 0.85rem;
+}
+
+.report-purchases-positive-state p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.report-purchases-receipt-context {
+  margin: 1rem 0 0;
+}
+
+.report-purchases-receipt-context strong {
+  color: var(--color-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-purchases-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.report-purchases-table .data-table {
+  min-width: 54rem;
+}
+
+.report-purchases-order-status {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.report-purchases-order-status.status-recebido {
+  color: var(--color-primary);
+}
+
+.report-purchases-order-status.status-parcialmente_recebido,
+.report-purchases-order-status.status-emitido {
+  color: var(--color-warning-strong, var(--color-warning));
+}
+
+.report-purchases-order-status.status-cancelado {
+  color: var(--color-danger, var(--color-text-muted));
+}
+
 .report-detail-table {
   margin-top: 0;
 }
@@ -1613,6 +1768,10 @@
 
 @media (max-width: 1080px) and (min-width: 901px) {
   .report-ranking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-purchases-situation-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -3826,6 +3985,14 @@ a,
   }
 
   .report-toolbar > .button {
+    width: 100%;
+  }
+
+  .report-purchases-links {
+    display: grid;
+  }
+
+  .report-purchases-links .button {
     width: 100%;
   }
 

@@ -23,10 +23,35 @@ export type CommercialReport = {
   by_product: Array<{ product_id: number; product_name?: string | null; quantity: number; total: number }>
 }
 
+export type PurchaseReportStatus = 'RASCUNHO' | 'EMITIDO' | 'PARCIALMENTE_RECEBIDO' | 'RECEBIDO' | 'CANCELADO'
+
+export type PurchaseReportOrder = {
+  id: number
+  numero: string
+  supplier_name: string
+  status: PurchaseReportStatus
+  created_at: string
+  ordered_value: string | number
+  pending_value: string | number
+}
+
 export type PurchasesReport = {
   total_orders: number
   pending_receipts: number
   quotes: number
+  period: DashboardAnalyticsPeriod
+  date_from: string
+  date_to: string
+  period_orders: number
+  received_orders_in_period: number
+  confirmed_receipts_in_period: number
+  ordered_value_in_period: string | number
+  received_value_in_period: string | number
+  open_orders: number
+  pending_value: string | number
+  pending_line_count: number
+  status_counts: Record<PurchaseReportStatus, number>
+  orders: PurchaseReportOrder[]
 }
 
 export type StockReport = {
@@ -93,8 +118,8 @@ export function getCommercialReport(filters: { dateFrom?: string; dateTo?: strin
   return request<CommercialReport>(`/api/reports/commercial${dateQuery(filters)}`)
 }
 
-export function getPurchasesReport(): Promise<PurchasesReport> {
-  return request<PurchasesReport>('/api/reports/purchases')
+export function getPurchasesReport(period: DashboardAnalyticsPeriod = '12m'): Promise<PurchasesReport> {
+  return request<PurchasesReport>(`/api/reports/purchases?period=${period}`)
 }
 
 export function getStockReport(period: DashboardAnalyticsPeriod = '12m'): Promise<StockReport> {

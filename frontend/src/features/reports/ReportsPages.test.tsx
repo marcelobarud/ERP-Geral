@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as reportsApi from './api'
-import { CommercialReportPage, FinanceReportPage, StockReportPage } from './ReportsPages'
+import { CommercialReportPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from './ReportsPages'
 
 vi.mock('./api', () => ({
   getCommercialReport: vi.fn(),
@@ -139,6 +139,100 @@ describe('CommercialReportPage', () => {
     expect(screen.getByRole('heading', { name: 'Relatório comercial' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
     expect(await screen.findByRole('heading', { name: 'Vendas por produto' })).toBeTruthy()
+  })
+})
+
+const purchasesReport = {
+  total_orders: 1,
+  pending_receipts: 0,
+  quotes: 1,
+  period: '12m' as const,
+  date_from: '2025-09-20',
+  date_to: '2026-09-19',
+  period_orders: 1,
+  received_orders_in_period: 1,
+  confirmed_receipts_in_period: 2,
+  ordered_value_in_period: 85,
+  received_value_in_period: 85,
+  open_orders: 0,
+  pending_value: 0,
+  pending_line_count: 0,
+  status_counts: { RASCUNHO: 0, EMITIDO: 0, PARCIALMENTE_RECEBIDO: 0, RECEBIDO: 1, CANCELADO: 0 },
+  orders: [{ id: 1, numero: 'PC-001', supplier_name: 'Fornecedor analytics', status: 'RECEBIDO' as const, created_at: '2026-09-11', ordered_value: 85, pending_value: 0 }],
+}
+
+describe('PurchasesReportPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(reportsApi.getPurchasesReport).mockImplementation(async (period = '12m') => ({
+      ...purchasesReport,
+      period,
+      date_from: period === '30d' ? '2026-08-21' : purchasesReport.date_from,
+    }))
+  })
+
+  it('separates period activity from current purchase position without forcing charts', async () => {
+    render(<PurchasesReportPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Compras no período' })).toBeTruthy()
+    expect(screen.getByText('Pedidos no período')).toBeTruthy()
+    expect(screen.getByText('Pedidos em aberto')).toBeTruthy()
+    expect(screen.getAllByText('R$ 85,00').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Nenhum recebimento pendente')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Distribuição por status' })).toBeTruthy()
+    expect(screen.getByRole('table', { name: 'Pedidos de compra criados no período' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Evolução das compras' })).toBeNull()
+
+    fireEvent.change(screen.getByLabelText('Período da atividade'), { target: { value: '30d' } })
+
+    await waitFor(() => expect(reportsApi.getPurchasesReport).toHaveBeenCalledWith('30d'))
+    expect(await screen.findByText('Últimos 30 dias: 21/08/2026 a 19/09/2026')).toBeTruthy()
+  })
+
+  it('renders pending receipt attention with monetary evidence', async () => {
+    vi.mocked(reportsApi.getPurchasesReport).mockResolvedValue({
+      ...purchasesReport,
+      pending_receipts: 1,
+      open_orders: 1,
+      pending_value: 51,
+      pending_line_count: 1,
+      status_counts: { RASCUNHO: 0, EMITIDO: 0, PARCIALMENTE_RECEBIDO: 1, RECEBIDO: 0, CANCELADO: 0 },
+      orders: [{ ...purchasesReport.orders[0], status: 'PARCIALMENTE_RECEBIDO', pending_value: 51 }],
+    })
+
+    render(<PurchasesReportPage />)
+
+    expect(await screen.findByText('Recebimentos pendentes')).toBeTruthy()
+    expect(screen.getByText('Valor pendente')).toBeTruthy()
+    expect(screen.getAllByText('R$ 51,00').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Parcialmente recebido').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('communicates a naturally empty period and preserves context during loading/error', async () => {
+    vi.mocked(reportsApi.getPurchasesReport).mockResolvedValue({
+      ...purchasesReport,
+      period_orders: 0,
+      received_orders_in_period: 0,
+      confirmed_receipts_in_period: 0,
+      ordered_value_in_period: 0,
+      received_value_in_period: 0,
+      status_counts: { RASCUNHO: 0, EMITIDO: 0, PARCIALMENTE_RECEBIDO: 0, RECEBIDO: 0, CANCELADO: 0 },
+      orders: [],
+    })
+
+    render(<PurchasesReportPage />)
+
+    expect(await screen.findByText('Nenhum pedido no período selecionado. Ajuste a janela para investigar outra atividade.')).toBeTruthy()
+    expect((screen.getByRole('button', { name: 'Exportar CSV' }) as HTMLButtonElement).disabled).toBe(true)
+
+    let rejectReport: ((reason?: unknown) => void) | undefined
+    vi.mocked(reportsApi.getPurchasesReport).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectReport = reject }))
+    fireEvent.change(screen.getByLabelText('Período da atividade'), { target: { value: '30d' } })
+    expect(screen.getByRole('status')).toBeTruthy()
+    rejectReport?.(new Error('API indisponível'))
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Relatório de compras' })).toBeTruthy()
+    expect(screen.getByLabelText('Período da atividade')).toBeTruthy()
   })
 })
 

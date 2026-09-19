@@ -30,6 +30,7 @@ import {
   type CommercialReport,
   type ErpDashboard,
   type FinanceReport,
+  type PurchaseReportStatus,
   type PurchasesReport,
   type StockReport,
 } from './api'
@@ -274,13 +275,138 @@ function CommercialCustomersTable({ items }: { items: CommercialReport['by_custo
   return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por cliente</caption><thead><tr><th scope="col">Cliente</th><th scope="col">Vendas</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item, index) => <tr key={item.customer_id ?? `unknown-${index}`}><td className="data-primary">{item.customer_name || (item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente')}</td><td className="report-number-cell">{item.sales}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
 }
 
+const purchaseReportStatuses: PurchaseReportStatus[] = ['RASCUNHO', 'EMITIDO', 'PARCIALMENTE_RECEBIDO', 'RECEBIDO', 'CANCELADO']
+
+function purchaseStatusLabel(status: PurchaseReportStatus) {
+  return {
+    RASCUNHO: 'Rascunho',
+    EMITIDO: 'Emitido',
+    PARCIALMENTE_RECEBIDO: 'Parcialmente recebido',
+    RECEBIDO: 'Recebido',
+    CANCELADO: 'Cancelado',
+  }[status]
+}
+
 export function PurchasesReportPage() {
+  const [period, setPeriod] = useState<DashboardAnalyticsPeriod>('12m')
   const [data, setData] = useState<PurchasesReport | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { try { setError(null); setData(await getPurchasesReport()) } catch (cause) { setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório de compras.')) } }, [])
+  const [loading, setLoading] = useState(true)
+  const load = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setData(await getPurchasesReport(period))
+    } catch (cause) {
+      setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório de compras.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [period])
   useEffect(() => { void load() }, [load])
-  const rows = data ? [{ pedidos: data.total_orders, recebimentos_pendentes: data.pending_receipts, orcamentos: data.quotes }] : []
-  return <ReportLayout pageId="reports_purchases" loaded={data !== null} eyebrow="Relatórios" title="Relatório de compras" description="Acompanhe pedidos, recebimentos pendentes e orçamentos." rows={rows} filename="relatorio-compras.csv" error={error} onRetry={() => void load()}><div className="report-metrics-grid">{data ? <><Metric label="Pedidos" value={data.total_orders} /><Metric label="Recebimentos pendentes" value={data.pending_receipts} /><Metric label="Orçamentos" value={data.quotes} /></> : null}</div></ReportLayout>
+  const rows = data ? data.orders.map((order) => ({ pedido: order.numero, fornecedor: order.supplier_name, status: purchaseStatusLabel(order.status), data: order.created_at, valor: money(Number(order.ordered_value)), pendente: money(Number(order.pending_value)) })) : []
+  const selectedPeriodLabel = dashboardPeriodOptions.find((option) => option.value === period)?.label ?? period
+  const hasCurrentPeriod = data?.period === period
+  const scopeDescription = hasCurrentPeriod
+    ? `${selectedPeriodLabel}: ${formatDateRange(data.date_from, data.date_to)}`
+    : `${selectedPeriodLabel}: atualizando recorte`
+
+  return <div className="page-stack">
+    <PageHeader eyebrow="Relatórios" title="Relatório de compras" description="Pedidos, recebimentos confirmados e pendências de compras." pageId="reports_purchases" />
+    <div className="report-toolbar">
+      <label className="dashboard-period-field">
+        <span>Período da atividade</span>
+        <select aria-label="Período da atividade" value={period} onChange={(event) => setPeriod(event.target.value as DashboardAnalyticsPeriod)}>
+          {dashboardPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <ExportButton rows={rows} filename="relatorio-compras.csv" />
+    </div>
+    <div className="report-active-scope" aria-label={`Escopo analítico: ${scopeDescription}`}>
+      <strong>Escopo analítico</strong>
+      <span>{scopeDescription}</span>
+      <span>Posição: atual · pedidos em aberto e recebimentos pendentes</span>
+    </div>
+    {error ? <ErrorState description={error} onRetry={() => void load()} /> : null}
+    {!data && loading ? <LoadingState label="Carregando relatório de compras..." /> : null}
+    {!error && data ? <PurchasesReportContent data={data} selectedPeriod={period} loading={loading} /> : null}
+  </div>
+}
+
+function PurchasesReportContent({ data, selectedPeriod, loading }: { data: PurchasesReport; selectedPeriod: DashboardAnalyticsPeriod; loading: boolean }) {
+  const hasCurrentPeriod = data.period === selectedPeriod
+  const statusEntries = purchaseReportStatuses
+    .map((status) => ({ status, count: data.status_counts[status] ?? 0 }))
+    .filter((item) => item.count > 0)
+  const hasAttention = data.pending_receipts > 0 || Number(data.pending_value) > 0
+
+  return <>
+    {!hasCurrentPeriod && loading ? <div className="report-purchases-refresh" role="status">Atualizando a atividade do período. A posição atual permanece disponível.</div> : null}
+    <section className="report-metric-group" aria-labelledby="purchases-metrics-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Resumo da atividade</p>
+          <h2 id="purchases-metrics-title">Compras no período</h2>
+          <p>Os valores usam o custo unitário registrado nos itens dos pedidos; preços de venda não participam desta leitura.</p>
+        </div>
+        <p className="report-section-context">{hasCurrentPeriod ? formatDateRange(data.date_from, data.date_to) : 'Atualizando'}</p>
+      </div>
+      <div className="report-metric-layout">
+        <article className="report-primary-metric">
+          <span className="dashboard-card-label">Pedidos no período</span>
+          <strong className="report-primary-metric-value">{data.period_orders}</strong>
+          <span className="dashboard-card-description">Pedidos criados no recorte selecionado.</span>
+        </article>
+        <div className="report-supporting-metrics">
+          <Metric label="Recebidos no período" value={data.received_orders_in_period} detail={`${data.confirmed_receipts_in_period} recebimento(s) confirmado(s)`} />
+          <Metric label="Pedidos em aberto" value={data.open_orders} detail="Posição atual" />
+          <Metric label="Valor dos pedidos" value={money(Number(data.ordered_value_in_period))} detail="Custo registrado no período" />
+        </div>
+      </div>
+    </section>
+
+    <section className="report-analysis-section" aria-labelledby="purchases-situation-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Situação atual</p>
+          <h2 id="purchases-situation-title">Status e recebimentos</h2>
+          <p>Com o volume atual, a leitura prioriza a situação dos pedidos, as pendências e a evidência operacional.</p>
+        </div>
+      </div>
+      <div className="report-purchases-situation-grid">
+        <section className="data-card report-purchases-status" aria-labelledby="purchases-status-title">
+          <p className="eyebrow">Pedidos</p>
+          <h3 id="purchases-status-title">Distribuição por status</h3>
+          {statusEntries.length ? <ul>{statusEntries.map((item) => <li key={item.status}><span>{purchaseStatusLabel(item.status)}</span><strong>{item.count}</strong></li>)}</ul> : <p className="report-purchases-muted">Nenhum pedido registrado.</p>}
+        </section>
+        <section className="data-card report-purchases-attention" aria-labelledby="purchases-attention-title">
+          <p className="eyebrow">Atenção operacional</p>
+          <h3 id="purchases-attention-title">Recebimentos pendentes</h3>
+          {hasAttention ? <div className="report-purchases-attention-summary"><div><span>Pedidos disponíveis</span><strong>{data.pending_receipts}</strong></div><div><span>Valor pendente</span><strong>{money(Number(data.pending_value))}</strong></div><p>{data.pending_line_count} linha(s) de item ainda aguardam recebimento.</p></div> : <div className="report-purchases-positive-state"><strong>Nenhum recebimento pendente</strong><p>Todos os pedidos disponíveis para recebimento estão em dia.</p></div>}
+          <p className="report-purchases-receipt-context">Confirmados no período: <strong>{data.confirmed_receipts_in_period}</strong> · {money(Number(data.received_value_in_period))}</p>
+        </section>
+      </div>
+      <nav className="report-purchases-links" aria-label="Investigar compras">
+        <a className="button button-secondary" href="/purchases">Ver pedidos de compra</a>
+        <a className="button button-secondary" href="/purchases/receipts">Ver recebimentos</a>
+      </nav>
+    </section>
+
+    <section className="report-analysis-section" aria-labelledby="purchases-detail-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Evidência detalhada</p>
+          <h2 id="purchases-detail-title">Pedidos criados no período</h2>
+          <p>O valor pendente só é calculado para pedidos emitidos ou parcialmente recebidos.</p>
+        </div>
+      </div>
+      {data.orders.length ? <PurchasesReportTable orders={data.orders} /> : <div className="data-card report-detail-empty"><p>Nenhum pedido no período selecionado. Ajuste a janela para investigar outra atividade.</p></div>}
+    </section>
+  </>
+}
+
+function PurchasesReportTable({ orders }: { orders: PurchasesReport['orders'] }) {
+  return <div className="data-card data-table-wrap report-detail-table report-purchases-table"><table className="data-table"><caption className="sr-only">Pedidos de compra criados no período</caption><thead><tr><th scope="col">Pedido</th><th scope="col">Fornecedor</th><th scope="col">Data</th><th scope="col">Status</th><th scope="col">Valor</th><th scope="col">Pendente</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="data-primary">{order.numero}</td><td>{order.supplier_name}</td><td>{formatDate(order.created_at)}</td><td><span className={`report-purchases-order-status status-${order.status.toLowerCase()}`}>{purchaseStatusLabel(order.status)}</span></td><td className="report-number-cell">{money(Number(order.ordered_value))}</td><td className="report-number-cell">{money(Number(order.pending_value))}</td></tr>)}</tbody></table></div>
 }
 
 export function StockReportPage() {

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import case, desc, func, literal, select
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, selectinload
 
 from app.api.dependencies import require_authenticated
 from app.db.session import get_db_session
@@ -16,7 +16,10 @@ from app.models import (
     Orcamento,
     ParcelaFinanceira,
     PedidoCompra,
+    PedidoCompraItem,
     Produto,
+    RecebimentoCompra,
+    RecebimentoCompraItem,
     TituloFinanceiro,
     Venda,
     VendaItem,
@@ -428,19 +431,173 @@ def commercial_report(
 
 
 @router.get("/purchases")
-def purchases_report(db: Session = Depends(get_db_session)):
-    pending = (
+def purchases_report(
+    period: DashboardAnalyticsPeriod = Query(default="12m"),
+    db: Session = Depends(get_db_session),
+):
+    date_from, date_to, _ = _dashboard_period(period)
+    start_datetime = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+    end_datetime = datetime.combine(
+        date_to + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
+    status_values = (
+        "RASCUNHO",
+        "EMITIDO",
+        "PARCIALMENTE_RECEBIDO",
+        "RECEBIDO",
+        "CANCELADO",
+    )
+    receiving_statuses = ("EMITIDO", "PARCIALMENTE_RECEBIDO")
+    status_rows = db.execute(
+        select(PedidoCompra.status, func.count(PedidoCompra.id)).group_by(
+            PedidoCompra.status
+        )
+    ).all()
+    total_orders = db.scalar(select(func.count(PedidoCompra.id))) or 0
+    status_counts = {
+        status: next((count for value, count in status_rows if value == status), 0)
+        for status in status_values
+    }
+    period_order_count = (
         db.scalar(
             select(func.count(PedidoCompra.id)).where(
-                PedidoCompra.status.in_(["EMITIDO", "PARCIALMENTE_RECEBIDO"])
+                PedidoCompra.created_at >= start_datetime,
+                PedidoCompra.created_at < end_datetime,
             )
         )
         or 0
     )
+    ordered_value_in_period = db.scalar(
+        select(func.sum(PedidoCompraItem.quantidade * PedidoCompraItem.custo_unitario))
+        .join(PedidoCompra, PedidoCompra.id == PedidoCompraItem.pedido_id)
+        .where(
+            PedidoCompra.created_at >= start_datetime,
+            PedidoCompra.created_at < end_datetime,
+            PedidoCompra.status != "CANCELADO",
+        )
+    ) or Decimal("0.00")
+    pending_value = db.scalar(
+        select(
+            func.sum(
+                (PedidoCompraItem.quantidade - PedidoCompraItem.quantidade_recebida)
+                * PedidoCompraItem.custo_unitario
+            )
+        )
+        .join(PedidoCompra, PedidoCompra.id == PedidoCompraItem.pedido_id)
+        .where(
+            PedidoCompra.status.in_(receiving_statuses),
+            PedidoCompraItem.quantidade > PedidoCompraItem.quantidade_recebida,
+        )
+    ) or Decimal("0.00")
+    pending_line_count = (
+        db.scalar(
+            select(func.count(PedidoCompraItem.id))
+            .join(PedidoCompra, PedidoCompra.id == PedidoCompraItem.pedido_id)
+            .where(
+                PedidoCompra.status.in_(receiving_statuses),
+                PedidoCompraItem.quantidade > PedidoCompraItem.quantidade_recebida,
+            )
+        )
+        or 0
+    )
+    confirmed_receipts_in_period = (
+        db.scalar(
+            select(func.count(RecebimentoCompra.id)).where(
+                RecebimentoCompra.status == "CONFIRMADO",
+                RecebimentoCompra.data_recebimento >= date_from,
+                RecebimentoCompra.data_recebimento <= date_to,
+            )
+        )
+        or 0
+    )
+    received_orders_in_period = (
+        db.scalar(
+            select(func.count(func.distinct(RecebimentoCompra.pedido_id))).where(
+                RecebimentoCompra.status == "CONFIRMADO",
+                RecebimentoCompra.data_recebimento >= date_from,
+                RecebimentoCompra.data_recebimento <= date_to,
+            )
+        )
+        or 0
+    )
+    received_value_in_period = db.scalar(
+        select(
+            func.sum(
+                RecebimentoCompraItem.quantidade * RecebimentoCompraItem.custo_efetivo
+            )
+        )
+        .join(
+            RecebimentoCompra,
+            RecebimentoCompra.id == RecebimentoCompraItem.recebimento_id,
+        )
+        .where(
+            RecebimentoCompra.status == "CONFIRMADO",
+            RecebimentoCompra.data_recebimento >= date_from,
+            RecebimentoCompra.data_recebimento <= date_to,
+        )
+    ) or Decimal("0.00")
+    period_orders = db.scalars(
+        select(PedidoCompra)
+        .options(
+            selectinload(PedidoCompra.fornecedor),
+            selectinload(PedidoCompra.itens),
+        )
+        .where(
+            PedidoCompra.created_at >= start_datetime,
+            PedidoCompra.created_at < end_datetime,
+        )
+        .order_by(PedidoCompra.created_at.desc(), PedidoCompra.id.desc())
+    ).all()
+
+    order_rows = []
+    for order in period_orders:
+        ordered_value = sum(
+            (item.quantidade * item.custo_unitario for item in order.itens),
+            Decimal("0.00"),
+        )
+        pending_order_value = (
+            sum(
+                (
+                    (item.quantidade - item.quantidade_recebida) * item.custo_unitario
+                    for item in order.itens
+                ),
+                Decimal("0.00"),
+            )
+            if order.status in receiving_statuses
+            else Decimal("0.00")
+        )
+        order_rows.append(
+            {
+                "id": order.id,
+                "numero": order.numero,
+                "supplier_name": order.fornecedor.nome,
+                "status": order.status,
+                "created_at": order.created_at.date(),
+                "ordered_value": ordered_value,
+                "pending_value": pending_order_value,
+            }
+        )
+
     return {
-        "total_orders": db.scalar(select(func.count(PedidoCompra.id))) or 0,
-        "pending_receipts": pending,
+        "total_orders": total_orders,
+        "pending_receipts": status_counts["EMITIDO"]
+        + status_counts["PARCIALMENTE_RECEBIDO"],
         "quotes": db.scalar(select(func.count(Orcamento.id))) or 0,
+        "period": period,
+        "date_from": date_from,
+        "date_to": date_to,
+        "period_orders": period_order_count,
+        "received_orders_in_period": received_orders_in_period,
+        "confirmed_receipts_in_period": confirmed_receipts_in_period,
+        "ordered_value_in_period": ordered_value_in_period,
+        "received_value_in_period": received_value_in_period,
+        "open_orders": status_counts["RASCUNHO"]
+        + status_counts["EMITIDO"]
+        + status_counts["PARCIALMENTE_RECEBIDO"],
+        "pending_value": pending_value,
+        "pending_line_count": pending_line_count,
+        "status_counts": status_counts,
+        "orders": order_rows,
     }
 
 
