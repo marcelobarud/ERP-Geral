@@ -23,12 +23,10 @@ import {
 } from '../dashboard/analytics'
 import {
   getCommercialReport,
-  getErpDashboard,
   getFinanceReport,
   getPurchasesReport,
   getStockReport,
   type CommercialReport,
-  type ErpDashboard,
   type FinanceReport,
   type PurchaseReportStatus,
   type PurchasesReport,
@@ -92,14 +90,6 @@ function ExportButton({ rows, filename }: { rows: Array<Record<string, string | 
 
 function FilterBar({ filters, onChange, onSubmit }: { filters: ReportFilters; onChange: (filters: ReportFilters) => void; onSubmit: () => void }) {
   return <form className="report-filter-bar" onSubmit={(event) => { event.preventDefault(); onSubmit() }}><label>De<input type="date" value={filters.dateFrom} onChange={(event) => onChange({ ...filters, dateFrom: event.target.value })} /></label><label>Até<input type="date" value={filters.dateTo} onChange={(event) => onChange({ ...filters, dateTo: event.target.value })} /></label><button className="button button-primary" type="submit">Aplicar</button></form>
-}
-
-export function ErpDashboardPage() {
-  const [data, setData] = useState<ErpDashboard | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { try { setError(null); setData(await getErpDashboard()) } catch (cause) { setError(getApiErrorMessage(cause, 'Não foi possível carregar o dashboard ERP.')) } }, [])
-  useEffect(() => { void load() }, [load])
-  return <div className="dashboard-page"><PageHeader eyebrow="Relatórios" title="Dashboard ERP" description="Acompanhe os principais indicadores comerciais, operacionais e financeiros." pageId="reports_dashboard" />{!data && !error ? <LoadingState label="Carregando indicadores ERP..." /> : null}{error ? <ErrorState description={error} onRetry={() => void load()} /> : null}{data ? <div className="report-metrics-grid"><Metric label="Clientes" value={data.customers} /><Metric label="Produtos ativos" value={data.products} /><Metric label="Vendas concluídas" value={data.completed_sales} /><Metric label="Produtos abaixo do mínimo" value={data.low_stock_products} /><Metric label="A receber em aberto" value={money(data.receivable_open)} /><Metric label="A pagar em aberto" value={money(data.payable_open)} /><Metric label="Recebido" value={money(data.realized_receivable)} /><Metric label="Pago" value={money(data.realized_payable)} /></div> : null}</div>
 }
 
 export function CommercialReportPage() {

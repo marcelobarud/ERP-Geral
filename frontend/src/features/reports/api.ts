@@ -1,17 +1,6 @@
 import { request } from '../../services/httpClient'
 import type { DashboardAnalyticsGranularity, DashboardAnalyticsPeriod } from '../dashboard/analytics'
 
-export type ErpDashboard = {
-  customers: number
-  products: number
-  completed_sales: number
-  low_stock_products: number
-  receivable_open: number
-  payable_open: number
-  realized_receivable: number
-  realized_payable: number
-}
-
 export type CommercialReport = {
   sales: number
   completed_sales: number
@@ -108,10 +97,6 @@ function dateQuery(filters: { dateFrom?: string; dateTo?: string } = {}) {
   if (filters.dateTo) params.set('date_to', filters.dateTo)
   const query = params.toString()
   return query ? `?${query}` : ''
-}
-
-export function getErpDashboard(): Promise<ErpDashboard> {
-  return request<ErpDashboard>('/api/reports/dashboard')
 }
 
 export function getCommercialReport(filters: { dateFrom?: string; dateTo?: string } = {}): Promise<CommercialReport> {

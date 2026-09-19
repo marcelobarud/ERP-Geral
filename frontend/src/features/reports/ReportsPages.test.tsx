@@ -8,7 +8,6 @@ import { CommercialReportPage, FinanceReportPage, PurchasesReportPage, StockRepo
 
 vi.mock('./api', () => ({
   getCommercialReport: vi.fn(),
-  getErpDashboard: vi.fn(),
   getFinanceReport: vi.fn(),
   getPurchasesReport: vi.fn(),
   getStockReport: vi.fn(),

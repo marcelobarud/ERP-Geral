@@ -17,7 +17,7 @@ import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../f
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
-import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
+import { CommercialReportPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
 import { ModulesPage } from '../features/settings/ModulesPage'
 import { SettingsHubPage } from '../features/settings/SettingsHubPage'
 import { UsersPage } from '../features/settings/UsersPage'
@@ -26,10 +26,10 @@ import { VisualCustomizationProvider } from '../features/settings/VisualCustomiz
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { ModuleDisabledPage, NotFoundPage } from '../pages/NotFoundPage'
 import { navigationIcons } from './iconography'
-import { getModuleForPath, getRoute, type RouteDefinition } from './routes'
+import { getCanonicalPathname, getModuleForPath, getRoute, type RouteDefinition } from './routes'
 
 function currentPathname(): string {
-  return window.location.pathname || '/'
+  return getCanonicalPathname(window.location.pathname || '/')
 }
 
 function PageForRoute({
@@ -84,8 +84,6 @@ function PageForRoute({
       return <FinancialTitlesPage kind="PAGAR" />
     case '/finance/cashflow':
       return <CashflowPage />
-    case '/reports/dashboard':
-      return <ErpDashboardPage />
     case '/reports/commercial':
       return <CommercialReportPage />
     case '/reports/purchases':
@@ -122,10 +120,19 @@ function AppContent() {
   const loadModules = useCallback(async () => { try { setModules(await listModules()) } catch { /* A API continua protegendo os endpoints. */ } }, [])
 
   useEffect(() => {
-    const handlePopState = () => setPathname(currentPathname())
-    window.addEventListener('popstate', handlePopState)
+    const syncPathname = () => {
+      const actualPathname = window.location.pathname || '/'
+      const canonicalPathname = getCanonicalPathname(actualPathname)
+      if (actualPathname !== canonicalPathname) {
+        window.history.replaceState({}, '', canonicalPathname)
+      }
+      setPathname(canonicalPathname)
+    }
 
-    return () => window.removeEventListener('popstate', handlePopState)
+    syncPathname()
+    window.addEventListener('popstate', syncPathname)
+
+    return () => window.removeEventListener('popstate', syncPathname)
   }, [])
 
   useEffect(() => {
@@ -137,10 +144,11 @@ function AppContent() {
 
   const navigate = useCallback(
     (path: string) => {
-      if (path === pathname) return
+      const canonicalPath = getCanonicalPathname(path)
+      if (canonicalPath === pathname) return
 
-      window.history.pushState({}, '', path)
-      setPathname(path)
+      window.history.pushState({}, '', canonicalPath)
+      setPathname(canonicalPath)
     },
     [pathname],
   )

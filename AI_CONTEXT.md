@@ -1371,3 +1371,10 @@ começar na ação segura. Popovers e filtros são não modais: não usam focus 
 fecham por Escape/clique externo e devolvem o foco ao gatilho. Se houver
 sobreposição real de modais, apenas o modal do topo responde ao Escape e mantém
 o ciclo de foco.
+
+## Atualização — Fusão dos dashboards gerais em 2026-09-19
+
+O Dashboard principal passou a ser a única visão geral da operação. O antigo
+destino `/reports/dashboard` permanece compatível por redirecionamento para
+`/`, sem alteração do contrato backend legado. Comercial, Compras, Estoque e
+Financeiro continuam como relatórios especializados para análise por domínio.

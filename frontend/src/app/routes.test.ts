@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getNavigationGroups, getRoute } from './routes'
+import { getCanonicalPathname, getNavigationGroups, getRoute } from './routes'
 import { appearanceLabels, defaultAppearance } from '../features/settings/types'
 
 describe('navegação comercial', () => {
@@ -41,7 +41,6 @@ describe('navegação comercial', () => {
       '/finance/cashflow',
     ])
     expect(groups.find((group) => group.label === 'Relatórios')?.items.map((item) => item.path)).toEqual([
-      '/reports/dashboard',
       '/reports/commercial',
       '/reports/purchases',
       '/reports/stock',
@@ -61,7 +60,9 @@ describe('navegação comercial', () => {
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
     expect(getRoute('/inventory/balances').label).toBe('Saldos')
     expect(getRoute('/finance/receivables').label).toBe('Contas a receber')
-    expect(getRoute('/reports/dashboard').label).toBe('Dashboard ERP')
+    expect(getCanonicalPathname('/reports/dashboard')).toBe('/')
+    expect(getCanonicalPathname('/reports/dashboard/')).toBe('/')
+    expect(getRoute('/reports/dashboard').path).toBe('/')
     expect(getRoute('/settings').label).toBe('Visão geral')
   })
 })

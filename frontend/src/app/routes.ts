@@ -83,7 +83,6 @@ export function getNavigationGroups(
       moduleCode: 'reports',
       collapsible: true,
       items: [
-        { path: '/reports/dashboard', label: 'Dashboard ERP', icon: navigationIcons.reports },
         { path: '/reports/commercial', label: 'Comercial', icon: navigationIcons.commercialReport },
         { path: '/reports/purchases', label: 'Compras', icon: navigationIcons.purchases },
         { path: '/reports/stock', label: 'Estoque', icon: navigationIcons.inventoryBalances },
@@ -129,7 +128,6 @@ const routeDescriptions: Record<string, string> = {
   '/finance/receivables': 'Acompanhe contas a receber e liquidações.',
   '/finance/payables': 'Acompanhe contas a pagar e liquidações.',
   '/finance/cashflow': 'Consulte o fluxo previsto e realizado.',
-  '/reports/dashboard': 'Acompanhe os principais indicadores do ERP.',
   '/reports/commercial': 'Analise vendas, cancelamentos e devoluções.',
   '/reports/purchases': 'Acompanhe pedidos e recebimentos pendentes.',
   '/reports/stock': 'Analise saldos e produtos abaixo do mínimo.',
@@ -158,11 +156,20 @@ export const notFoundRoute: RouteDefinition = {
   description: 'A página que você tentou acessar não existe.',
 }
 
+const legacyRouteRedirects: Record<string, string> = {
+  '/reports/dashboard': '/',
+}
+
+export function getCanonicalPathname(pathname: string): string {
+  const normalizedPath = pathname.replace(/\/$/, '') || '/'
+  return legacyRouteRedirects[normalizedPath] ?? normalizedPath
+}
+
 export function getRoute(
   pathname: string,
   labels = appearanceLabels(defaultAppearance),
 ): RouteDefinition {
-  const normalizedPath = pathname.replace(/\/$/, '') || '/'
+  const normalizedPath = getCanonicalPathname(pathname)
   const routeItems = getNavigationGroups(labels).flatMap((group) => group.items)
   const item = routeItems.find((candidate) => candidate.path === normalizedPath)
 
