@@ -114,3 +114,10 @@ pela API; apenas a exibição dos labels do eixo pode ser espaçada com
 `tickLabelInterval`. A interface não cria pontos sintéticos no frontend. O
 visual principal usa uma geometria maior, enquanto análises auxiliares e
 estados vazios usam variantes compactas próprias.
+
+No Relatório Comercial, a mesma fundação pode combinar uma série temporal para
+responder quando o resultado aconteceu, rankings horizontais Top N para
+responder o que ou quem mais contribuiu e tabelas compactas como evidência
+detalhada. A granularidade deve vir da agregação do backend, os rankings devem
+se adaptar ao tamanho real do dataset e estados sem dados devem explicar a
+ausência em vez de renderizar eixos vazios.

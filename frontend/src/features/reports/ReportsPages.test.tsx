@@ -21,8 +21,13 @@ const report = {
   completed_sales: 2,
   cancelled_sales: 1,
   approved_returns: 1,
-  by_customer: [{ customer_id: 4, sales: 2, total: 125 }],
-  by_product: [{ product_id: 8, quantity: 3.5, total: 125 }],
+  granularity: 'month' as const,
+  sales_trend: [
+    { bucket: '2026-08-01', sales_value: 50, completed_sales: 1 },
+    { bucket: '2026-09-01', sales_value: 75, completed_sales: 1 },
+  ],
+  by_customer: [{ customer_id: 4, customer_name: 'Cliente analytics', sales: 2, total: 125 }],
+  by_product: [{ product_id: 8, product_name: 'Produto analytics', quantity: 3.5, total: 125 }],
 }
 
 describe('CommercialReportPage', () => {
@@ -40,9 +45,13 @@ describe('CommercialReportPage', () => {
     expect(returnsMetric?.textContent).toContain('Todo o histórico')
     expect(returnsMetric?.textContent).toContain('1')
     expect(screen.getByText('Vendas por produto')).toBeTruthy()
-    expect(screen.getByText('Produto #8')).toBeTruthy()
-    expect(screen.getByText('Cliente #4')).toBeTruthy()
+    expect(screen.getAllByText('Produto analytics')).toHaveLength(2)
+    expect(screen.getAllByText('Cliente analytics')).toHaveLength(2)
     expect(screen.getByText('3,5')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Vendas ao longo do período' })).toBeTruthy()
+    expect(screen.getByLabelText('Gráfico de linha com a evolução das vendas concluídas')).toBeTruthy()
+    expect(screen.getByLabelText('Gráfico de barras com os produtos que mais contribuíram')).toBeTruthy()
+    expect(screen.getByLabelText('Gráfico de barras com os clientes que mais contribuíram')).toBeTruthy()
     expect((screen.getByRole('button', { name: 'Exportar CSV' }) as HTMLButtonElement).disabled).toBe(false)
 
     fireEvent.change(screen.getByLabelText('De'), { target: { value: '2026-09-01' } })
@@ -57,6 +66,8 @@ describe('CommercialReportPage', () => {
       completed_sales: 0,
       cancelled_sales: 0,
       approved_returns: 0,
+      granularity: 'month',
+      sales_trend: [],
       by_customer: [],
       by_product: [],
     })
@@ -66,6 +77,25 @@ describe('CommercialReportPage', () => {
     expect(await screen.findByText('Não houve vendas no período selecionado')).toBeTruthy()
     expect((screen.getByRole('button', { name: 'Exportar CSV' }) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.queryByText('Vendas por produto')).toBeNull()
+  })
+
+  it('keeps charts contextual when only cancelled sales exist', async () => {
+    vi.mocked(reportsApi.getCommercialReport).mockResolvedValue({
+      sales: 1,
+      completed_sales: 0,
+      cancelled_sales: 1,
+      approved_returns: 0,
+      granularity: 'day',
+      sales_trend: [{ bucket: '2026-09-01', sales_value: 0, completed_sales: 0 }],
+      by_customer: [],
+      by_product: [],
+    })
+
+    render(<CommercialReportPage />)
+
+    expect(await screen.findByText('Sem vendas concluídas para traçar a evolução')).toBeTruthy()
+    expect(screen.getByText('Sem agregação por produto')).toBeTruthy()
+    expect(screen.getByText('Sem agregação por cliente')).toBeTruthy()
   })
 
   it('keeps the report context during loading and offers retry after an error', async () => {

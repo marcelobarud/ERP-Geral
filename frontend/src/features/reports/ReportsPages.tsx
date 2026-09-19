@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
+import { BarChart } from '@mui/x-charts/BarChart'
+import { LineChart } from '@mui/x-charts/LineChart'
+
 import { ErrorState } from '../../components/ErrorState'
 import { EmptyState } from '../../components/EmptyState'
 import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
 import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 import { getApiErrorMessage } from '../../services/httpClient'
+import {
+  chartAxisTickLabelStyle,
+  chartSx,
+  formatBucketLabel,
+  formatCompactMoney,
+  formatMoney,
+  getTickLabelInterval,
+} from '../dashboard/analytics'
 import {
   getCommercialReport,
   getErpDashboard,
@@ -18,6 +29,13 @@ import {
   type PurchasesReport,
   type StockReport,
 } from './api'
+import {
+  hasPositiveTrend,
+  sumTrendSales,
+  sumTrendValue,
+  topCustomerContributors,
+  topProductContributors,
+} from './reportAnalytics'
 
 type ReportFilters = { dateFrom: string; dateTo: string }
 
@@ -90,6 +108,14 @@ export function CommercialReportPage() {
 function CommercialReportContent({ data, filters }: { data: CommercialReport | null; filters: ReportFilters }) {
   if (!data) return null
 
+  const salesTrend = data.sales_trend ?? []
+  const productItems = topProductContributors(data.by_product)
+  const customerItems = topCustomerContributors(data.by_customer)
+  const granularity = data.granularity ?? 'month'
+  const hasTemporalData = hasPositiveTrend(salesTrend)
+  const totalSold = sumTrendValue(salesTrend)
+  const completedSales = sumTrendSales(salesTrend)
+
   return (
     <>
       <section className="report-metric-group" aria-labelledby="commercial-metrics-title">
@@ -111,6 +137,59 @@ function CommercialReportContent({ data, filters }: { data: CommercialReport | n
             <Metric label="Canceladas" value={data.cancelled_sales} detail="Status cancelada" />
             <Metric label="Devoluções aprovadas" value={data.approved_returns} detail="Todo o histórico" />
           </div>
+        </div>
+      </section>
+
+      <section className="report-visual-analysis" aria-labelledby="commercial-analysis-title">
+        <div className="report-section-heading">
+          <div>
+            <p className="eyebrow">Leitura visual</p>
+            <h2 id="commercial-analysis-title">Como as vendas se comportaram</h2>
+            <p>Use a evolução para entender quando o resultado aconteceu e os rankings para investigar suas principais contribuições.</p>
+          </div>
+        </div>
+
+        <ReportChartPanel
+          id="commercial-sales-trend"
+          variant="primary"
+          eyebrow="Evolução temporal"
+          title="Vendas ao longo do período"
+          description="Valor das vendas concluídas no escopo selecionado."
+          summary={hasTemporalData ? <div className="report-chart-summary"><div><span>Total vendido</span><strong>{money(totalSold)}</strong></div><div><span>Vendas concluídas</span><strong>{completedSales}</strong></div></div> : null}
+          meta={data.granularity ? `Granularidade: ${granularityLabel(granularity)}` : undefined}
+        >
+          {hasTemporalData ? <div className="report-chart" aria-label="Gráfico de linha com a evolução das vendas concluídas"><LineChart
+            xAxis={[{ data: salesTrend.map((point) => point.bucket), scaleType: 'point', tickLabelInterval: getTickLabelInterval(salesTrend.length, granularity), tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string) => formatBucketLabel(value, granularity) }]}
+            yAxis={[{ width: 64, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => formatCompactMoney(value) }]}
+            series={[{ data: salesTrend.map((point) => point.sales_value), label: 'Vendas concluídas', color: 'var(--color-primary)', valueFormatter: (value: number | null) => formatMoney(Number(value)) }]}
+            hideLegend
+            height={252}
+            margin={{ top: 18, right: 18, bottom: 32, left: 8 }}
+            grid={{ horizontal: true }}
+            sx={chartSx}
+          /></div> : <ChartEmptyState title="Sem vendas concluídas para traçar a evolução" description="O recorte possui métricas, mas não há vendas concluídas que alimentem esta série temporal." />}
+        </ReportChartPanel>
+
+        <div className="report-ranking-grid">
+          <ReportChartPanel
+            id="commercial-product-ranking"
+            variant="supporting"
+            eyebrow="Principais contribuições"
+            title="Produtos que mais contribuíram"
+            description="Top produtos pelo valor vendido no período."
+          >
+            {productItems.length ? <CommercialRankingChart items={productItems} kind="product" /> : <ChartEmptyState title="Sem agregação por produto" description="Não há vendas concluídas por produto neste recorte." />}
+          </ReportChartPanel>
+
+          <ReportChartPanel
+            id="commercial-customer-ranking"
+            variant="supporting"
+            eyebrow="Principais contribuições"
+            title="Clientes que mais contribuíram"
+            description="Top clientes pelo valor vendido no período."
+          >
+            {customerItems.length ? <CommercialRankingChart items={customerItems} kind="customer" /> : <ChartEmptyState title="Sem agregação por cliente" description="Não há vendas concluídas por cliente neste recorte." />}
+          </ReportChartPanel>
         </div>
       </section>
 
@@ -139,12 +218,44 @@ function CommercialReportContent({ data, filters }: { data: CommercialReport | n
   )
 }
 
+function granularityLabel(granularity: NonNullable<CommercialReport['granularity']>) {
+  return { day: 'diária', week: 'semanal', month: 'mensal' }[granularity]
+}
+
+function ChartEmptyState({ title, description }: { title: string; description: string }) {
+  return <div className="report-chart-empty"><strong>{title}</strong><p>{description}</p></div>
+}
+
+function ReportChartPanel({ id, variant, eyebrow, title, description, summary, meta, children }: { id: string; variant: 'primary' | 'supporting'; eyebrow: string; title: string; description: string; summary?: ReactNode; meta?: string; children: ReactNode }) {
+  return <article className={`report-chart-panel report-chart-panel-${variant}`} aria-labelledby={`${id}-title`}><header className="report-chart-panel-header"><div><p className="eyebrow">{eyebrow}</p><h3 id={`${id}-title`}>{title}</h3><p>{description}</p></div>{meta ? <span className="report-chart-meta">{meta}</span> : null}</header><div className="report-chart-panel-body">{summary}{children}</div></article>
+}
+
+function CommercialRankingChart(props: { items: ReturnType<typeof topProductContributors>; kind: 'product' } | { items: ReturnType<typeof topCustomerContributors>; kind: 'customer' }) {
+  const labels = props.kind === 'product'
+    ? props.items.map((item) => item.product_name || `Produto #${item.product_id}`)
+    : props.items.map((item) => item.customer_name || (item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente'))
+  const values = props.items.map((item) => item.total)
+  const chartHeight = Math.max(148, props.items.length * 32 + 68)
+  const labelWidth = props.kind === 'customer' ? 184 : 160
+  return <div className="report-chart" aria-label={`Gráfico de barras com ${props.kind === 'product' ? 'os produtos' : 'os clientes'} que mais contribuíram`}><BarChart
+    layout="horizontal"
+    xAxis={[{ min: 0, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => formatCompactMoney(value) }]}
+    yAxis={[{ scaleType: 'band', data: labels, tickLabelStyle: chartAxisTickLabelStyle, width: labelWidth }]}
+    series={[{ data: values, label: props.kind === 'product' ? 'Valor vendido por produto' : 'Valor vendido por cliente', color: 'var(--color-primary)', valueFormatter: (value: number | null) => formatMoney(Number(value)) }]}
+    hideLegend
+    height={chartHeight}
+    margin={{ top: 12, right: 18, bottom: 32, left: 8 }}
+    grid={{ vertical: true }}
+    sx={chartSx}
+  /></div>
+}
+
 function CommercialProductsTable({ items }: { items: CommercialReport['by_product'] }) {
-  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por produto</caption><thead><tr><th scope="col">Produto</th><th scope="col">Quantidade</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item) => <tr key={item.product_id}><td className="data-primary">Produto #{item.product_id}</td><td className="report-number-cell">{quantity(item.quantity)}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
+  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por produto</caption><thead><tr><th scope="col">Produto</th><th scope="col">Quantidade</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item) => <tr key={item.product_id}><td className="data-primary">{item.product_name || `Produto #${item.product_id}`}</td><td className="report-number-cell">{quantity(item.quantity)}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
 }
 
 function CommercialCustomersTable({ items }: { items: CommercialReport['by_customer'] }) {
-  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por cliente</caption><thead><tr><th scope="col">Cliente</th><th scope="col">Vendas</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item, index) => <tr key={item.customer_id ?? `unknown-${index}`}><td className="data-primary">{item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente'}</td><td className="report-number-cell">{item.sales}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
+  return <div className="data-card report-detail-table"><div className="data-table-wrap"><table className="data-table"><caption className="sr-only">Vendas concluídas agrupadas por cliente</caption><thead><tr><th scope="col">Cliente</th><th scope="col">Vendas</th><th scope="col">Total</th></tr></thead><tbody>{items.map((item, index) => <tr key={item.customer_id ?? `unknown-${index}`}><td className="data-primary">{item.customer_name || (item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente')}</td><td className="report-number-cell">{item.sales}</td><td className="report-number-cell">{money(item.total)}</td></tr>)}</tbody></table></div></div>
 }
 
 export function PurchasesReportPage() {

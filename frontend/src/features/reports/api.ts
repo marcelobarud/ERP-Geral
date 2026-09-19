@@ -16,8 +16,10 @@ export type CommercialReport = {
   completed_sales: number
   cancelled_sales: number
   approved_returns: number
-  by_customer: Array<{ customer_id: number | null; sales: number; total: number }>
-  by_product: Array<{ product_id: number; quantity: number; total: number }>
+  granularity?: 'day' | 'week' | 'month'
+  sales_trend?: Array<{ bucket: string; sales_value: number; completed_sales: number }>
+  by_customer: Array<{ customer_id: number | null; customer_name?: string | null; sales: number; total: number }>
+  by_product: Array<{ product_id: number; product_name?: string | null; quantity: number; total: number }>
 }
 
 export type PurchasesReport = {

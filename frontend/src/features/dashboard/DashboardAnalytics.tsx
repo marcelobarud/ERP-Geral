@@ -10,6 +10,8 @@ import { LoadingState } from '../../components/LoadingState'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import {
   dashboardPeriodOptions,
+  chartAxisTickLabelStyle,
+  chartSx,
   formatBucketLabel,
   formatCompactMoney,
   formatDateRange,
@@ -27,30 +29,6 @@ const dashboardChartHeights = {
   supporting: 172,
   stock: 172,
 } as const
-
-const chartAxisTickLabelStyle = {
-  fontFamily: 'var(--font-family-sans)',
-  fontSize: 11,
-}
-
-const chartSx = {
-  '& .MuiChartsAxis-line, & .MuiChartsAxis-tick': {
-    stroke: 'var(--color-border-subtle)',
-  },
-  '& .MuiChartsAxis-tickLabel': {
-    fill: 'var(--color-text-secondary)',
-    fontFamily: 'var(--font-family-sans)',
-    fontSize: '0.7rem',
-  },
-  '& .MuiChartsGrid-line': {
-    stroke: 'var(--color-border-subtle)',
-    strokeDasharray: '2 4',
-    opacity: 0.72,
-  },
-  '& .MuiChartsLegend-root, & .MuiChartsTooltip-root': {
-    fontFamily: 'var(--font-family-sans)',
-  },
-}
 
 type DashboardChartPanelProps = {
   id: string

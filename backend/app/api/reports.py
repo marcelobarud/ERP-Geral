@@ -110,6 +110,15 @@ def _bucket_date(value: date | datetime) -> date:
     return value.date() if isinstance(value, datetime) else value
 
 
+def _commercial_granularity(date_from: date, date_to: date) -> str:
+    span_days = (date_to - date_from).days + 1
+    if span_days <= 45:
+        return "day"
+    if span_days <= 180:
+        return "week"
+    return "month"
+
+
 @router.get("/commercial")
 def commercial_report(
     date_from: date | None = Query(default=None),
@@ -118,36 +127,95 @@ def commercial_report(
 ):
     sales_query = date_filters(select(Venda), Venda.data_venda, date_from, date_to)
     sales = db.scalars(sales_query).all()
+    customer_total = func.sum(VendaItem.quantidade * VendaItem.preco_unitario)
     by_customer = db.execute(
         date_filters(
             select(
                 Venda.cliente_id,
+                Cliente.nome,
                 func.count(Venda.id),
-                func.sum(VendaItem.quantidade * VendaItem.preco_unitario),
+                customer_total,
             )
             .join(VendaItem, VendaItem.venda_id == Venda.id)
+            .outerjoin(Cliente, Cliente.id == Venda.cliente_id)
             .where(Venda.status == "CONCLUIDA")
-            .group_by(Venda.cliente_id),
+            .group_by(Venda.cliente_id, Cliente.nome)
+            .order_by(desc(customer_total), Venda.cliente_id),
             Venda.data_venda,
             date_from,
             date_to,
         )
     ).all()
+    product_quantity = func.sum(VendaItem.quantidade)
+    product_total = func.sum(VendaItem.quantidade * VendaItem.preco_unitario)
     by_product = db.execute(
         date_filters(
             select(
                 VendaItem.produto_id,
-                func.sum(VendaItem.quantidade),
-                func.sum(VendaItem.quantidade * VendaItem.preco_unitario),
+                Produto.nome,
+                product_quantity,
+                product_total,
             )
             .join(Venda, Venda.id == VendaItem.venda_id)
+            .join(Produto, Produto.id == VendaItem.produto_id)
             .where(Venda.status == "CONCLUIDA")
-            .group_by(VendaItem.produto_id),
+            .group_by(VendaItem.produto_id, Produto.nome)
+            .order_by(desc(product_total), VendaItem.produto_id),
             Venda.data_venda,
             date_from,
             date_to,
         )
     ).all()
+    completed_date_range = db.execute(
+        date_filters(
+            select(func.min(Venda.data_venda), func.max(Venda.data_venda)).where(
+                Venda.status == "CONCLUIDA"
+            ),
+            Venda.data_venda,
+            date_from,
+            date_to,
+        )
+    ).one()
+    first_completed_at, last_completed_at = completed_date_range
+    if first_completed_at is not None and last_completed_at is not None:
+        temporal_from = date_from or _bucket_date(first_completed_at)
+        temporal_to = date_to or _bucket_date(last_completed_at)
+        granularity = _commercial_granularity(temporal_from, temporal_to)
+        buckets = _dashboard_buckets(temporal_from, temporal_to, granularity)
+        sales_bucket = func.date_trunc(granularity, Venda.data_venda)
+        sales_rows = db.execute(
+            date_filters(
+                select(
+                    sales_bucket,
+                    func.sum(VendaItem.quantidade * VendaItem.preco_unitario),
+                    func.count(func.distinct(Venda.id)),
+                )
+                .join(VendaItem, VendaItem.venda_id == Venda.id)
+                .where(Venda.status == "CONCLUIDA")
+                .group_by(sales_bucket)
+                .order_by(sales_bucket),
+                Venda.data_venda,
+                date_from,
+                date_to,
+            )
+        ).all()
+        sales_by_bucket = {
+            _bucket_date(row[0]): (row[1] or Decimal("0.00"), row[2] or 0)
+            for row in sales_rows
+        }
+        sales_trend = [
+            {
+                "bucket": bucket,
+                "sales_value": float(
+                    sales_by_bucket.get(bucket, (Decimal("0.00"), 0))[0]
+                ),
+                "completed_sales": sales_by_bucket.get(bucket, (Decimal("0.00"), 0))[1],
+            }
+            for bucket in buckets
+        ]
+    else:
+        granularity = "month"
+        sales_trend = []
     returns = (
         db.scalar(
             select(func.count(DevolucaoVenda.id)).where(
@@ -161,15 +229,23 @@ def commercial_report(
         "completed_sales": sum(sale.status == "CONCLUIDA" for sale in sales),
         "cancelled_sales": sum(sale.status == "CANCELADA" for sale in sales),
         "approved_returns": returns,
+        "granularity": granularity,
+        "sales_trend": sales_trend,
         "by_customer": [
-            {"customer_id": row[0], "sales": row[1], "total": row[2] or Decimal("0")}
+            {
+                "customer_id": row[0],
+                "customer_name": row[1],
+                "sales": row[2],
+                "total": row[3] or Decimal("0"),
+            }
             for row in by_customer
         ],
         "by_product": [
             {
                 "product_id": row[0],
-                "quantity": row[1] or Decimal("0"),
-                "total": row[2] or Decimal("0"),
+                "product_name": row[1],
+                "quantity": row[2] or Decimal("0"),
+                "total": row[3] or Decimal("0"),
             }
             for row in by_product
         ],

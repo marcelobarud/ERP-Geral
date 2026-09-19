@@ -25,6 +25,30 @@ export type DashboardAnalytics = {
   }>
 }
 
+export const chartAxisTickLabelStyle = {
+  fontFamily: 'var(--font-family-sans)',
+  fontSize: 11,
+}
+
+export const chartSx = {
+  '& .MuiChartsAxis-line, & .MuiChartsAxis-tick': {
+    stroke: 'var(--color-border-subtle)',
+  },
+  '& .MuiChartsAxis-tickLabel': {
+    fill: 'var(--color-text-secondary)',
+    fontFamily: 'var(--font-family-sans)',
+    fontSize: '0.7rem',
+  },
+  '& .MuiChartsGrid-line': {
+    stroke: 'var(--color-border-subtle)',
+    strokeDasharray: '2 4',
+    opacity: 0.72,
+  },
+  '& .MuiChartsLegend-root, & .MuiChartsTooltip-root': {
+    fontFamily: 'var(--font-family-sans)',
+  },
+}
+
 export const dashboardPeriodOptions: Array<{ value: DashboardAnalyticsPeriod; label: string }> = [
   { value: '30d', label: 'Últimos 30 dias' },
   { value: '90d', label: 'Últimas 12 semanas' },
