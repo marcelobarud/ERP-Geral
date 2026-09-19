@@ -2785,6 +2785,36 @@ a,
   accent-color: var(--color-primary);
 }
 
+.inventory-balances-toolbar {
+  flex-wrap: wrap;
+}
+
+.inventory-balances-toolbar > .form-field {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.inventory-balances-toolbar > .form-field select {
+  width: auto;
+  max-width: 100%;
+}
+
+.inventory-balances-toolbar > .filter-checkbox {
+  flex: 0 0 auto;
+  align-self: end;
+}
+
+@media (max-width: 900px) {
+  .inventory-balances-toolbar > .form-field select {
+    width: 100%;
+    max-width: none;
+  }
+
+  .inventory-balances-toolbar > .filter-checkbox {
+    width: 100%;
+  }
+}
+
 .checkbox-field input:focus-visible,
 .filter-checkbox input:focus-visible {
   outline: 0;
