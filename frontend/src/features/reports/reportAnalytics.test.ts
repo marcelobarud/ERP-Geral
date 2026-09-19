@@ -4,19 +4,37 @@ import {
   hasPositiveTrend,
   sumTrendSales,
   sumTrendValue,
+  topCustomerContributors,
   topProductContributors,
+  truncateRankingLabel,
 } from './reportAnalytics'
 
 describe('commercial report analytics helpers', () => {
-  it('orders product contributions by value and keeps only the top eight', () => {
-    const items = Array.from({ length: 9 }, (_, index) => ({
+  it('orders product contributions by value and keeps only the top six', () => {
+    const items = Array.from({ length: 7 }, (_, index) => ({
       product_id: index + 1,
       product_name: `Produto ${index + 1}`,
       quantity: 1,
       total: index + 1,
     }))
 
-    expect(topProductContributors(items).map((item) => item.product_id)).toEqual([9, 8, 7, 6, 5, 4, 3, 2])
+    expect(topProductContributors(items).map((item) => item.product_id)).toEqual([7, 6, 5, 4, 3, 2])
+  })
+
+  it('orders customer contributions by value, resolves ties by id and keeps six items', () => {
+    const items = Array.from({ length: 7 }, (_, index) => ({
+      customer_id: index + 1,
+      customer_name: `Cliente ${index + 1}`,
+      sales: 1,
+      total: index === 0 ? 20 : index === 1 ? 20 : index + 1,
+    }))
+
+    expect(topCustomerContributors(items).map((item) => item.customer_id)).toEqual([1, 2, 7, 6, 5, 4])
+  })
+
+  it('truncates only the visible ranking label while preserving a readable suffix', () => {
+    expect(truncateRankingLabel('Cliente Demonstração com nome muito longo', 24)).toBe('Cliente Demonstração co…')
+    expect(truncateRankingLabel('Produto curto', 24)).toBe('Produto curto')
   })
 
   it('identifies and summarizes real temporal values', () => {

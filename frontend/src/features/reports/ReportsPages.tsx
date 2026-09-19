@@ -35,6 +35,7 @@ import {
   sumTrendValue,
   topCustomerContributors,
   topProductContributors,
+  truncateRankingLabel,
 } from './reportAnalytics'
 
 type ReportFilters = { dateFrom: string; dateTo: string }
@@ -235,16 +236,18 @@ function CommercialRankingChart(props: { items: ReturnType<typeof topProductCont
     ? props.items.map((item) => item.product_name || `Produto #${item.product_id}`)
     : props.items.map((item) => item.customer_name || (item.customer_id ? `Cliente #${item.customer_id}` : 'Venda sem cliente'))
   const values = props.items.map((item) => item.total)
-  const chartHeight = Math.max(148, props.items.length * 32 + 68)
-  const labelWidth = props.kind === 'customer' ? 184 : 160
+  const chartHeight = Math.max(176, props.items.length * 30 + 48)
+  const labelLimit = props.kind === 'customer' ? 24 : 22
+  const labelWidth = props.kind === 'customer' ? 176 : 152
   return <div className="report-chart" aria-label={`Gráfico de barras com ${props.kind === 'product' ? 'os produtos' : 'os clientes'} que mais contribuíram`}><BarChart
     layout="horizontal"
-    xAxis={[{ min: 0, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => formatCompactMoney(value) }]}
-    yAxis={[{ scaleType: 'band', data: labels, tickLabelStyle: chartAxisTickLabelStyle, width: labelWidth }]}
+    xAxis={[{ min: 0, tickLabelStyle: { ...chartAxisTickLabelStyle, fontSize: 10 }, valueFormatter: (value: number) => formatCompactMoney(value) }]}
+    yAxis={[{ scaleType: 'band', data: labels, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string, context) => context.location === 'tooltip' ? value : truncateRankingLabel(value, labelLimit), width: labelWidth }]}
     series={[{ data: values, label: props.kind === 'product' ? 'Valor vendido por produto' : 'Valor vendido por cliente', color: 'var(--color-primary)', valueFormatter: (value: number | null) => formatMoney(Number(value)) }]}
+    slotProps={{ tooltip: { trigger: 'axis' } }}
     hideLegend
     height={chartHeight}
-    margin={{ top: 12, right: 18, bottom: 32, left: 8 }}
+    margin={{ top: 12, right: 36, bottom: 32, left: 8 }}
     grid={{ vertical: true }}
     sx={chartSx}
   /></div>

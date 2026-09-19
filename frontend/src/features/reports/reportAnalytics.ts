@@ -1,6 +1,14 @@
 import type { CommercialReport } from './api'
 
-export const commercialChartTopN = 8
+export const commercialChartTopN = 6
+
+export function truncateRankingLabel(label: string, maxLength: number) {
+  const normalized = label.trim()
+  if (normalized.length <= maxLength) return normalized
+
+  const visibleLength = Math.max(1, maxLength - 1)
+  return `${normalized.slice(0, visibleLength).trimEnd()}…`
+}
 
 export function topProductContributors(items: CommercialReport['by_product']) {
   return [...items]

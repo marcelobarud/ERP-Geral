@@ -98,6 +98,29 @@ describe('CommercialReportPage', () => {
     expect(screen.getByText('Sem agregação por cliente')).toBeTruthy()
   })
 
+  it('keeps detailed tables complete when charts are limited to six items', async () => {
+    vi.mocked(reportsApi.getCommercialReport).mockResolvedValue({
+      ...report,
+      by_product: Array.from({ length: 7 }, (_, index) => ({
+        product_id: index + 1,
+        product_name: `Produto detalhado ${index + 1}`,
+        quantity: index + 1,
+        total: (index + 1) * 10,
+      })),
+      by_customer: Array.from({ length: 7 }, (_, index) => ({
+        customer_id: index + 1,
+        customer_name: `Cliente detalhado ${index + 1}`,
+        sales: index + 1,
+        total: (index + 1) * 10,
+      })),
+    })
+
+    render(<CommercialReportPage />)
+
+    expect(await screen.findAllByText('Produto detalhado 7')).toHaveLength(2)
+    expect(screen.getAllByText('Cliente detalhado 7')).toHaveLength(2)
+  })
+
   it('keeps the report context during loading and offers retry after an error', async () => {
     let resolveReport: ((value: typeof report) => void) | undefined
     vi.mocked(reportsApi.getCommercialReport).mockImplementationOnce(() => new Promise((resolve) => { resolveReport = resolve }))

@@ -1560,6 +1560,12 @@
   margin-top: 1rem;
 }
 
+@media (max-width: 1080px) and (min-width: 901px) {
+  .report-ranking-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .settings-page {
   width: min(100%, 78rem);
   margin: 0 auto;
