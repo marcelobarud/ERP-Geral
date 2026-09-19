@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   hasPositiveTrend,
+  hasStockMovement,
   sumTrendSales,
   sumTrendValue,
   topCustomerContributors,
   topProductContributors,
+  topStockCriticalItems,
   truncateRankingLabel,
 } from './reportAnalytics'
 
@@ -47,5 +49,44 @@ describe('commercial report analytics helpers', () => {
     expect(sumTrendValue(trend)).toBe(125.5)
     expect(sumTrendSales(trend)).toBe(2)
     expect(hasPositiveTrend([trend[0]])).toBe(false)
+  })
+})
+
+describe('stock report analytics helpers', () => {
+  it('keeps the six greatest comparable critical percentages', () => {
+    const items = [
+      ...Array.from({ length: 7 }, (_, index) => ({
+        produto_id: index + 1,
+        deposito_id: 1,
+        saldo: 1,
+        estoque_minimo: 10,
+        abaixo_do_minimo: true,
+        product_name: `Produto ${index + 1}`,
+        sku: `SKU-${index + 1}`,
+        unit: 'UN',
+        deficit: 9,
+        shortfall_percent: index + 1,
+      })),
+      {
+        produto_id: 99,
+        deposito_id: 1,
+        saldo: -1,
+        estoque_minimo: 0,
+        abaixo_do_minimo: true,
+        product_name: 'Mínimo zero',
+        sku: 'ZERO',
+        unit: 'UN',
+        deficit: 1,
+        shortfall_percent: null,
+      },
+    ]
+
+    expect(topStockCriticalItems(items).map((item) => item.produto_id)).toEqual([7, 6, 5, 4, 3, 2])
+  })
+
+  it('recognizes sparse series with only entries or only exits', () => {
+    expect(hasStockMovement([{ bucket: '2026-09-01', entries: 1, exits: 0 }])).toBe(true)
+    expect(hasStockMovement([{ bucket: '2026-09-01', entries: 0, exits: 1 }])).toBe(true)
+    expect(hasStockMovement([{ bucket: '2026-09-01', entries: 0, exits: 0 }])).toBe(false)
   })
 })

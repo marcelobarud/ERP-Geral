@@ -30,9 +30,33 @@ export type PurchasesReport = {
 }
 
 export type StockReport = {
-  balances: Array<{ produto_id: number; quantidade: number; abaixo_do_minimo: boolean }>
-  below_minimum: Array<{ produto_id: number; quantidade: number; abaixo_do_minimo: boolean }>
+  balances: StockReportBalance[]
+  below_minimum: StockReportBalance[]
   movement_count: number
+  active_products: number
+  products_with_balance: number
+  period: DashboardAnalyticsPeriod
+  date_from: string
+  date_to: string
+  granularity: DashboardAnalyticsGranularity
+  movement_entries: number
+  movement_exits: number
+  movement_count_in_period: number
+  movement_series: Array<{ bucket: string; entries: number; exits: number }>
+  deposit: { id: number; code: string; name: string }
+}
+
+export type StockReportBalance = {
+  produto_id: number
+  deposito_id: number
+  saldo: string | number
+  estoque_minimo: string | number
+  abaixo_do_minimo: boolean
+  product_name: string
+  sku: string
+  unit: string
+  deficit: string | number
+  shortfall_percent: number | null
 }
 
 export type FinanceReport = {
@@ -73,8 +97,8 @@ export function getPurchasesReport(): Promise<PurchasesReport> {
   return request<PurchasesReport>('/api/reports/purchases')
 }
 
-export function getStockReport(): Promise<StockReport> {
-  return request<StockReport>('/api/reports/stock')
+export function getStockReport(period: DashboardAnalyticsPeriod = '12m'): Promise<StockReport> {
+  return request<StockReport>(`/api/reports/stock?period=${period}`)
 }
 
 export function getFinanceReport(period: DashboardAnalyticsPeriod = '12m'): Promise<FinanceReport> {

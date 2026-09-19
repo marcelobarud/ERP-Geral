@@ -39,7 +39,9 @@ import {
   sumTrendValue,
   topCustomerContributors,
   topProductContributors,
+  topStockCriticalItems,
   truncateRankingLabel,
+  hasStockMovement,
 } from './reportAnalytics'
 
 type ReportFilters = { dateFrom: string; dateTo: string }
@@ -227,7 +229,7 @@ function granularityLabel(granularity: NonNullable<CommercialReport['granularity
   return { day: 'diária', week: 'semanal', month: 'mensal' }[granularity]
 }
 
-function financeTickLabelInterval(pointCount: number, granularity: FinanceReport['granularity']) {
+function reportTickLabelInterval(pointCount: number, granularity: FinanceReport['granularity']) {
   if (granularity === 'day' && pointCount > 20) {
     return (_value: unknown, index: number) => index % 10 === 0 || index === pointCount - 1
   }
@@ -282,12 +284,161 @@ export function PurchasesReportPage() {
 }
 
 export function StockReportPage() {
+  const [period, setPeriod] = useState<DashboardAnalyticsPeriod>('12m')
   const [data, setData] = useState<StockReport | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { try { setError(null); setData(await getStockReport()) } catch (cause) { setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório de estoque.')) } }, [])
+  const [loading, setLoading] = useState(true)
+  const load = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setData(await getStockReport(period))
+    } catch (cause) {
+      setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório de estoque.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [period])
   useEffect(() => { void load() }, [load])
-  const rows = data ? [{ produto: 'Resumo', quantidade: data.balances.length, abaixo_do_minimo: data.below_minimum.length }, ...data.balances.map((item) => ({ produto: item.produto_id, quantidade: item.quantidade, abaixo_do_minimo: item.abaixo_do_minimo ? 'sim' : 'não' }))] : []
-  return <ReportLayout pageId="reports_stock" loaded={data !== null} eyebrow="Relatórios" title="Relatório de estoque" description="Saldos, produtos abaixo do mínimo e movimentações registradas." rows={rows} filename="relatorio-estoque.csv" error={error} onRetry={() => void load()}><div className="report-metrics-grid">{data ? <><Metric label="Itens com saldo" value={data.balances.length} /><Metric label="Abaixo do mínimo" value={data.below_minimum.length} /><Metric label="Movimentações" value={data.movement_count} /></> : null}</div></ReportLayout>
+  const rows = data ? data.balances.map((item) => ({ produto: item.product_name, sku: item.sku, saldo: item.saldo, estoque_minimo: item.estoque_minimo, unidade: item.unit, abaixo_do_minimo: item.abaixo_do_minimo ? 'sim' : 'não' })) : []
+  const selectedPeriodLabel = dashboardPeriodOptions.find((option) => option.value === period)?.label ?? period
+  const hasCurrentPeriod = data?.period === period
+  const scopeDescription = hasCurrentPeriod
+    ? `${selectedPeriodLabel}: ${formatDateRange(data.date_from, data.date_to)}`
+    : `${selectedPeriodLabel}: atualizando recorte`
+
+  return <div className="page-stack">
+    <PageHeader eyebrow="Relatórios" title="Relatório de estoque" description="Posição atual, movimentações e itens que exigem atenção operacional." pageId="reports_stock" />
+    <div className="report-toolbar">
+      <label className="dashboard-period-field">
+        <span>Período das movimentações</span>
+        <select value={period} onChange={(event) => setPeriod(event.target.value as DashboardAnalyticsPeriod)}>
+          {dashboardPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <ExportButton rows={rows} filename="relatorio-estoque.csv" />
+    </div>
+    <div className="report-active-scope" aria-label={`Escopo analítico: ${scopeDescription}`}>
+      <strong>Escopo analítico</strong>
+      <span>{scopeDescription}</span>
+      <span>Posição: atual · {data?.deposit.name ?? 'depósito padrão'}</span>
+    </div>
+    {error ? <ErrorState description={error} onRetry={() => void load()} /> : null}
+    {!data && loading ? <LoadingState label="Carregando relatório de estoque..." /> : null}
+    {!error && data ? <StockReportContent data={data} selectedPeriod={period} loading={loading} /> : null}
+  </div>
+}
+
+function StockReportContent({ data, selectedPeriod, loading }: { data: StockReport; selectedPeriod: DashboardAnalyticsPeriod; loading: boolean }) {
+  const hasCurrentPeriod = data.period === selectedPeriod
+  const movementSeries = hasCurrentPeriod ? data.movement_series : []
+  const hasMovements = hasStockMovement(movementSeries)
+  const criticalItems = topStockCriticalItems(data.below_minimum)
+
+  return <>
+    <section className="report-metric-group" aria-labelledby="stock-metrics-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Posição atual</p>
+          <h2 id="stock-metrics-title">Estoque no depósito</h2>
+          <p>As quantidades permanecem associadas à unidade de medida de cada produto e não são somadas entre unidades diferentes.</p>
+        </div>
+        <p className="report-section-context">{data.deposit.name}</p>
+      </div>
+      <div className="report-metric-layout">
+        <article className="report-primary-metric">
+          <span className="dashboard-card-label">Produtos com saldo</span>
+          <strong className="report-primary-metric-value">{data.products_with_balance}</strong>
+          <span className="dashboard-card-description">Produtos ativos com saldo diferente de zero.</span>
+        </article>
+        <div className="report-supporting-metrics">
+          <Metric label="Produtos ativos" value={data.active_products} detail="Posição atual" />
+          <Metric label="Abaixo do mínimo" value={data.below_minimum.length} detail="Exigem atenção" />
+          <Metric label="Movimentações" value={data.movement_count_in_period} detail="Eventos no período" />
+        </div>
+      </div>
+    </section>
+
+    <section className="report-visual-analysis" aria-labelledby="stock-analysis-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Leitura visual</p>
+          <h2 id="stock-analysis-title">Como o estoque se movimentou</h2>
+          <p>As séries contam eventos que aumentaram ou reduziram o saldo, preservando ajustes, inventários, devoluções e reversões conforme seu efeito oficial.</p>
+        </div>
+      </div>
+
+      <ReportChartPanel
+        id="stock-movement-trend"
+        variant="primary"
+        eyebrow="Análise principal"
+        title="Movimentações ao longo do período"
+        description="Contagem de registros de entrada e saída no depósito selecionado."
+        summary={hasMovements ? <div className="report-chart-summary"><div><span>Entradas no saldo</span><strong>{data.movement_entries}</strong></div><div><span>Saídas do saldo</span><strong>{data.movement_exits}</strong></div></div> : null}
+        meta={hasCurrentPeriod ? `Granularidade: ${granularityLabel(data.granularity)}` : undefined}
+      >
+        {!hasCurrentPeriod && loading ? <div className="report-chart-empty" role="status"><strong>Atualizando movimentações</strong><p>A posição atual permanece disponível enquanto o novo período é carregado.</p></div> : hasMovements ? <div className="report-chart" aria-label="Gráfico de barras com entradas e saídas de estoque ao longo do período"><BarChart
+          xAxis={[{ scaleType: 'band', data: movementSeries.map((point) => point.bucket), tickLabelInterval: reportTickLabelInterval(movementSeries.length, data.granularity), tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string) => formatBucketLabel(value, data.granularity) }]}
+          yAxis={[{ width: 48, min: 0, tickMinStep: 1, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => quantity(value) }]}
+          series={[
+            { data: movementSeries.map((point) => point.entries), label: 'Entradas no saldo', color: 'var(--color-primary)', valueFormatter: (value: number | null) => `${Number(value)} registros` },
+            { data: movementSeries.map((point) => point.exits), label: 'Saídas do saldo', color: 'var(--color-accent)', valueFormatter: (value: number | null) => `${Number(value)} registros` },
+          ]}
+          slotProps={{ tooltip: { trigger: 'axis' } }}
+          height={300}
+          margin={{ top: 36, right: 20, bottom: 34, left: 8 }}
+          grid={{ horizontal: true }}
+          sx={chartSx}
+        /></div> : <ChartEmptyState title="Nenhuma movimentação no período selecionado" description="Escolha uma janela maior para investigar entradas e saídas anteriores." />}
+      </ReportChartPanel>
+
+      <div className="report-stock-attention">
+        <ReportChartPanel
+          id="stock-critical-ranking"
+          variant="supporting"
+          eyebrow="Atenção operacional"
+          title="Produtos abaixo do mínimo"
+          description="Top 6 pela porcentagem que falta para alcançar o mínimo configurado."
+          meta="Posição atual"
+        >
+          {criticalItems.length ? <StockCriticalRanking items={criticalItems} /> : data.below_minimum.length ? <ChartEmptyState title="Itens críticos sem percentual comparável" description="Há saldo abaixo de mínimo zero; consulte a tabela para avaliar o déficit na unidade do produto." /> : <ChartEmptyState title="Estoque dentro do mínimo" description="Nenhum item ativo exige atenção neste momento." />}
+        </ReportChartPanel>
+      </div>
+    </section>
+
+    <section className="report-analysis-section" aria-labelledby="stock-detail-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Evidência detalhada</p>
+          <h2 id="stock-detail-title">Saldos por produto</h2>
+          <p>Compare saldo atual, mínimo e déficit sem perder a unidade de medida de cada item.</p>
+        </div>
+      </div>
+      {data.balances.length ? <StockBalancesTable items={data.balances} /> : <div className="data-card report-detail-empty"><p>Não há produtos ativos para detalhar neste depósito.</p></div>}
+    </section>
+  </>
+}
+
+function StockCriticalRanking({ items }: { items: ReturnType<typeof topStockCriticalItems> }) {
+  const labels = items.map((item) => item.product_name)
+  const values = items.map((item) => item.shortfall_percent ?? 0)
+  const chartHeight = Math.max(176, items.length * 32 + 56)
+  return <div className="report-chart" aria-label="Gráfico de barras com produtos abaixo do estoque mínimo"><BarChart
+    layout="horizontal"
+    xAxis={[{ min: 0, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => `${value.toFixed(0)}%` }]}
+    yAxis={[{ scaleType: 'band', data: labels, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string, context) => context.location === 'tooltip' ? value : truncateRankingLabel(value, 24), width: 176 }]}
+    series={[{ data: values, label: 'Déficit até o mínimo', color: 'var(--color-warning)', valueFormatter: (value: number | null) => `${Number(value).toFixed(1)}% abaixo do mínimo` }]}
+    slotProps={{ tooltip: { trigger: 'axis' } }}
+    hideLegend
+    height={chartHeight}
+    margin={{ top: 12, right: 36, bottom: 32, left: 8 }}
+    grid={{ vertical: true }}
+    sx={chartSx}
+  /></div>
+}
+
+function StockBalancesTable({ items }: { items: StockReport['balances'] }) {
+  return <div className="data-card data-table-wrap report-detail-table report-stock-table"><table className="data-table"><caption className="sr-only">Saldos atuais agrupados por produto</caption><thead><tr><th scope="col">Produto</th><th scope="col">Saldo atual</th><th scope="col">Mínimo</th><th scope="col">Déficit</th><th scope="col">Status</th></tr></thead><tbody>{items.map((item) => <tr key={item.produto_id}><td className="data-primary"><span>{item.product_name}</span><small>{item.sku}</small></td><td className="report-number-cell">{quantity(Number(item.saldo))} {item.unit}</td><td className="report-number-cell">{quantity(Number(item.estoque_minimo))} {item.unit}</td><td className="report-number-cell">{quantity(Number(item.deficit))} {item.unit}</td><td><span className={`report-stock-status${item.abaixo_do_minimo ? ' is-critical' : ''}`}>{item.abaixo_do_minimo ? 'Abaixo do mínimo' : 'Dentro do mínimo'}</span></td></tr>)}</tbody></table></div>
 }
 
 export function FinanceReportPage() {
@@ -391,7 +542,7 @@ function FinanceReportContent({ data, selectedPeriod, loading }: { data: Finance
         meta={hasCurrentPeriod ? `Granularidade: ${granularityLabel(data.granularity)}` : undefined}
       >
         {!hasCurrentPeriod && loading ? <div className="report-chart-empty" role="status"><strong>Atualizando análise financeira</strong><p>Os indicadores de posição permanecem disponíveis enquanto o novo período é carregado.</p></div> : hasCommitments ? <div className="report-chart" aria-label="Gráfico de barras com valores a receber e a pagar em aberto por vencimento"><BarChart
-          xAxis={[{ scaleType: 'band', data: commitments.map((point) => point.bucket), tickLabelInterval: financeTickLabelInterval(commitments.length, data.granularity), tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string) => formatBucketLabel(value, data.granularity) }]}
+          xAxis={[{ scaleType: 'band', data: commitments.map((point) => point.bucket), tickLabelInterval: reportTickLabelInterval(commitments.length, data.granularity), tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string) => formatBucketLabel(value, data.granularity) }]}
           yAxis={[{ width: 72, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => formatCompactMoney(value) }]}
           series={[
             { data: commitments.map((point) => point.receivable), label: 'A receber em aberto', color: 'var(--color-primary)', valueFormatter: (value: number | null) => formatMoney(Number(value)) },

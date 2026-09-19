@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as reportsApi from './api'
-import { CommercialReportPage, FinanceReportPage } from './ReportsPages'
+import { CommercialReportPage, FinanceReportPage, StockReportPage } from './ReportsPages'
 
 vi.mock('./api', () => ({
   getCommercialReport: vi.fn(),
@@ -139,6 +139,131 @@ describe('CommercialReportPage', () => {
     expect(screen.getByRole('heading', { name: 'Relatório comercial' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
     expect(await screen.findByRole('heading', { name: 'Vendas por produto' })).toBeTruthy()
+  })
+})
+
+const criticalStockBalance = {
+  produto_id: 1,
+  deposito_id: 1,
+  saldo: '3.125',
+  estoque_minimo: '10.000',
+  abaixo_do_minimo: true,
+  product_name: 'Produto crítico com nome operacional muito longo',
+  sku: 'CRITICO-001',
+  unit: 'UN',
+  deficit: '6.875',
+  shortfall_percent: 68.75,
+}
+
+const normalStockBalance = {
+  produto_id: 2,
+  deposito_id: 1,
+  saldo: '10.000',
+  estoque_minimo: '0.000',
+  abaixo_do_minimo: false,
+  product_name: 'Produto normal',
+  sku: 'NORMAL-002',
+  unit: 'KG',
+  deficit: '0.000',
+  shortfall_percent: null,
+}
+
+const stockReport = {
+  balances: [criticalStockBalance, normalStockBalance],
+  below_minimum: [criticalStockBalance],
+  movement_count: 9,
+  active_products: 2,
+  products_with_balance: 2,
+  period: '12m' as const,
+  date_from: '2025-09-20',
+  date_to: '2026-09-19',
+  granularity: 'month' as const,
+  movement_entries: 4,
+  movement_exits: 2,
+  movement_count_in_period: 6,
+  movement_series: [
+    { bucket: '2026-08-01', entries: 1, exits: 0 },
+    { bucket: '2026-09-01', entries: 3, exits: 2 },
+  ],
+  deposit: { id: 1, code: 'PRINCIPAL', name: 'Depósito principal' },
+}
+
+describe('StockReportPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(reportsApi.getStockReport).mockImplementation(async (period = '12m') => ({
+      ...stockReport,
+      period,
+      date_from: period === '30d' ? '2026-08-21' : stockReport.date_from,
+      granularity: period === '30d' ? 'day' : stockReport.granularity,
+    }))
+  })
+
+  it('separates current position from movement period and preserves detailed quantities', async () => {
+    render(<StockReportPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Estoque no depósito' })).toBeTruthy()
+    expect(screen.getByText('Produtos com saldo')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Movimentações ao longo do período' })).toBeTruthy()
+    expect(screen.getByLabelText('Gráfico de barras com entradas e saídas de estoque ao longo do período')).toBeTruthy()
+    expect(screen.getByLabelText('Gráfico de barras com produtos abaixo do estoque mínimo')).toBeTruthy()
+    expect(screen.getAllByText('Produto crítico com nome operacional muito longo')).toHaveLength(1)
+    expect(screen.getByText('3,125 UN')).toBeTruthy()
+    expect(screen.getByText('10 KG')).toBeTruthy()
+    expect(screen.getByRole('table', { name: 'Saldos atuais agrupados por produto' })).toBeTruthy()
+
+    fireEvent.change(screen.getByLabelText('Período das movimentações'), { target: { value: '30d' } })
+
+    await waitFor(() => expect(reportsApi.getStockReport).toHaveBeenCalledWith('30d'))
+    expect(await screen.findByText('Últimos 30 dias: 21/08/2026 a 19/09/2026')).toBeTruthy()
+  })
+
+  it('uses specific empty states for temporal data and healthy stock', async () => {
+    vi.mocked(reportsApi.getStockReport).mockResolvedValue({
+      ...stockReport,
+      below_minimum: [],
+      movement_entries: 0,
+      movement_exits: 0,
+      movement_count_in_period: 0,
+      movement_series: stockReport.movement_series.map((point) => ({ ...point, entries: 0, exits: 0 })),
+    })
+
+    render(<StockReportPage />)
+
+    expect(await screen.findByText('Nenhuma movimentação no período selecionado')).toBeTruthy()
+    expect(screen.getByText('Estoque dentro do mínimo')).toBeTruthy()
+    expect(screen.queryByLabelText('Gráfico de barras com entradas e saídas de estoque ao longo do período')).toBeNull()
+  })
+
+  it.each([
+    { entries: 2, exits: 0 },
+    { entries: 0, exits: 2 },
+  ])('renders a sparse chart with directional data %#', async ({ entries, exits }) => {
+    vi.mocked(reportsApi.getStockReport).mockResolvedValue({
+      ...stockReport,
+      movement_entries: entries,
+      movement_exits: exits,
+      movement_count_in_period: entries + exits,
+      movement_series: [{ bucket: '2026-09-01', entries, exits }],
+    })
+
+    render(<StockReportPage />)
+
+    expect(await screen.findByLabelText('Gráfico de barras com entradas e saídas de estoque ao longo do período')).toBeTruthy()
+  })
+
+  it('preserves header and period during loading and errors', async () => {
+    let rejectReport: ((reason?: unknown) => void) | undefined
+    vi.mocked(reportsApi.getStockReport).mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectReport = reject }))
+
+    render(<StockReportPage />)
+
+    expect(screen.getByRole('heading', { name: 'Relatório de estoque' })).toBeTruthy()
+    expect(screen.getByLabelText('Período das movimentações')).toBeTruthy()
+    expect(screen.getByRole('status')).toBeTruthy()
+    rejectReport?.(new Error('API indisponível'))
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByLabelText('Período das movimentações')).toBeTruthy()
   })
 })
 

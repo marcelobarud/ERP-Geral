@@ -9,6 +9,7 @@ from app.api.dependencies import require_authenticated
 from app.db.session import get_db_session
 from app.models import (
     Cliente,
+    DepositoEstoque,
     DevolucaoVenda,
     LiquidacaoFinanceira,
     MovimentacaoEstoque,
@@ -218,6 +219,72 @@ def _overdue_open_summary(db: Session) -> dict[str, int | float]:
     return summary
 
 
+def _stock_movement_trend(
+    db: Session,
+    deposit_id: int,
+    date_from: date,
+    date_to: date,
+    granularity: DashboardAnalyticsGranularity,
+) -> list[dict[str, date | int]]:
+    buckets = _dashboard_buckets(date_from, date_to, granularity)
+    start_datetime = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+    end_datetime = datetime.combine(
+        date_to + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
+    reverse_source = aliased(MovimentacaoEstoque)
+    entry_event = case(
+        (MovimentacaoEstoque.tipo.in_(POSITIVE_TYPES), 1),
+        (
+            (MovimentacaoEstoque.tipo == "REVERSAO")
+            & reverse_source.tipo.in_(NEGATIVE_TYPES),
+            1,
+        ),
+        else_=0,
+    )
+    exit_event = case(
+        (MovimentacaoEstoque.tipo.in_(NEGATIVE_TYPES), 1),
+        (
+            (MovimentacaoEstoque.tipo == "REVERSAO")
+            & reverse_source.tipo.in_(POSITIVE_TYPES),
+            1,
+        ),
+        else_=0,
+    )
+    movement_bucket = func.date_trunc(
+        granularity, MovimentacaoEstoque.data_movimentacao
+    )
+    rows = db.execute(
+        select(
+            movement_bucket,
+            func.sum(entry_event),
+            func.sum(exit_event),
+        )
+        .outerjoin(
+            reverse_source,
+            reverse_source.id == MovimentacaoEstoque.movimento_origem_id,
+        )
+        .where(
+            MovimentacaoEstoque.deposito_id == deposit_id,
+            MovimentacaoEstoque.data_movimentacao >= start_datetime,
+            MovimentacaoEstoque.data_movimentacao < end_datetime,
+        )
+        .group_by(movement_bucket)
+        .order_by(movement_bucket)
+    ).all()
+    movements_by_bucket = {
+        _bucket_date(bucket): (int(entries or 0), int(exits or 0))
+        for bucket, entries, exits in rows
+    }
+    return [
+        {
+            "bucket": bucket,
+            "entries": movements_by_bucket.get(bucket, (0, 0))[0],
+            "exits": movements_by_bucket.get(bucket, (0, 0))[1],
+        }
+        for bucket in buckets
+    ]
+
+
 def _commercial_granularity(date_from: date, date_to: date) -> str:
     span_days = (date_to - date_from).days + 1
     if span_days <= 45:
@@ -380,6 +447,7 @@ def purchases_report(db: Session = Depends(get_db_session)):
 @router.get("/stock")
 def stock_report(
     deposit_id: int | None = Query(default=None, gt=0),
+    period: DashboardAnalyticsPeriod = Query(default="12m"),
     db: Session = Depends(get_db_session),
 ):
     if deposit_id is None:
@@ -388,10 +456,59 @@ def stock_report(
         except InventoryNotFound as exception:
             raise HTTPException(status_code=409, detail=str(exception)) from None
     balances = list_balances(db, deposit_id)
+    deposit = db.get(DepositoEstoque, deposit_id)
+    products = db.scalars(
+        select(Produto).where(Produto.id.in_([item["produto_id"] for item in balances]))
+    ).all()
+    products_by_id = {product.id: product for product in products}
+    enriched_balances = []
+    for balance in balances:
+        product = products_by_id[balance["produto_id"]]
+        saldo = balance["saldo"]
+        minimum = balance["estoque_minimo"]
+        deficit = max(minimum - saldo, Decimal("0.000"))
+        shortfall_percent = (
+            float(deficit * 100 / minimum)
+            if balance["abaixo_do_minimo"] and minimum > 0
+            else None
+        )
+        enriched_balances.append(
+            {
+                **balance,
+                "product_name": product.nome,
+                "sku": product.sku,
+                "unit": product.unidade_medida,
+                "deficit": deficit,
+                "shortfall_percent": shortfall_percent,
+            }
+        )
+    date_from, date_to, granularity = _dashboard_period(period)
+    movement_series = _stock_movement_trend(
+        db, deposit_id, date_from, date_to, granularity
+    )
+    movement_entries = sum(point["entries"] for point in movement_series)
+    movement_exits = sum(point["exits"] for point in movement_series)
     return {
-        "balances": balances,
-        "below_minimum": [item for item in balances if item["abaixo_do_minimo"]],
+        "balances": enriched_balances,
+        "below_minimum": [
+            item for item in enriched_balances if item["abaixo_do_minimo"]
+        ],
         "movement_count": db.scalar(select(func.count(MovimentacaoEstoque.id))) or 0,
+        "active_products": len(enriched_balances),
+        "products_with_balance": sum(item["saldo"] != 0 for item in balances),
+        "period": period,
+        "date_from": date_from,
+        "date_to": date_to,
+        "granularity": granularity,
+        "movement_entries": movement_entries,
+        "movement_exits": movement_exits,
+        "movement_count_in_period": movement_entries + movement_exits,
+        "movement_series": movement_series,
+        "deposit": {
+            "id": deposit.id,
+            "code": deposit.codigo,
+            "name": deposit.nome,
+        },
     }
 
 

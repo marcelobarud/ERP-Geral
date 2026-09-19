@@ -128,3 +128,11 @@ valores a receber e a pagar ainda em aberto por vencimento. O seletor de períod
 deve declarar quais blocos ele altera; métricas acumuladas permanecem rotuladas
 como posição histórica. Saldos vencidos quitados não alimentam estados de
 atenção, e a ausência de pendências deve ser comunicada como estado positivo.
+
+No Relatório de Estoque, posição atual e movimento temporal devem manter
+escopos explícitos. Quantidades de produtos com unidades de medida diferentes
+não são somadas como um total único; quando o relatório abrange todo o catálogo,
+a série temporal compara contagens de eventos que aumentaram ou reduziram o
+saldo. O ranking de atenção usa percentual abaixo do mínimo apenas quando o
+mínimo é maior que zero, enquanto a tabela preserva saldo, mínimo, déficit e
+unidade por produto. A ausência de itens críticos é um estado positivo.
