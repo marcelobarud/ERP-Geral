@@ -12,10 +12,14 @@ import { getApiErrorMessage } from '../../services/httpClient'
 import {
   chartAxisTickLabelStyle,
   chartSx,
+  dashboardPeriodOptions,
   formatBucketLabel,
   formatCompactMoney,
+  formatDateRange,
   formatMoney,
   getTickLabelInterval,
+  hasPositiveValue,
+  type DashboardAnalyticsPeriod,
 } from '../dashboard/analytics'
 import {
   getCommercialReport,
@@ -223,6 +227,13 @@ function granularityLabel(granularity: NonNullable<CommercialReport['granularity
   return { day: 'diária', week: 'semanal', month: 'mensal' }[granularity]
 }
 
+function financeTickLabelInterval(pointCount: number, granularity: FinanceReport['granularity']) {
+  if (granularity === 'day' && pointCount > 20) {
+    return (_value: unknown, index: number) => index % 10 === 0 || index === pointCount - 1
+  }
+  return getTickLabelInterval(pointCount, granularity)
+}
+
 function ChartEmptyState({ title, description }: { title: string; description: string }) {
   return <div className="report-chart-empty"><strong>{title}</strong><p>{description}</p></div>
 }
@@ -280,12 +291,132 @@ export function StockReportPage() {
 }
 
 export function FinanceReportPage() {
+  const [period, setPeriod] = useState<DashboardAnalyticsPeriod>('12m')
   const [data, setData] = useState<FinanceReport | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { try { setError(null); setData(await getFinanceReport()) } catch (cause) { setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório financeiro.')) } }, [])
+  const [loading, setLoading] = useState(true)
+  const load = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setData(await getFinanceReport(period))
+    } catch (cause) {
+      setError(getApiErrorMessage(cause, 'Não foi possível carregar o relatório financeiro.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [period])
   useEffect(() => { void load() }, [load])
   const rows = data ? [{ contas_a_receber: data.receivable_titles, contas_a_pagar: data.payable_titles, vencidos: data.overdue_installments, previsto_receber: data.previsto_receber, previsto_pagar: data.previsto_pagar }] : []
-  return <ReportLayout pageId="reports_finance" loaded={data !== null} eyebrow="Relatórios" title="Relatório financeiro" description="Títulos, vencimentos e fluxo previsto versus realizado." rows={rows} filename="relatorio-financeiro.csv" error={error} onRetry={() => void load()}><div className="report-metrics-grid">{data ? <><Metric label="Contas a receber" value={data.receivable_titles} /><Metric label="Contas a pagar" value={data.payable_titles} /><Metric label="Vencidos" value={data.overdue_installments} /><Metric label="Previsto a receber" value={money(data.previsto_receber)} /><Metric label="Previsto a pagar" value={money(data.previsto_pagar)} /><Metric label="Realizado a receber" value={money(data.realizado_receber)} /></> : null}</div></ReportLayout>
+  const selectedPeriodLabel = dashboardPeriodOptions.find((option) => option.value === period)?.label ?? period
+  const hasCurrentPeriod = data?.period === period
+  const scopeDescription = hasCurrentPeriod
+    ? `${selectedPeriodLabel}: ${formatDateRange(data.date_from, data.date_to)}`
+    : `${selectedPeriodLabel}: atualizando recorte`
+
+  return <div className="page-stack">
+    <PageHeader eyebrow="Relatórios" title="Relatório financeiro" description="Posição financeira, compromissos por vencimento e valores que pedem atenção." pageId="reports_finance" />
+    <div className="report-toolbar">
+      <label className="dashboard-period-field">
+        <span>Período dos vencimentos</span>
+        <select value={period} onChange={(event) => setPeriod(event.target.value as DashboardAnalyticsPeriod)}>
+          {dashboardPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <ExportButton rows={rows} filename="relatorio-financeiro.csv" />
+    </div>
+    <div className="report-active-scope" aria-label={`Escopo analítico: ${scopeDescription}`}>
+      <strong>Escopo analítico</strong>
+      <span>{scopeDescription}</span>
+      <span>Posição financeira: todo o histórico</span>
+    </div>
+    {error ? <ErrorState description={error} onRetry={() => void load()} /> : null}
+    {!data && loading ? <LoadingState label="Carregando relatório financeiro..." /> : null}
+    {!error && data ? <FinanceReportContent data={data} selectedPeriod={period} loading={loading} /> : null}
+  </div>
+}
+
+function FinanceReportContent({ data, selectedPeriod, loading }: { data: FinanceReport; selectedPeriod: DashboardAnalyticsPeriod; loading: boolean }) {
+  const hasCurrentPeriod = data.period === selectedPeriod
+  const commitments = hasCurrentPeriod ? data.commitments : []
+  const hasCommitments = hasPositiveValue(commitments.flatMap((point) => [point.receivable, point.payable]))
+  const receivableInPeriod = commitments.reduce((total, point) => total + point.receivable, 0)
+  const payableInPeriod = commitments.reduce((total, point) => total + point.payable, 0)
+  const overdueTotal = data.overdue_receivable + data.overdue_payable
+
+  return <>
+    <section className="report-metric-group" aria-labelledby="finance-metrics-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Posição financeira</p>
+          <h2 id="finance-metrics-title">Saldos e liquidações</h2>
+          <p>Os saldos em aberto descontam liquidações confirmadas; recebido e pago mostram o realizado acumulado.</p>
+        </div>
+        <p className="report-section-context">Todo o histórico</p>
+      </div>
+      <div className="report-metric-layout">
+        <article className="report-primary-metric">
+          <span className="dashboard-card-label">A receber em aberto</span>
+          <strong className="report-primary-metric-value">{money(Number(data.previsto_receber))}</strong>
+          <span className="dashboard-card-description">Saldo remanescente dos títulos a receber.</span>
+        </article>
+        <div className="report-supporting-metrics">
+          <Metric label="A pagar em aberto" value={money(Number(data.previsto_pagar))} detail="Saldo remanescente" />
+          <Metric label="Recebido" value={money(Number(data.realizado_receber))} detail="Liquidações confirmadas" />
+          <Metric label="Pago" value={money(Number(data.realizado_pagar))} detail="Liquidações confirmadas" />
+        </div>
+      </div>
+      <div className="report-finance-counts" aria-label="Quantidade de títulos financeiros">
+        <span><strong>{data.receivable_titles}</strong> títulos a receber</span>
+        <span><strong>{data.payable_titles}</strong> títulos a pagar</span>
+      </div>
+    </section>
+
+    <section className="report-visual-analysis" aria-labelledby="finance-analysis-title">
+      <div className="report-section-heading">
+        <div>
+          <p className="eyebrow">Leitura visual</p>
+          <h2 id="finance-analysis-title">Quando os compromissos vencem</h2>
+          <p>Compare entradas e saídas ainda em aberto pela data de vencimento das parcelas.</p>
+        </div>
+      </div>
+
+      <ReportChartPanel
+        id="finance-commitments"
+        variant="primary"
+        eyebrow="Análise principal"
+        title="Compromissos por vencimento"
+        description="Valores ainda em aberto no período selecionado, agrupados pela mesma unidade temporal."
+        summary={hasCommitments ? <div className="report-chart-summary"><div><span>A receber no período</span><strong>{money(receivableInPeriod)}</strong></div><div><span>A pagar no período</span><strong>{money(payableInPeriod)}</strong></div></div> : null}
+        meta={hasCurrentPeriod ? `Granularidade: ${granularityLabel(data.granularity)}` : undefined}
+      >
+        {!hasCurrentPeriod && loading ? <div className="report-chart-empty" role="status"><strong>Atualizando análise financeira</strong><p>Os indicadores de posição permanecem disponíveis enquanto o novo período é carregado.</p></div> : hasCommitments ? <div className="report-chart" aria-label="Gráfico de barras com valores a receber e a pagar em aberto por vencimento"><BarChart
+          xAxis={[{ scaleType: 'band', data: commitments.map((point) => point.bucket), tickLabelInterval: financeTickLabelInterval(commitments.length, data.granularity), tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: string) => formatBucketLabel(value, data.granularity) }]}
+          yAxis={[{ width: 72, tickLabelStyle: chartAxisTickLabelStyle, valueFormatter: (value: number) => formatCompactMoney(value) }]}
+          series={[
+            { data: commitments.map((point) => point.receivable), label: 'A receber em aberto', color: 'var(--color-primary)', valueFormatter: (value: number | null) => formatMoney(Number(value)) },
+            { data: commitments.map((point) => point.payable), label: 'A pagar em aberto', color: 'var(--color-accent)', valueFormatter: (value: number | null) => formatMoney(Number(value)) },
+          ]}
+          slotProps={{ tooltip: { trigger: 'axis' } }}
+          height={300}
+          margin={{ top: 36, right: 20, bottom: 34, left: 8 }}
+          grid={{ horizontal: true }}
+          sx={chartSx}
+        /></div> : <ChartEmptyState title="Nenhum compromisso em aberto neste período" description="Não há parcelas com saldo remanescente e vencimento dentro do recorte selecionado." />}
+      </ReportChartPanel>
+
+      <ReportChartPanel
+        id="finance-overdue-attention"
+        variant="supporting"
+        eyebrow="Atenção atual"
+        title="Parcelas vencidas ainda em aberto"
+        description="Apenas parcelas com vencimento anterior a hoje e saldo remanescente positivo."
+        meta="Todo o histórico"
+      >
+        {data.overdue_open_installments > 0 ? <div className="report-chart-summary report-finance-attention-summary"><div><span>Valor em atraso</span><strong>{money(overdueTotal)}</strong></div><div><span>Parcelas</span><strong>{data.overdue_open_installments}</strong></div><div><span>A receber</span><strong>{money(data.overdue_receivable)}</strong></div><div><span>A pagar</span><strong>{money(data.overdue_payable)}</strong></div></div> : <ChartEmptyState title="Nenhuma parcela vencida em aberto" description="Não há saldos remanescentes vencidos que exijam atenção neste momento." />}
+      </ReportChartPanel>
+    </section>
+  </>
 }
 
 function ReportLayout({ pageId, loaded, eyebrow, title, description, filters, setFilters, onSubmit, rows, filename, error, onRetry, emptyTitle = 'Nenhum dado encontrado', emptyDescription = 'Não há registros para os filtros ou período selecionado.', children }: { pageId: string; loaded: boolean; eyebrow: string; title: string; description: string; filters?: ReportFilters; setFilters?: (filters: ReportFilters) => void; onSubmit?: () => void; rows: Array<Record<string, string | number>>; filename: string; error: string | null; onRetry: () => void; emptyTitle?: string; emptyDescription?: string; children: ReactNode }) {

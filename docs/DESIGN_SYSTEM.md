@@ -121,3 +121,10 @@ responder o que ou quem mais contribuiu e tabelas compactas como evidência
 detalhada. A granularidade deve vir da agregação do backend, os rankings devem
 se adaptar ao tamanho real do dataset e estados sem dados devem explicar a
 ausência em vez de renderizar eixos vazios.
+
+No Relatório Financeiro, séries monetárias comparáveis podem compartilhar um
+`BarChart` agrupado quando usam a mesma base temporal e a mesma unidade, como
+valores a receber e a pagar ainda em aberto por vencimento. O seletor de período
+deve declarar quais blocos ele altera; métricas acumuladas permanecem rotuladas
+como posição histórica. Saldos vencidos quitados não alimentam estados de
+atenção, e a ausência de pendências deve ser comunicada como estado positivo.

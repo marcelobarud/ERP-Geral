@@ -1,4 +1,5 @@
 import { request } from '../../services/httpClient'
+import type { DashboardAnalyticsGranularity, DashboardAnalyticsPeriod } from '../dashboard/analytics'
 
 export type ErpDashboard = {
   customers: number
@@ -35,13 +36,21 @@ export type StockReport = {
 }
 
 export type FinanceReport = {
-  previsto_receber: number
-  previsto_pagar: number
-  realizado_receber: number
-  realizado_pagar: number
+  previsto_receber: string | number
+  previsto_pagar: string | number
+  realizado_receber: string | number
+  realizado_pagar: string | number
   receivable_titles: number
   payable_titles: number
   overdue_installments: number
+  overdue_open_installments: number
+  overdue_receivable: number
+  overdue_payable: number
+  period: DashboardAnalyticsPeriod
+  date_from: string
+  date_to: string
+  granularity: DashboardAnalyticsGranularity
+  commitments: Array<{ bucket: string; receivable: number; payable: number }>
 }
 
 function dateQuery(filters: { dateFrom?: string; dateTo?: string } = {}) {
@@ -68,6 +77,6 @@ export function getStockReport(): Promise<StockReport> {
   return request<StockReport>('/api/reports/stock')
 }
 
-export function getFinanceReport(): Promise<FinanceReport> {
-  return request<FinanceReport>('/api/reports/finance')
+export function getFinanceReport(period: DashboardAnalyticsPeriod = '12m'): Promise<FinanceReport> {
+  return request<FinanceReport>(`/api/reports/finance?period=${period}`)
 }

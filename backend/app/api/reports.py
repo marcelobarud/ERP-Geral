@@ -110,6 +110,114 @@ def _bucket_date(value: date | datetime) -> date:
     return value.date() if isinstance(value, datetime) else value
 
 
+def _confirmed_settlements_by_installment():
+    return (
+        select(
+            LiquidacaoFinanceira.parcela_id.label("parcela_id"),
+            func.sum(LiquidacaoFinanceira.valor).label("settled"),
+        )
+        .where(LiquidacaoFinanceira.status == "CONFIRMADA")
+        .group_by(LiquidacaoFinanceira.parcela_id)
+        .subquery()
+    )
+
+
+def _open_installment_value(settled_by_installment):
+    settled_value = func.coalesce(
+        settled_by_installment.c.settled, literal(Decimal("0.00"))
+    )
+    return case(
+        (
+            ParcelaFinanceira.valor > settled_value,
+            ParcelaFinanceira.valor - settled_value,
+        ),
+        else_=literal(Decimal("0.00")),
+    )
+
+
+def _finance_commitment_trend(
+    db: Session,
+    date_from: date,
+    date_to: date,
+    granularity: DashboardAnalyticsGranularity,
+) -> list[dict[str, date | float]]:
+    buckets = _dashboard_buckets(date_from, date_to, granularity)
+    settled_by_installment = _confirmed_settlements_by_installment()
+    open_value = _open_installment_value(settled_by_installment)
+    finance_bucket = func.date_trunc(granularity, ParcelaFinanceira.vencimento)
+    finance_rows = db.execute(
+        select(finance_bucket, TituloFinanceiro.tipo, func.sum(open_value))
+        .join(
+            TituloFinanceiro,
+            TituloFinanceiro.id == ParcelaFinanceira.titulo_id,
+        )
+        .outerjoin(
+            settled_by_installment,
+            settled_by_installment.c.parcela_id == ParcelaFinanceira.id,
+        )
+        .where(
+            ParcelaFinanceira.vencimento >= date_from,
+            ParcelaFinanceira.vencimento <= date_to,
+        )
+        .group_by(finance_bucket, TituloFinanceiro.tipo)
+        .order_by(finance_bucket)
+    ).all()
+    finance_by_bucket: dict[date, dict[str, Decimal]] = {}
+    for bucket, title_type, amount in finance_rows:
+        values = finance_by_bucket.setdefault(
+            _bucket_date(bucket), {"RECEBER": Decimal("0.00"), "PAGAR": Decimal("0.00")}
+        )
+        values[title_type] += amount or Decimal("0.00")
+
+    return [
+        {
+            "bucket": bucket,
+            "receivable": float(
+                finance_by_bucket.get(bucket, {}).get("RECEBER", Decimal("0.00"))
+            ),
+            "payable": float(
+                finance_by_bucket.get(bucket, {}).get("PAGAR", Decimal("0.00"))
+            ),
+        }
+        for bucket in buckets
+    ]
+
+
+def _overdue_open_summary(db: Session) -> dict[str, int | float]:
+    settled_by_installment = _confirmed_settlements_by_installment()
+    open_value = _open_installment_value(settled_by_installment)
+    rows = db.execute(
+        select(
+            TituloFinanceiro.tipo,
+            func.count(ParcelaFinanceira.id),
+            func.sum(open_value),
+        )
+        .join(
+            TituloFinanceiro,
+            TituloFinanceiro.id == ParcelaFinanceira.titulo_id,
+        )
+        .outerjoin(
+            settled_by_installment,
+            settled_by_installment.c.parcela_id == ParcelaFinanceira.id,
+        )
+        .where(
+            ParcelaFinanceira.vencimento < date.today(),
+            open_value > 0,
+        )
+        .group_by(TituloFinanceiro.tipo)
+    ).all()
+    summary = {
+        "overdue_open_installments": 0,
+        "overdue_receivable": 0.0,
+        "overdue_payable": 0.0,
+    }
+    for title_type, installment_count, amount in rows:
+        summary["overdue_open_installments"] += installment_count or 0
+        key = "overdue_receivable" if title_type == "RECEBER" else "overdue_payable"
+        summary[key] = float(amount or Decimal("0.00"))
+    return summary
+
+
 def _commercial_granularity(date_from: date, date_to: date) -> str:
     span_days = (date_to - date_from).days + 1
     if span_days <= 45:
@@ -288,10 +396,20 @@ def stock_report(
 
 
 @router.get("/finance")
-def finance_report(db: Session = Depends(get_db_session)):
+def finance_report(
+    period: DashboardAnalyticsPeriod = Query(default="12m"),
+    db: Session = Depends(get_db_session),
+):
     cashflow = cashflow_summary(db)
+    date_from, date_to, granularity = _dashboard_period(period)
     return {
         **cashflow.model_dump(mode="json"),
+        "period": period,
+        "date_from": date_from,
+        "date_to": date_to,
+        "granularity": granularity,
+        "commitments": _finance_commitment_trend(db, date_from, date_to, granularity),
+        **_overdue_open_summary(db),
         "receivable_titles": db.scalar(
             select(func.count(TituloFinanceiro.id)).where(
                 TituloFinanceiro.tipo == "RECEBER"
@@ -374,49 +492,7 @@ def dashboard_analytics(
         for row in sales_rows
     }
 
-    settled_by_installment = (
-        select(
-            LiquidacaoFinanceira.parcela_id.label("parcela_id"),
-            func.sum(LiquidacaoFinanceira.valor).label("settled"),
-        )
-        .where(LiquidacaoFinanceira.status == "CONFIRMADA")
-        .group_by(LiquidacaoFinanceira.parcela_id)
-        .subquery()
-    )
-    settled_value = func.coalesce(
-        settled_by_installment.c.settled, literal(Decimal("0.00"))
-    )
-    open_value = case(
-        (
-            ParcelaFinanceira.valor > settled_value,
-            ParcelaFinanceira.valor - settled_value,
-        ),
-        else_=literal(Decimal("0.00")),
-    )
-    finance_bucket = func.date_trunc(granularity, ParcelaFinanceira.vencimento)
-    finance_rows = db.execute(
-        select(finance_bucket, TituloFinanceiro.tipo, func.sum(open_value))
-        .join(
-            TituloFinanceiro,
-            TituloFinanceiro.id == ParcelaFinanceira.titulo_id,
-        )
-        .outerjoin(
-            settled_by_installment,
-            settled_by_installment.c.parcela_id == ParcelaFinanceira.id,
-        )
-        .where(
-            ParcelaFinanceira.vencimento >= date_from,
-            ParcelaFinanceira.vencimento <= date_to,
-        )
-        .group_by(finance_bucket, TituloFinanceiro.tipo)
-        .order_by(finance_bucket)
-    ).all()
-    finance_by_bucket: dict[date, dict[str, Decimal]] = {}
-    for bucket, title_type, amount in finance_rows:
-        values = finance_by_bucket.setdefault(
-            _bucket_date(bucket), {"RECEBER": Decimal("0.00"), "PAGAR": Decimal("0.00")}
-        )
-        values[title_type] += amount or Decimal("0.00")
+    finance_trend = _finance_commitment_trend(db, date_from, date_to, granularity)
 
     reverse_source = aliased(MovimentacaoEstoque)
     reverse_effect = case(
@@ -484,18 +560,7 @@ def dashboard_analytics(
             }
             for bucket in buckets
         ],
-        finance_trend=[
-            {
-                "bucket": bucket,
-                "receivable": float(
-                    finance_by_bucket.get(bucket, {}).get("RECEBER", Decimal("0.00"))
-                ),
-                "payable": float(
-                    finance_by_bucket.get(bucket, {}).get("PAGAR", Decimal("0.00"))
-                ),
-            }
-            for bucket in buckets
-        ],
+        finance_trend=finance_trend,
         stock_attention=[
             {
                 "product_id": row[0],

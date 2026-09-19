@@ -1395,6 +1395,26 @@
   min-height: 10.5rem;
 }
 
+.report-finance-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  margin-top: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+}
+
+.report-finance-counts strong {
+  color: var(--color-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-finance-attention-summary {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
 .report-detail-table {
   margin-top: 0;
 }
