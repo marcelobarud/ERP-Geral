@@ -69,3 +69,25 @@ def test_protected_operational_endpoint_rejects_missing_token(
         monkeypatch.delenv("AUTH_SECRET", raising=False)
         monkeypatch.delenv("DATABASE_URL", raising=False)
         get_settings.cache_clear()
+
+
+def test_dashboard_analytics_rejects_missing_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AUTH_REQUIRED", "true")
+    monkeypatch.setenv("AUTH_SECRET", "a" * 40)
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql+psycopg://user:password@localhost:5432/erp_geral",
+    )
+    get_settings.cache_clear()
+
+    try:
+        response = TestClient(app).get("/api/reports/dashboard/analytics")
+        assert response.status_code == 401
+        assert response.json() == {"detail": "Autenticação necessária."}
+    finally:
+        monkeypatch.delenv("AUTH_REQUIRED", raising=False)
+        monkeypatch.delenv("AUTH_SECRET", raising=False)
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        get_settings.cache_clear()

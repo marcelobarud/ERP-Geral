@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 
 import { EmptyState } from '../../components/EmptyState'
+import { ErrorState } from '../../components/ErrorState'
 import { FeedbackBanner } from '../../components/FeedbackBanner'
+import { LoadingState } from '../../components/LoadingState'
 import { Modal } from '../../components/Modal'
 import { PageHeader } from '../../components/PageHeader'
 import { getApiErrorMessage } from '../../services/httpClient'
@@ -26,13 +28,71 @@ export function FinancialTitlesPage({ kind }: { kind: 'RECEBER' | 'PAGAR' }) {
   const load = () => { Promise.all([api.listTitles(kind, status || undefined), api.listAccounts()]).then(([titleList, accountList]) => { setTitles(titleList); setAccounts(accountList) }).catch((loadError) => setError(getApiErrorMessage(loadError, 'Não foi possível carregar o financeiro.'))) }
   useEffect(load, [kind, status])
   const refresh = () => { setSettling(null); setSelected(null); load(); setFeedback('Operação financeira concluída.') }
-  return <div className="crud-page"><PageHeader eyebrow="Financeiro" title={kind === 'RECEBER' ? 'Contas a receber' : 'Contas a pagar'} description="Acompanhe títulos, parcelas, vencimentos e liquidações." pageId="settings" />{feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}{error ? <FeedbackBanner kind="error" message={error} onDismiss={() => setError(null)} /> : null}<section className="filter-toolbar"><label className="form-field"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos</option>{['ABERTO', 'PARCIAL', 'PAGO', 'VENCIDO'].map((value) => <option value={value} key={value}>{statusLabel(value)}</option>)}</select></label></section><div className="data-card data-table-wrap"><table className="data-table"><thead><tr><th>Título</th><th>Origem</th><th>Valor</th><th>Saldo</th><th>Status</th><th>Ações</th></tr></thead><tbody>{titles.map((title) => <tr key={title.id}><td className="data-primary">{title.numero}<span className="data-secondary">{title.descricao ?? ''}</span></td><td>{title.origem_tipo ? `${title.origem_tipo} #${title.origem_id}` : 'Manual'}</td><td>{money(title.valor_original)}</td><td>{money(title.saldo)}</td><td>{statusLabel(title.status)}</td><td><button className="table-action" type="button" onClick={() => setSelected(title)}>Ver parcelas</button></td></tr>)}</tbody></table>{titles.length === 0 ? <EmptyState title="Nenhum título encontrado" description="Títulos serão criados pelas operações do ERP." /> : null}</div>{selected ? <Modal title={`Parcelas de ${selected.numero}`} size="large" onClose={() => setSelected(null)}><div className="data-card data-table-wrap"><table className="data-table"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Liquidado</th><th>Status</th><th>Ações</th></tr></thead><tbody>{selected.parcelas.map((installment) => <tr key={installment.id}><td>{installment.numero}</td><td>{installment.vencimento}</td><td>{money(installment.valor)}</td><td>{money(installment.valor_liquidado)}</td><td>{statusLabel(installment.status)}</td><td>{installment.status !== 'PAGO' && installment.status !== 'CANCELADO' ? <button className="table-action" type="button" onClick={() => setSettling(installment)}>Liquidar</button> : null}</td></tr>)}</tbody></table></div></Modal> : null}{settling ? <Modal title="Registrar liquidação" onClose={() => setSettling(null)}><SettlementForm installment={settling} accounts={accounts} onSaved={refresh} onCancel={() => setSettling(null)} /></Modal> : null}</div>
+  return <div className="crud-page"><PageHeader eyebrow="Financeiro" title={kind === 'RECEBER' ? 'Contas a receber' : 'Contas a pagar'} description="Acompanhe títulos, parcelas, vencimentos e liquidações." pageId="settings" />{feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}{error ? <FeedbackBanner kind="error" message={error} onDismiss={() => setError(null)} /> : null}<section className="filter-toolbar"><label className="form-field"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos</option>{['ABERTO', 'PARCIAL', 'PAGO', 'VENCIDO'].map((value) => <option value={value} key={value}>{statusLabel(value)}</option>)}</select></label></section><div className="data-card data-table-wrap mobile-row-cards finance-titles-table"><table className="data-table"><thead><tr><th>Título</th><th>Origem</th><th>Valor</th><th>Saldo</th><th>Status</th><th>Ações</th></tr></thead><tbody>{titles.map((title) => <tr key={title.id}><td className="data-primary" data-label="Título">{title.numero}<span className="data-secondary">{title.descricao ?? ''}</span><span className="data-secondary">{title.origem_tipo ? `${title.origem_tipo} #${title.origem_id}` : 'Manual'}</span></td><td data-label="Origem">{title.origem_tipo ? `${title.origem_tipo} #${title.origem_id}` : 'Manual'}</td><td data-label="Valor">{money(title.valor_original)}</td><td data-label="Saldo">{money(title.saldo)}</td><td data-label="Status">{statusLabel(title.status)}</td><td data-label="Ações"><button className="table-action" type="button" onClick={() => setSelected(title)}>Ver parcelas</button></td></tr>)}</tbody></table>{titles.length === 0 ? <EmptyState title="Nenhum título encontrado" description="Títulos serão criados pelas operações do ERP." /> : null}</div>{selected ? <Modal title={`Parcelas de ${selected.numero}`} size="large" onClose={() => setSelected(null)}><div className="data-card data-table-wrap"><table className="data-table"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Liquidado</th><th>Status</th><th>Ações</th></tr></thead><tbody>{selected.parcelas.map((installment) => <tr key={installment.id}><td>{installment.numero}</td><td>{installment.vencimento}</td><td>{money(installment.valor)}</td><td>{money(installment.valor_liquidado)}</td><td>{statusLabel(installment.status)}</td><td>{installment.status !== 'PAGO' && installment.status !== 'CANCELADO' ? <button className="table-action" type="button" onClick={() => setSettling(installment)}>Liquidar</button> : null}</td></tr>)}</tbody></table></div></Modal> : null}{settling ? <Modal title="Registrar liquidação" onClose={() => setSettling(null)}><SettlementForm installment={settling} accounts={accounts} onSaved={refresh} onCancel={() => setSettling(null)} /></Modal> : null}</div>
 }
 
 export function CashflowPage() {
-  const [cashflow, setCashflow] = useState<Cashflow | null>(null); const [accounts, setAccounts] = useState<FinancialAccount[]>([]); const [creating, setCreating] = useState(false); const [name, setName] = useState(''); const [initial, setInitial] = useState('0'); const [error, setError] = useState<string | null>(null); const [feedback, setFeedback] = useState<string | null>(null)
-  const load = () => { Promise.all([api.getCashflow(), api.listAccounts()]).then(([summary, accountList]) => { setCashflow(summary); setAccounts(accountList) }).catch((loadError) => setError(getApiErrorMessage(loadError, 'Não foi possível carregar o fluxo de caixa.'))) }
+  const [cashflow, setCashflow] = useState<Cashflow | null>(null)
+  const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+  const [creating, setCreating] = useState(false)
+  const [name, setName] = useState('')
+  const [initial, setInitial] = useState('0')
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const load = () => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setLoading(true)
+    setLoadError(null)
+    Promise.all([api.getCashflow(), api.listAccounts()])
+      .then(([summary, accountList]) => { setCashflow(summary); setAccounts(accountList) })
+      .catch((loadCause) => setLoadError(getApiErrorMessage(loadCause, 'Não foi possível carregar o fluxo de caixa.')))
+      .finally(() => setLoading(false))
+  }
   useEffect(load, [])
   const create = async (event: FormEvent) => { event.preventDefault(); try { await api.createAccount({ nome: name, saldo_inicial: initial }); setCreating(false); setName(''); setInitial('0'); setFeedback('Conta criada com sucesso.'); load() } catch (createError) { setError(getApiErrorMessage(createError, 'Não foi possível criar a conta.')) } }
-  return <div className="crud-page"><div className="crud-page-header"><PageHeader eyebrow="Financeiro" title="Caixa e fluxo de caixa" description="Separe o previsto do realizado e mantenha as contas financeiras organizadas." pageId="settings" /><button className="button button-primary" type="button" onClick={() => setCreating(true)}>+ Nova conta</button></div>{feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}{error ? <FeedbackBanner kind="error" message={error} onDismiss={() => setError(null)} /> : null}{cashflow ? <div className="data-card"><div className="form-grid"><div><strong>Previsto a receber</strong><p>{money(cashflow.previsto_receber)}</p></div><div><strong>Previsto a pagar</strong><p>{money(cashflow.previsto_pagar)}</p></div><div><strong>Realizado a receber</strong><p>{money(cashflow.realizado_receber)}</p></div><div><strong>Realizado a pagar</strong><p>{money(cashflow.realizado_pagar)}</p></div></div></div> : null}<div className="data-card data-table-wrap"><h2>Contas</h2><table className="data-table"><thead><tr><th>Conta</th><th>Saldo inicial</th><th>Status</th></tr></thead><tbody>{accounts.map((account) => <tr key={account.id}><td>{account.nome}</td><td>{money(account.saldo_inicial)}</td><td>{account.ativo ? 'Ativa' : 'Inativa'}</td></tr>)}</tbody></table>{accounts.length === 0 ? <EmptyState title="Nenhuma conta cadastrada" description="Crie uma conta para liquidar títulos." /> : null}</div>{creating ? <Modal title="Nova conta financeira" onClose={() => setCreating(false)}><form onSubmit={create}><label className="form-field"><span>Nome</span><input required value={name} onChange={(event) => setName(event.target.value)} /></label><label className="form-field"><span>Saldo inicial</span><input required min="0" step="0.01" type="number" value={initial} onChange={(event) => setInitial(event.target.value)} /></label><div className="form-actions"><button className="button button-secondary" type="button" onClick={() => setCreating(false)}>Cancelar</button><button className="button button-primary" type="submit">Salvar conta</button></div></form></Modal> : null}</div>
+  return (
+    <div className="crud-page finance-page">
+      <div className="crud-page-header">
+        <PageHeader eyebrow="Financeiro" title="Caixa e fluxo de caixa" description="Separe o previsto do realizado e mantenha as contas financeiras organizadas." pageId="settings" />
+        <button className="button button-primary" type="button" onClick={() => setCreating(true)}>+ Nova conta</button>
+      </div>
+      {feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}
+      {error ? <FeedbackBanner kind="error" message={error} onDismiss={() => setError(null)} /> : null}
+      {loading ? <LoadingState label="Carregando fluxo de caixa..." /> : loadError ? <ErrorState description={loadError} onRetry={() => load()} /> : (
+        <>
+          {cashflow ? (
+            <section className="finance-section finance-summary" aria-labelledby="cashflow-summary-title">
+              <div className="finance-section-heading">
+                <p className="eyebrow">Resumo financeiro</p>
+                <h2 id="cashflow-summary-title">Fluxo previsto e realizado</h2>
+                <p className="finance-section-description">Compare os valores previstos com o que já foi realizado nas contas financeiras.</p>
+              </div>
+              <div className="data-card finance-summary-surface">
+                <div className="finance-metric-group">
+                  <div className="finance-metric"><span className="finance-metric-label">Previsto a receber</span><strong className="finance-metric-value">{money(cashflow.previsto_receber)}</strong><span className="finance-metric-context">Valores em aberto</span></div>
+                  <div className="finance-metric"><span className="finance-metric-label">Previsto a pagar</span><strong className="finance-metric-value">{money(cashflow.previsto_pagar)}</strong><span className="finance-metric-context">Valores em aberto</span></div>
+                  <div className="finance-metric"><span className="finance-metric-label">Realizado a receber</span><strong className="finance-metric-value">{money(cashflow.realizado_receber)}</strong><span className="finance-metric-context">Liquidações registradas</span></div>
+                  <div className="finance-metric"><span className="finance-metric-label">Realizado a pagar</span><strong className="finance-metric-value">{money(cashflow.realizado_pagar)}</strong><span className="finance-metric-context">Liquidações registradas</span></div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+          <section className="finance-section finance-accounts" aria-labelledby="finance-accounts-title">
+            <div className="finance-section-heading">
+              <p className="eyebrow">Contas financeiras</p>
+              <h2 id="finance-accounts-title">Contas</h2>
+              <p className="finance-section-description">Contas disponíveis para organizar saldos e liquidar títulos.</p>
+            </div>
+            <div className="data-card data-table-wrap">
+              <table className="data-table"><thead><tr><th>Conta</th><th>Saldo inicial</th><th>Status</th></tr></thead><tbody>{accounts.map((account) => <tr key={account.id}><td>{account.nome}</td><td>{money(account.saldo_inicial)}</td><td>{account.ativo ? 'Ativa' : 'Inativa'}</td></tr>)}</tbody></table>
+              {accounts.length === 0 ? <EmptyState title="Nenhuma conta cadastrada" description="Crie uma conta para liquidar títulos." /> : null}
+            </div>
+          </section>
+        </>
+      )}
+      {creating ? <Modal title="Nova conta financeira" onClose={() => setCreating(false)}><form onSubmit={create}><label className="form-field"><span>Nome</span><input required value={name} onChange={(event) => setName(event.target.value)} /></label><label className="form-field"><span>Saldo inicial</span><input required min="0" step="0.01" type="number" value={initial} onChange={(event) => setInitial(event.target.value)} /></label><div className="form-actions"><button className="button button-secondary" type="button" onClick={() => setCreating(false)}>Cancelar</button><button className="button button-primary" type="submit">Salvar conta</button></div></form></Modal> : null}
+    </div>
+  )
 }

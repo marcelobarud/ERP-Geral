@@ -109,6 +109,7 @@ def test_openapi_lists_sales_routes_and_sale_request_contract() -> None:
         )
 
     assert "/api/dashboard/summary" in paths
+    assert "/api/reports/dashboard/analytics" in paths
     assert "/api/auth/login" in paths
     assert "/api/auth/logout" in paths
     assert "/api/auth/me" in paths

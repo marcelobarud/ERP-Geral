@@ -1,6 +1,7 @@
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+  font-family: var(--font-family-sans);
   color: var(--color-text-primary, #1e293b);
   background: var(--color-background, #eef4f8);
   font-synthesis: none;
@@ -12,7 +13,7 @@
   --color-accent: #2f8065;
   --color-background: #eef4f8;
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fbfd;
+  --color-surface-soft: #f8fafb;
   --color-text-primary: #1e293b;
   --color-text-secondary: #4b6575;
   --color-text-muted: #718096;
@@ -28,25 +29,102 @@
   --color-danger: #b95353;
   --color-success: #2f8065;
   --color-warning: #9a7441;
+  --color-warning-text: #9a6b1f;
   --color-blue-soft: #e5f0f5;
   --color-success-soft: #e5f5ee;
   --color-danger-soft: #fceceb;
+
+  /* Semantic visual roles. Existing appearance variables remain the source
+     of truth so page themes and element overrides keep their precedence. */
+  --color-canvas: color-mix(in srgb, var(--color-background) 85%, var(--color-surface) 15%);
+  --color-surface-muted: var(--color-surface-soft);
+  --color-surface-elevated: var(--color-surface);
+  --color-border-subtle: var(--color-table-border);
+  --color-border-default: color-mix(in srgb, var(--color-table-border) 85%, var(--color-text-muted) 15%);
+  --color-border-strong: color-mix(in srgb, var(--color-table-border) 70%, var(--color-text-muted) 30%);
+  --color-accent-hover: var(--color-accent);
+  --color-accent-foreground: var(--color-on-accent);
+  --color-error: var(--color-danger);
+  --color-info: var(--color-primary);
+  --color-focus: var(--color-primary);
+  --color-success-surface: var(--color-success-soft);
+  --color-warning-surface: #fff7e6;
+  --color-error-surface: var(--color-danger-soft);
+  --border-width-default: 1px;
+
+  /* Interactive controls stay quiet by default and become clearer through
+     border, focus and state changes rather than decorative elevation. */
+  --color-control-background: var(--color-surface);
+  --color-control-hover: var(--color-surface-muted);
+  --color-control-active: color-mix(in srgb, var(--color-surface-muted) 76%, var(--color-text-primary) 24%);
+  --color-control-placeholder: var(--color-text-muted);
+  --color-control-disabled-background: color-mix(in srgb, var(--color-surface-muted) 76%, var(--color-surface) 24%);
+  --color-control-disabled-text: var(--color-text-muted);
+  --color-button-primary-hover: var(--appearance-secondary);
+  --color-button-secondary-text: var(--color-link);
+  --color-button-danger-surface: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface) 90%);
+  --color-button-danger-hover: color-mix(in srgb, var(--color-danger) 17%, var(--color-surface) 83%);
+  --color-table-row-hover: var(--color-surface-muted);
+
+  /* Typography roles preserve the current rendered scale. */
+  --text-page-title-size: clamp(1.75rem, 3vw, 2.75rem);
+  --text-page-title-line-height: 1.15;
+  --text-page-title-weight: 700;
+  --text-page-title-tracking: -0.035em;
+  --text-section-title-size: 1.05rem;
+  --text-section-title-line-height: 1.35;
+  --text-section-title-weight: 700;
+  --text-card-title-size: 1.1rem;
+  --text-card-title-weight: 700;
+  --text-body-size: 1rem;
+  --text-body-line-height: 1.7;
+  --text-body-small-size: 0.84rem;
+  --text-body-small-line-height: 1.5;
+  --text-label-size: 0.78rem;
+  --text-label-weight: 750;
+  --text-button-size: 0.82rem;
+  --text-button-weight: 750;
+  --text-caption-size: 0.72rem;
+  --text-metadata-size: 0.72rem;
+  --text-numeric-size: 1rem;
+  --text-numeric-weight: 700;
+  --text-eyebrow-size: 0.68rem;
+  --text-eyebrow-weight: 750;
+  --text-eyebrow-tracking: 0.12em;
+
+  /* Small, reusable spacing scale; contextual values remain local. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
   --ink: var(--color-text-primary);
   --muted: var(--color-text-secondary);
   --soft-muted: var(--color-text-muted);
-  --line: var(--color-table-border);
+  --line: var(--color-border-default);
   --surface: var(--color-surface);
-  --surface-soft: var(--color-surface-soft);
+  --surface-soft: var(--color-surface-muted);
   --blue: var(--color-primary);
   --blue-deep: var(--color-link);
   --blue-soft: var(--color-blue-soft);
   --green: var(--color-success);
-  --green-soft: var(--color-success-soft);
-  --red: var(--color-danger);
-  --red-soft: var(--color-danger-soft);
+  --green-soft: var(--color-success-surface);
+  --red: var(--color-error);
+  --red-soft: var(--color-error-surface);
   --radius-lg: 1.5rem;
   --radius-md: 1rem;
   --shadow-soft: 0 1rem 3rem rgba(52, 86, 111, 0.08);
+  --radius-control: var(--appearance-control-radius);
+  --radius-surface: var(--appearance-card-radius);
+  --radius-overlay: 1.125rem;
+  --radius-popover: 0.75rem;
+  --radius-pill: 999px;
+  --elevation-0: none;
+  --elevation-1: 0 0.5rem 1.25rem rgba(52, 86, 111, 0.06);
+  --elevation-2: 0 1.5rem 5rem rgba(28, 53, 70, 0.16);
   --appearance-primary: #487a98;
   --appearance-secondary: #2f5975;
   --appearance-accent: #2f8065;
@@ -58,7 +136,22 @@
   --space-page: clamp(1.15rem, 3vw, 3.5rem);
   --space-section: clamp(1.5rem, 3vw, 2.75rem);
   --control-height: 2.7rem;
-  --focus-ring: 0 0 0 0.2rem rgba(72, 122, 152, 0.2);
+  --focus-ring-color: rgba(72, 122, 152, 0.2);
+  --focus-ring-width: 0.2rem;
+  --focus-ring-offset: 0rem;
+  --focus-ring: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+  --motion-fast: 160ms;
+  --motion-normal: 180ms;
+  --motion-slow: 240ms;
+  --z-shell: 20;
+  --z-backdrop: 10;
+  --z-popover: 20;
+  --z-drawer: 20;
+  --z-modal: 40;
+  --z-editor-overlay: 99;
+  --z-editor-bar: 100;
+  --z-editor-panel: 101;
+  --z-feedback: 102;
 }
 
 * {

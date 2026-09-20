@@ -73,8 +73,10 @@ describe('EmployeesPage filter infrastructure pilot', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
     await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(true, 'Carlos', expect.objectContaining({ page: 1, pageSize: 20 })))
 
-    fireEvent.click(screen.getByRole('button', { name: /Filtros \(1\)/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
+    expect(screen.getByText('Filtros ativos')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Busca: Carlos/ })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Filtros \(2\)/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Limpar filtros' })[0])
     await waitFor(() => expect(employeesApi.listEmployees).toHaveBeenCalledWith(false, '', expect.objectContaining({ page: 1, pageSize: 20 })))
     expect((screen.getByRole('searchbox', { name: 'Pesquisar funcionários' }) as HTMLInputElement).value).toBe('')
     fireEvent.click(screen.getByRole('button', { name: 'Filtros' }))

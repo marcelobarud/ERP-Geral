@@ -51,6 +51,13 @@ temp/
 .DS_Store
 Thumbs.db
 
+# Obsidian: keep shared core-plugin choices, ignore machine-local workspace state
+.obsidian/*
+!.obsidian/core-plugins.json
+
+# Seed local e temporário para dados demonstrativos
+backend/scripts/seed_demo_ecosystem.py
+
 # Database exports and local databases
 *.sqlite
 *.sqlite3

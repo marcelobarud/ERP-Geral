@@ -17,25 +17,29 @@ import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../f
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
-import { CommercialReportPage, ErpDashboardPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
+import { CommercialReportPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
 import { ModulesPage } from '../features/settings/ModulesPage'
+import { SettingsHubPage } from '../features/settings/SettingsHubPage'
 import { UsersPage } from '../features/settings/UsersPage'
 import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { ModuleDisabledPage, NotFoundPage } from '../pages/NotFoundPage'
-import { getModuleForPath, getRoute, type RouteDefinition } from './routes'
+import { navigationIcons } from './iconography'
+import { getCanonicalPathname, getModuleForPath, getRoute, type RouteDefinition } from './routes'
 
 function currentPathname(): string {
-  return window.location.pathname || '/'
+  return getCanonicalPathname(window.location.pathname || '/')
 }
 
 function PageForRoute({
   route,
   onNavigate,
+  canManageUsers,
 }: {
   route: RouteDefinition
   onNavigate: (path: string) => void
+  canManageUsers: boolean
 }) {
   switch (route.path) {
     case '/':
@@ -80,8 +84,6 @@ function PageForRoute({
       return <FinancialTitlesPage kind="PAGAR" />
     case '/finance/cashflow':
       return <CashflowPage />
-    case '/reports/dashboard':
-      return <ErpDashboardPage />
     case '/reports/commercial':
       return <CommercialReportPage />
     case '/reports/purchases':
@@ -90,6 +92,8 @@ function PageForRoute({
       return <StockReportPage />
     case '/reports/finance':
       return <FinanceReportPage />
+    case '/settings':
+      return <SettingsHubPage canManageUsers={canManageUsers} />
     case '/settings/appearance':
       return <AppearancePage />
     case '/settings/custom-fields':
@@ -116,10 +120,19 @@ function AppContent() {
   const loadModules = useCallback(async () => { try { setModules(await listModules()) } catch { /* A API continua protegendo os endpoints. */ } }, [])
 
   useEffect(() => {
-    const handlePopState = () => setPathname(currentPathname())
-    window.addEventListener('popstate', handlePopState)
+    const syncPathname = () => {
+      const actualPathname = window.location.pathname || '/'
+      const canonicalPathname = getCanonicalPathname(actualPathname)
+      if (actualPathname !== canonicalPathname) {
+        window.history.replaceState({}, '', canonicalPathname)
+      }
+      setPathname(canonicalPathname)
+    }
 
-    return () => window.removeEventListener('popstate', handlePopState)
+    syncPathname()
+    window.addEventListener('popstate', syncPathname)
+
+    return () => window.removeEventListener('popstate', syncPathname)
   }, [])
 
   useEffect(() => {
@@ -131,26 +144,28 @@ function AppContent() {
 
   const navigate = useCallback(
     (path: string) => {
-      if (path === pathname) return
+      const canonicalPath = getCanonicalPathname(path)
+      if (canonicalPath === pathname) return
 
-      window.history.pushState({}, '', path)
-      setPathname(path)
+      window.history.pushState({}, '', canonicalPath)
+      setPathname(canonicalPath)
     },
     [pathname],
   )
 
   const moduleCode = getModuleForPath(pathname)
   const moduleDisabled = modules.length > 0 && moduleCode !== null && !activeModules.has(moduleCode)
-  const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: '!', description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
+  const route = moduleDisabled ? { path: '/module-disabled', label: 'Módulo desativado', icon: navigationIcons.alert, description: 'Esta área está desativada nas configurações do ERP.' } : getRoute(pathname, appearanceLabels(preview))
   const pageId = pageIdForPath(pathname)
+  const canManageUsers = !authRequired || user?.role === 'ADMIN'
 
   useEffect(() => {
     void loadPageAppearance(pageId)
   }, [loadPageAppearance, pageId])
 
   return (
-      <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={!authRequired || user?.role === 'ADMIN'} pageTheme={pageAppearances[pageId]?.resolved}>
-      <PageForRoute route={route} onNavigate={navigate} />
+      <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={canManageUsers} pageTheme={pageAppearances[pageId]?.resolved}>
+      <PageForRoute route={route} onNavigate={navigate} canManageUsers={canManageUsers} />
     </AppLayout>
   )
 }

@@ -159,21 +159,19 @@ function SaleItemRow({
           placeholder="1.000"
           type="text"
           value={item.quantidade}
+          aria-describedby="sale-items-help"
           onChange={(event) => onChange({ quantidade: event.target.value })}
         />
-        <span className="form-help">Aceita até três casas decimais.</span>
       </div>
       <div className="sale-item-value">
         <span className="sale-item-label">Preço unitário</span>
         <strong>{selectedProduct ? formatMoney(selectedProduct.preco_venda) : '—'}</strong>
-        <span className="sale-item-note">Definido pelo catálogo</span>
       </div>
       <div className="sale-item-value">
         <span className="sale-item-label">Subtotal visual</span>
         <strong>{selectedProduct ? formatMoney(subtotal) : '—'}</strong>
-        <span className="sale-item-note">Confirmado pelo backend</span>
       </div>
-      <button className="table-action table-action-danger sale-remove" type="button" onClick={onRemove}>
+      <button className="table-action table-action-danger sale-remove" type="button" aria-label={selectedProduct ? `Remover ${selectedProduct.nome}` : `Remover item ${item.key}`} onClick={onRemove}>
         Remover
       </button>
     </div>
@@ -330,13 +328,12 @@ export function NewSalePage() {
   }
 
   return (
-    <div className="sales-page">
+    <div className="sales-page new-sale-page">
       <div className="sales-page-header">
         <PageHeader eyebrow="Vendas" title="Nova venda" description="Monte uma venda com segurança e acompanhe os valores antes de confirmar." pageId="new_sale" />
         <a className="button button-secondary" href="/sales">Ver vendas</a>
       </div>
       {feedback ? <FeedbackBanner kind="success" message={feedback} onDismiss={() => setFeedback(null)} /> : null}
-      {submitError ? <FeedbackBanner kind="error" message={submitError} onDismiss={() => setSubmitError(null)} /> : null}
       {loadError ? <ErrorState description={loadError} onRetry={() => void loadSaleDependencies()} /> : null}
       {createdSale ? (
         <div className="sale-created-card">
@@ -347,7 +344,7 @@ export function NewSalePage() {
           <a className="button button-primary" href="/sales">Abrir lista de vendas</a>
         </div>
       ) : null}
-      {loading ? <LoadingState label="Carregando clientes, funcionários e produtos..." /> : (
+      {loading ? <div className="new-sale-loading"><LoadingState label="Carregando clientes, funcionários e produtos..." /><div className="sale-layout sale-loading-layout" aria-hidden="true"><div className="sale-loading-main"><span /><span /><span /></div><div className="sale-loading-summary"><span /><span /><span /></div></div></div> : (
         <form className="sale-layout" onSubmit={submitSale}>
           <section className="sale-card" {...contextCustomization}>
             <div className="sale-section-heading">
@@ -384,26 +381,28 @@ export function NewSalePage() {
 
           <section className="sale-card sale-items-card" {...itemsCustomization}>
             <div className="sale-section-heading">
-              <div><p className="eyebrow">Composição</p><h2>Itens da venda</h2><p className="sale-section-description">O preço unitário é somente informativo e será confirmado pelo backend.</p></div>
+              <div><p className="eyebrow">Composição</p><h2>Itens da venda</h2><p className="sale-section-description" id="sale-items-help">O preço unitário e o subtotal são informativos e serão confirmados pelo backend. A quantidade aceita até três casas decimais.</p></div>
               <span className="sale-step">2</span>
             </div>
             {products.length === 0 ? <div className="sale-prerequisite"><strong>Nenhum produto disponível</strong><span>Cadastre um produto antes de criar uma venda.</span></div> : null}
-            {items.length === 0 ? <div className="sale-items-empty"><strong>Adicione o primeiro produto</strong><span>Você poderá incluir vários produtos, alterar quantidades e remover itens antes de salvar.</span></div> : (
+            {items.length === 0 ? <div className="sale-items-empty"><strong>Adicione o primeiro produto</strong><span>Você poderá incluir vários produtos, alterar quantidades e remover itens antes de salvar.</span><button className="button button-secondary" type="button" onClick={addItem} disabled={products.length === 0 || selectedProductIds.length >= products.length}>+ Adicionar produto</button></div> : (
               <div className="sale-item-list">
                 {items.map((item) => <SaleItemRow key={item.key} item={item} products={products} selectedProductIds={selectedProductIds.filter((id) => id !== item.produtoId)} onChange={(patch) => updateItem(item.key, patch)} onRemove={() => removeItem(item.key)} />)}
               </div>
             )}
-            <div className="sale-items-actions">
+            {items.length > 0 ? <div className="sale-items-actions">
               <button className="button button-secondary" type="button" onClick={addItem} disabled={products.length === 0 || selectedProductIds.length >= products.length}>+ Adicionar produto</button>
               {selectedProductIds.length >= products.length && products.length > 0 ? <span className="form-help">Todos os produtos disponíveis já foram adicionados.</span> : null}
-            </div>
+            </div> : null}
           </section>
 
-          <aside className="sale-summary-card">
+          <aside className="sale-summary-card" aria-label="Resumo da venda">
             <p className="eyebrow">Resumo</p>
             <h2>Total da venda</h2>
+            <div className="sale-summary-count"><span>Itens adicionados</span><strong>{items.length}</strong></div>
             <strong className="sale-total">{formatMoney(visualTotal)}</strong>
             <p>Estimativa visual com o preço atual do catálogo. O total definitivo será retornado pelo backend.</p>
+            {submitError ? <FeedbackBanner kind="error" message={submitError} onDismiss={() => setSubmitError(null)} /> : null}
             <button className="button button-primary sale-submit" type="submit" {...submitCustomization} disabled={saving || !prerequisitesReady || items.length === 0}>
               {saving ? 'Salvando venda...' : 'Salvar venda'}
             </button>

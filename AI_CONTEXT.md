@@ -1352,3 +1352,29 @@ principal `erp_geral` não recebeu operação destrutiva.
 A classificação operacional foi promovida para **SIM**: **ERP Geral pronto
 para primeira implantação controlada**. Nenhuma credencial temporária foi
 persistida.
+
+## Regra de crescimento de Configurações
+
+Configurações relacionadas devem compartilhar uma Settings Page enquanto
+mantiverem o mesmo contexto e consequência. Quando um domínio crescer ou
+possuir estados e permissões próprios, ele deve ganhar uma página dedicada;
+várias páginas do mesmo domínio entram no Hub de Configurações. Funcionalidades
+operacionais permanecem no módulo correspondente, e não devem ser deslocadas
+para Settings apenas por conveniência de navegação.
+
+## Política transversal de overlays
+
+Modais compartilhados devem abrir com foco semântico, conter Tab, fechar por
+Escape quando aplicável, bloquear a rolagem da página e devolver o foco ao
+gatilho ou ao primeiro controle útil da página. Confirmações destrutivas devem
+começar na ação segura. Popovers e filtros são não modais: não usam focus trap,
+fecham por Escape/clique externo e devolvem o foco ao gatilho. Se houver
+sobreposição real de modais, apenas o modal do topo responde ao Escape e mantém
+o ciclo de foco.
+
+## Atualização — Fusão dos dashboards gerais em 2026-09-19
+
+O Dashboard principal passou a ser a única visão geral da operação. O antigo
+destino `/reports/dashboard` permanece compatível por redirecionamento para
+`/`, sem alteração do contrato backend legado. Comercial, Compras, Estoque e
+Financeiro continuam como relatórios especializados para análise por domínio.

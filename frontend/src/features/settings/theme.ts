@@ -26,7 +26,7 @@ export function appearanceCssVars(appearance: AppearanceConfig): ThemeStyle {
     '--color-danger': appearance.cor_perigo,
     '--color-success': appearance.cor_sucesso,
     '--color-warning': appearance.cor_aviso,
-    '--color-surface-soft': '#F8FBFD',
+    '--color-surface-soft': '#F8FAFB',
     '--color-blue-soft': '#E5F0F5',
     '--color-success-soft': '#E5F5EE',
     '--color-danger-soft': '#FCECEB',

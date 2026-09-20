@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 import { Modal } from './Modal'
 
 type ConfirmDialogProps = {
@@ -15,10 +17,12 @@ export function ConfirmDialog({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+
   return (
-    <Modal title={title} description={description} onClose={onCancel}>
+    <Modal title={title} description={description} onClose={onCancel} initialFocusRef={cancelButtonRef}>
       <div className="confirm-actions">
-        <button className="button button-secondary" type="button" onClick={onCancel} disabled={busy}>
+        <button ref={cancelButtonRef} className="button button-secondary" type="button" onClick={onCancel} disabled={busy}>
           Cancelar
         </button>
         <button className="button button-danger" type="button" onClick={onConfirm} disabled={busy}>

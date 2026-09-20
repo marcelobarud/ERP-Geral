@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { getNavigationGroups, getRoute } from './routes'
+import { getCanonicalPathname, getNavigationGroups, getRoute } from './routes'
 import { appearanceLabels, defaultAppearance } from '../features/settings/types'
 
 describe('navegação comercial', () => {
   it('expõe os quatro fluxos comerciais e as condições de pagamento', () => {
     const groups = getNavigationGroups(appearanceLabels(defaultAppearance))
     const commercial = groups.find((group) => group.label === 'Comercial')
+
+    expect(commercial?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Estoque')?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Relatórios')?.collapsible).toBe(true)
+    expect(groups.find((group) => group.label === 'Compras')?.collapsible).toBeUndefined()
 
     expect(commercial?.items.map((item) => item.path)).toEqual([
       '/sales/new',
@@ -36,13 +41,13 @@ describe('navegação comercial', () => {
       '/finance/cashflow',
     ])
     expect(groups.find((group) => group.label === 'Relatórios')?.items.map((item) => item.path)).toEqual([
-      '/reports/dashboard',
       '/reports/commercial',
       '/reports/purchases',
       '/reports/stock',
       '/reports/finance',
     ])
     expect(groups.find((group) => group.label === 'Configurações')?.items.map((item) => item.path)).toContain('/settings/modules')
+    expect(groups.find((group) => group.label === 'Configurações')?.items.map((item) => item.path)).toContain('/settings')
     const onlyFinance = getNavigationGroups(appearanceLabels(defaultAppearance), new Set(['finance']))
     expect(onlyFinance.find((group) => group.label === 'Financeiro')).toBeTruthy()
     expect(onlyFinance.find((group) => group.label === 'Estoque')).toBeUndefined()
@@ -55,6 +60,9 @@ describe('navegação comercial', () => {
     expect(getRoute('/purchases/receipts').label).toBe('Recebimentos')
     expect(getRoute('/inventory/balances').label).toBe('Saldos')
     expect(getRoute('/finance/receivables').label).toBe('Contas a receber')
-    expect(getRoute('/reports/dashboard').label).toBe('Dashboard ERP')
+    expect(getCanonicalPathname('/reports/dashboard')).toBe('/')
+    expect(getCanonicalPathname('/reports/dashboard/')).toBe('/')
+    expect(getRoute('/reports/dashboard').path).toBe('/')
+    expect(getRoute('/settings').label).toBe('Visão geral')
   })
 })

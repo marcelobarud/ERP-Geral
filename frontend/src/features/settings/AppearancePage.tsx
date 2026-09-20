@@ -2,10 +2,13 @@ import { useState, type ChangeEvent, type FormEvent } from 'react'
 
 import { FeedbackBanner } from '../../components/FeedbackBanner'
 import { PageHeader } from '../../components/PageHeader'
+import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 import { getApiErrorMessage } from '../../services/httpClient'
 import { useAppearance } from './AppearanceContext'
 import { useVisualCustomization } from './VisualCustomizationContext'
 import type { AppearanceConfig, AppearancePatch } from './types'
+
+const PaletteIcon = actionIcons.palette
 
 const colorFields: { key: keyof AppearanceConfig; label: string }[] = [
   { key: 'cor_primaria', label: 'Cor principal' },
@@ -105,7 +108,7 @@ export function AppearancePage() {
         <div className="settings-card-heading settings-heading-spaced"><div><p className="eyebrow">Base visual</p><h2>Cores e formas principais</h2></div></div>
         <div className="appearance-options">{colorFields.map(({ key, label }) => <label className="appearance-color-field" key={key}>{label}<input type="color" value={String(form[key])} onChange={(event) => updateField(key, event.target.value.toUpperCase())} /><code>{String(form[key])}</code></label>)}</div>
         <div className="form-grid appearance-radius-grid">{radiusFields.map(([key, label]) => <div className="form-field" key={key}><label htmlFor={`appearance-${key}`}>{label}</label><input id={`appearance-${key}`} value={form[key]} onChange={(event) => updateField(key, event.target.value)} /></div>)}</div>
-        <div className="form-actions"><button className="button button-secondary" type="button" onClick={startCustomization} disabled={customizationActive}>🎨 Ativar modo de personalização visual</button><button className="button button-secondary" type="button" onClick={() => void restore()} disabled={saving}>Restaurar padrão</button><button className="button button-primary" type="submit" disabled={saving || loading}>{saving ? 'Salvando...' : 'Salvar aparência global'}</button></div>
+        <div className="form-actions"><button className="button button-secondary" type="button" onClick={startCustomization} disabled={customizationActive}><PaletteIcon size={iconSizes.action} stroke={iconStroke} aria-hidden="true" focusable="false" />Ativar modo de personalização visual</button><button className="button button-secondary" type="button" onClick={() => void restore()} disabled={saving}>Restaurar padrão</button><button className="button button-primary" type="submit" disabled={saving || loading}>{saving ? 'Salvando...' : 'Salvar aparência global'}</button></div>
       </form>
       <aside className="appearance-preview-card" aria-label="Prévia da aparência global"><p className="eyebrow">Prévia global</p><div className="appearance-preview-brand"><span className="brand-mark" aria-hidden="true">C</span><strong>{preview.nome_sistema}</strong></div><div className="appearance-preview-surface"><strong>{preview.rotulo_dashboard}</strong><p>Elementos sem override específico herdam esta identidade.</p><button className="button button-primary" type="button">Ação principal</button></div><span className="form-help">Para editar um título, card, botão, campo ou tabela individualmente, ative o modo visual.</span></aside>
     </div>

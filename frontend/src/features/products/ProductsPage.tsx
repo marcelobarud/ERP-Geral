@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { ActiveFilters, type ActiveFilterItem } from '../../components/ActiveFilters'
+import { CadastrosListLoading } from '../../components/CadastrosListLoading'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorState } from '../../components/ErrorState'
 import { FeedbackBanner } from '../../components/FeedbackBanner'
@@ -21,6 +23,7 @@ import type { Supplier } from '../suppliers/types'
 
 const emptyProduct: ProductPayload = { nome: '', categoria: '', preco_custo: '', preco_venda: '', fornecedor_id: 0 }
 const PAGE_SIZE = 20
+type ProductFilterKey = 'search' | 'category' | 'supplierId' | 'costMin' | 'costMax' | 'salePriceMin' | 'salePriceMax'
 
 function displayMoney(value: string | number): string {
   return `R$ ${String(value).replace('.', ',')}`
@@ -79,11 +82,36 @@ export function ProductsPage() {
   // oxlint-disable-next-line
   useEffect(() => { void loadProducts() }, [loadProducts])
 
-  const hasDraftFilters = Boolean(searchDraft.trim() || categoryDraft.trim() || supplierDraft !== '' || costMinDraft.trim() || costMaxDraft.trim() || salePriceMinDraft.trim() || salePriceMaxDraft.trim())
-  const hasAppliedFilters = Boolean(appliedFilters.search || appliedFilters.category || appliedFilters.supplierId || appliedFilters.costMin || appliedFilters.costMax || appliedFilters.salePriceMin || appliedFilters.salePriceMax)
   const filterCategories = uniqueFilterOptions(filterProducts.map((product) => product.categoria))
+  const supplierName = (supplierId: number) => suppliers.find((supplier) => supplier.id === supplierId)?.nome || 'Fornecedor não encontrado'
+  const activeFilters: ActiveFilterItem[] = [
+    appliedFilters.search ? { key: 'search', label: 'Busca', value: appliedFilters.search } : null,
+    appliedFilters.category ? { key: 'category', label: 'Categoria', value: appliedFilters.category } : null,
+    appliedFilters.supplierId ? { key: 'supplierId', label: 'Fornecedor', value: supplierName(appliedFilters.supplierId) } : null,
+    appliedFilters.costMin ? { key: 'costMin', label: 'Custo mínimo', value: displayMoney(appliedFilters.costMin) } : null,
+    appliedFilters.costMax ? { key: 'costMax', label: 'Custo máximo', value: displayMoney(appliedFilters.costMax) } : null,
+    appliedFilters.salePriceMin ? { key: 'salePriceMin', label: 'Venda mínima', value: displayMoney(appliedFilters.salePriceMin) } : null,
+    appliedFilters.salePriceMax ? { key: 'salePriceMax', label: 'Venda máxima', value: displayMoney(appliedFilters.salePriceMax) } : null,
+  ].filter((filter): filter is ActiveFilterItem => filter !== null)
+  const hasDraftFilters = Boolean(searchDraft.trim() || categoryDraft.trim() || supplierDraft !== '' || costMinDraft.trim() || costMaxDraft.trim() || salePriceMinDraft.trim() || salePriceMaxDraft.trim())
+  const hasAppliedFilters = activeFilters.length > 0
   const applyFilters = () => { setPage(1); setAppliedFilters({ search: searchDraft.trim(), category: categoryDraft, supplierId: supplierDraft, costMin: costMinDraft.trim(), costMax: costMaxDraft.trim(), salePriceMin: salePriceMinDraft.trim(), salePriceMax: salePriceMaxDraft.trim() }); setFiltersOpen(false) }
   const clearFilters = () => { setPage(1); setSearchDraft(''); setCategoryDraft(''); setSupplierDraft(''); setCostMinDraft(''); setCostMaxDraft(''); setSalePriceMinDraft(''); setSalePriceMaxDraft(''); setAppliedFilters({}); setFiltersOpen(false) }
+  const removeFilter = (key: string) => {
+    setPage(1)
+    if (key === 'search') setSearchDraft('')
+    if (key === 'category') setCategoryDraft('')
+    if (key === 'supplierId') setSupplierDraft('')
+    if (key === 'costMin') setCostMinDraft('')
+    if (key === 'costMax') setCostMaxDraft('')
+    if (key === 'salePriceMin') setSalePriceMinDraft('')
+    if (key === 'salePriceMax') setSalePriceMaxDraft('')
+    setAppliedFilters((current) => {
+      const next = { ...current }
+      delete next[key as ProductFilterKey]
+      return next
+    })
+  }
 
   const saveProduct = async (payload: ProductPayload) => {
     setSaving(true); setFeedback(null)
@@ -110,16 +138,15 @@ export function ProductsPage() {
     }
   }
 
-  const supplierName = (supplierId: number) => suppliers.find((supplier) => supplier.id === supplierId)?.nome || 'Fornecedor não encontrado'
   const formValue: ProductPayload = selected
     ? (({ id: _id, campos_personalizados: _custom, ...payload }) => payload)(selected)
     : emptyProduct
-  return <div className="crud-page">
+  return <div className="crud-page cadastros-family-page products-page">
     <div className="crud-page-header"><PageHeader eyebrow="Cadastros" title="Produtos" description="Mantenha seu catálogo e seus preços organizados." pageId="products" /><button className="button button-primary" type="button" {...createButtonCustomization} onClick={() => { setSelected(null); setModal('create'); setFeedback(null) }}>+ Novo produto</button></div>
       {feedback ? <FeedbackBanner kind={feedback.kind} message={feedback.message} onDismiss={() => setFeedback(null)} /> : null}
-      <section className="filter-toolbar" aria-label="Filtros de produtos">
-        <SearchInput value={searchDraft} onChange={setSearchDraft} onSearch={(value) => setAppliedFilters((current) => { const search = value.trim(); if (current.search === search) return current; const { search: _search, ...filters } = current; return search ? { ...filters, search } : filters })} onClear={() => setSearchDraft('')} label="Pesquisar produtos" customizationKey="products.search_input" customizationPage="products" />
-        <FilterMenu activeCount={[appliedFilters.category, appliedFilters.supplierId, appliedFilters.costMin, appliedFilters.costMax, appliedFilters.salePriceMin, appliedFilters.salePriceMax].filter(Boolean).length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
+      <section className="filter-toolbar cadastros-filter-toolbar" aria-label="Filtros de produtos">
+        <SearchInput value={searchDraft} onChange={setSearchDraft} onSearch={(value) => { setPage(1); setAppliedFilters((current) => { const search = value.trim(); if (current.search === search) return current; const { search: _search, ...filters } = current; return search ? { ...filters, search } : filters }) }} onClear={() => setSearchDraft('')} label="Pesquisar produtos" customizationKey="products.search_input" customizationPage="products" />
+        <FilterMenu activeCount={activeFilters.length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
           <label className="filter-field">Categoria<select value={categoryDraft} onChange={(event) => setCategoryDraft(event.target.value)}><option value="">Todas as categorias</option>{filterCategories.map((category) => <option value={category} key={category}>{category}</option>)}</select></label>
           <label className="filter-field">Fornecedor<select value={supplierDraft} onChange={(event) => setSupplierDraft(event.target.value ? Number(event.target.value) : '')}><option value="">Todos os fornecedores</option>{suppliers.map((supplier) => <option value={supplier.id} key={supplier.id}>{supplier.nome}</option>)}</select></label>
           <label className="filter-field">Custo mínimo<input type="number" min="0" step="0.01" value={costMinDraft} onChange={(event) => setCostMinDraft(event.target.value)} /></label>
@@ -128,7 +155,8 @@ export function ProductsPage() {
           <label className="filter-field">Venda máxima<input type="number" min="0" step="0.01" value={salePriceMaxDraft} onChange={(event) => setSalePriceMaxDraft(event.target.value)} /></label>
         </FilterMenu>
       </section>
-      {loading ? <LoadingState label="Carregando produtos..." /> : error ? <ErrorState description={error} onRetry={() => void loadProducts()} /> : products.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum produto cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie um produto e selecione um fornecedor existente.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Produto</th><th>Categoria</th><th>Fornecedor</th><th>Preço de custo</th><th>Preço de venda</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td className="data-primary">{product.nome}<span className="data-secondary">ID {product.id}</span></td><td>{product.categoria}</td><td>{supplierName(product.fornecedor_id)}</td><td>{displayMoney(product.preco_custo)}</td><td>{displayMoney(product.preco_venda)}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openProductDetails(product)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(product); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(product)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
+      <ActiveFilters filters={activeFilters} onRemove={removeFilter} onClear={clearFilters} />
+      {loading ? <CadastrosListLoading label="Carregando produtos..." /> : error ? <ErrorState description={error} onRetry={() => void loadProducts()} /> : products.length === 0 ? <div className="data-card cadastros-empty-state"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum produto cadastrado ainda'} description={hasAppliedFilters ? 'Ajuste a busca ou remova os filtros ativos para ver outros produtos.' : 'Crie o primeiro produto usando a ação Novo produto acima.'} /></div> : <><div className="data-card data-table-wrap cadastros-table products-table"><table className="data-table" {...tableCustomization}><thead><tr><th>Produto</th><th>Categoria</th><th>Fornecedor</th><th>Preço de custo</th><th>Preço de venda</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td className="data-primary">{product.nome}<span className="data-secondary">ID {product.id}</span></td><td>{product.categoria}</td><td>{supplierName(product.fornecedor_id)}</td><td className="money-cell">{displayMoney(product.preco_custo)}</td><td className="money-cell">{displayMoney(product.preco_venda)}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openProductDetails(product)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(product); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(product)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
     {modal === 'view' && selected ? <Modal title="Detalhes do produto" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do produto..." /> : selectedDetails ? <ProductDetails product={selectedDetails} supplierName={supplierName(selectedDetails.fornecedor_id)} /> : null}</Modal> : null}
     {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar produto' : 'Novo produto'} description="Selecione um fornecedor real e informe os valores com precisão." onClose={() => setModal(null)}><ProductForm initialValue={formValue} suppliers={suppliers} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveProduct(payload)} /></Modal> : null}
     {deleteTarget ? <ConfirmDialog title="Excluir produto?" description={`O cadastro de ${deleteTarget.nome} será removido. Itens de venda relacionados impedem a exclusão.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeProduct()} /> : null}

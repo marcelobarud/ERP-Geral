@@ -1,3 +1,8 @@
+import { actionIcons, iconSizes, iconStroke } from '../app/iconography'
+import { useCustomizable } from '../features/settings/VisualCustomizationContext'
+
+const LoadingIcon = actionIcons.loading
+
 type LoadingStateProps = {
   label?: string
 }
@@ -8,7 +13,7 @@ export function LoadingState({ label = 'Carregando...' }: LoadingStateProps) {
   return (
     <div className="state-card" {...rootCustomization} role="status" aria-live="polite">
       <span className="state-icon state-icon-loading" aria-hidden="true">
-        ⋯
+        <LoadingIcon size={iconSizes.status} stroke={iconStroke} focusable="false" />
       </span>
       <div>
         <strong {...labelCustomization}>{label}</strong>
@@ -17,4 +22,3 @@ export function LoadingState({ label = 'Carregando...' }: LoadingStateProps) {
     </div>
   )
 }
-import { useCustomizable } from '../features/settings/VisualCustomizationContext'

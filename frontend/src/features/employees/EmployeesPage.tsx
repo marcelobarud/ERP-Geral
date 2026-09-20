@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { ActiveFilters, type ActiveFilterItem } from '../../components/ActiveFilters'
+import { CadastrosListLoading } from '../../components/CadastrosListLoading'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorState } from '../../components/ErrorState'
 import { FeedbackBanner } from '../../components/FeedbackBanner'
@@ -100,11 +102,24 @@ export function EmployeesPage() {
   useEffect(() => { void loadEmployees() }, [loadEmployees])
 
   const hasDraftFilters = Boolean(searchDraft.trim() || cityDraft || stateDraft || statusDraft !== 'all')
-  const hasAppliedFilters = Boolean(appliedSearch || appliedCity || appliedState || appliedStatus !== 'all')
   const filterCities = useMemo(() => uniqueFilterOptions(filterEmployees.map((employee) => employee.cidade)), [filterEmployees])
   const filterStates = useMemo(() => uniqueFilterOptions(filterEmployees.map((employee) => employee.estado)), [filterEmployees])
+  const activeFilters: ActiveFilterItem[] = [
+    appliedSearch ? { key: 'search', label: 'Busca', value: appliedSearch } : null,
+    appliedCity ? { key: 'city', label: 'Cidade', value: appliedCity } : null,
+    appliedState ? { key: 'state', label: 'Estado', value: appliedState } : null,
+    appliedStatus !== 'all' ? { key: 'status', label: 'Status', value: appliedStatus === 'active' ? 'Ativos' : 'Inativos' } : null,
+  ].filter((filter): filter is ActiveFilterItem => filter !== null)
+  const hasAppliedFilters = activeFilters.length > 0
   const applyFilters = () => { setPage(1); setAppliedSearch(searchDraft.trim()); setAppliedCity(cityDraft); setAppliedState(stateDraft); setAppliedStatus(statusDraft); setFiltersOpen(false) }
   const clearFilters = () => { setPage(1); setSearchDraft(''); setAppliedSearch(''); setCityDraft(''); setAppliedCity(''); setStateDraft(''); setAppliedState(''); setStatusDraft('all'); setAppliedStatus('all'); setFiltersOpen(false) }
+  const removeFilter = (key: string) => {
+    setPage(1)
+    if (key === 'search') { setSearchDraft(''); setAppliedSearch('') }
+    if (key === 'city') { setCityDraft(''); setAppliedCity('') }
+    if (key === 'state') { setStateDraft(''); setAppliedState('') }
+    if (key === 'status') { setStatusDraft('all'); setAppliedStatus('all') }
+  }
 
   const saveEmployee = async (payload: EmployeePayload) => {
     setSaving(true); setFeedback(null)
@@ -133,18 +148,19 @@ export function EmployeesPage() {
 
   const formValue: EmployeePayload = selected ? (({ id: _id, campos_personalizados: _custom, ...payload }) => payload)(selected) : emptyEmployee
 
-  return <div className="crud-page">
+  return <div className="crud-page cadastros-family-page employees-page">
     <div className="crud-page-header"><PageHeader eyebrow="Cadastros" title="Funcionários" description="Organize a equipe que participa da operação." pageId="employees" /><button className="button button-primary" type="button" {...createButtonCustomization} onClick={() => { setSelected(null); setModal('create'); setFeedback(null) }}>+ Novo funcionário</button></div>
       {feedback ? <FeedbackBanner kind={feedback.kind} message={feedback.message} onDismiss={() => setFeedback(null)} /> : null}
-      <section className="filter-toolbar" aria-label="Filtros de funcionários">
-        <SearchInput value={searchDraft} onChange={setSearchDraft} onSearch={(value) => { const search = value.trim(); setAppliedSearch((current) => current === search ? current : search) }} onClear={() => setSearchDraft('')} label="Pesquisar funcionários" customizationKey="employees.search_input" customizationPage="employees" />
-        <FilterMenu activeCount={[appliedCity, appliedState, appliedStatus !== 'all' ? appliedStatus : ''].filter(Boolean).length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
+      <section className="filter-toolbar cadastros-filter-toolbar" aria-label="Filtros de funcionários">
+        <SearchInput value={searchDraft} onChange={setSearchDraft} onSearch={(value) => { setPage(1); const search = value.trim(); setAppliedSearch((current) => current === search ? current : search) }} onClear={() => setSearchDraft('')} label="Pesquisar funcionários" customizationKey="employees.search_input" customizationPage="employees" />
+        <FilterMenu activeCount={activeFilters.length} canClear={hasDraftFilters || hasAppliedFilters} open={filtersOpen} onToggle={() => setFiltersOpen((current) => !current)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} onClear={clearFilters}>
           <label className="filter-field">Cidade<select value={cityDraft} onChange={(event) => setCityDraft(event.target.value)}><option value="">Todas as cidades</option>{filterCities.map((city) => <option value={city} key={city}>{city}</option>)}</select></label>
           <label className="filter-field">Estado<select value={stateDraft} onChange={(event) => setStateDraft(event.target.value)}><option value="">Todos os estados</option>{filterStates.map((state) => <option value={state} key={state}>{state}</option>)}</select></label>
           <label className="filter-field">Status<select value={statusDraft} onChange={(event) => setStatusDraft(event.target.value as 'all' | 'active' | 'inactive')}><option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option></select></label>
         </FilterMenu>
       </section>
-      {loading ? <LoadingState label="Carregando funcionários..." /> : error ? <ErrorState description={error} onRetry={() => void loadEmployees()} /> : employees.length === 0 ? <div className="data-card"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum funcionário cadastrado ainda'} description={hasAppliedFilters ? 'Tente ajustar a pesquisa ou limpar os filtros.' : 'Crie o primeiro funcionário responsável pela operação.'} /></div> : <><div className="data-card data-table-wrap"><table className="data-table" {...tableCustomization}><thead><tr><th>Funcionário</th><th>Status</th><th>CPF</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}><td className="data-primary">{employee.nome_completo}<span className="data-secondary">ID {employee.id}</span></td><td><span className={`status-badge ${employee.ativo ? 'status-badge-active' : 'status-badge-inactive'}`}>{employee.ativo ? 'Ativo' : 'Inativo'}</span></td><td>{employee.cpf}</td><td>{employee.cidade} / {employee.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openEmployeeDetails(employee)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(employee); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(employee)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
+      <ActiveFilters filters={activeFilters} onRemove={removeFilter} onClear={clearFilters} />
+      {loading ? <CadastrosListLoading label="Carregando funcionários..." /> : error ? <ErrorState description={error} onRetry={() => void loadEmployees()} /> : employees.length === 0 ? <div className="data-card cadastros-empty-state"><EmptyState title={hasAppliedFilters ? 'Nenhum resultado encontrado para os filtros aplicados.' : 'Nenhum funcionário cadastrado ainda'} description={hasAppliedFilters ? 'Ajuste a busca ou remova os filtros ativos para ver outros funcionários.' : 'Crie o primeiro funcionário usando a ação Novo funcionário acima.'} /></div> : <><div className="data-card data-table-wrap cadastros-table employees-table"><table className="data-table" {...tableCustomization}><thead><tr><th>Funcionário</th><th>Status</th><th>CPF</th><th>Localização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}><td className="data-primary">{employee.nome_completo}<span className="data-secondary">ID {employee.id}</span></td><td><span className={`status-badge ${employee.ativo ? 'status-badge-active' : 'status-badge-inactive'}`}>{employee.ativo ? 'Ativo' : 'Inativo'}</span></td><td>{employee.cpf}</td><td>{employee.cidade} / {employee.estado}</td><td><div className="table-actions"><button className="table-action" type="button" onClick={() => void openEmployeeDetails(employee)}>Ver</button><button className="table-action" type="button" onClick={() => { setSelected(employee); setModal('edit') }}>Editar</button><button className="table-action table-action-danger" type="button" onClick={() => setDeleteTarget(employee)}>Excluir</button></div></td></tr>)}</tbody></table></div><PaginationControls meta={pagination} onPageChange={setPage} /></>}
     {modal === 'view' && selected ? <Modal title="Detalhes do funcionário" onClose={() => { setModal(null); setSelectedDetails(null) }}>{detailsLoading ? <LoadingState label="Carregando detalhes do funcionário..." /> : selectedDetails ? <EmployeeDetails employee={selectedDetails} /> : null}</Modal> : null}
     {(modal === 'create' || modal === 'edit') ? <Modal title={modal === 'edit' ? 'Editar funcionário' : 'Novo funcionário'} description="RG e complemento são opcionais." onClose={() => setModal(null)}><EmployeeForm initialValue={formValue} saving={saving} onCancel={() => setModal(null)} onSave={(payload) => void saveEmployee(payload)} /></Modal> : null}
     {deleteTarget ? <ConfirmDialog title="Excluir funcionário?" description={`O cadastro de ${deleteTarget.nome_completo} será removido. Vendas relacionadas impedem a exclusão.`} busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void removeEmployee()} /> : null}
