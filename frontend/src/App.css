@@ -4573,42 +4573,18 @@ a,
     table-layout: fixed;
   }
 
-  .finance-titles-table .data-table th:nth-child(2),
-  .finance-titles-table .data-table td:nth-child(2) {
-    display: none;
-  }
-
-  .finance-titles-table .data-table th:first-child,
-  .finance-titles-table .data-table td:first-child {
-    width: 34%;
-  }
-
-  .finance-titles-table .data-table th:nth-child(3),
-  .finance-titles-table .data-table td:nth-child(3),
-  .finance-titles-table .data-table th:nth-child(4),
-  .finance-titles-table .data-table td:nth-child(4) {
-    width: 17%;
-  }
-
-  .finance-titles-table .data-table th:nth-child(5),
-  .finance-titles-table .data-table td:nth-child(5) {
-    width: 14%;
-  }
-
-  .finance-titles-table .data-table th:last-child,
-  .finance-titles-table .data-table td:last-child {
-    width: 18%;
-  }
-
   .finance-titles-table .data-table th,
   .finance-titles-table .data-table td {
     min-width: 0;
-    padding: 0.65rem 0.25rem;
     overflow-wrap: anywhere;
   }
 
   .finance-titles-table .data-table td {
-    font-size: 0.72rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .finance-titles-table .data-table td {
+    font-size: 0.78rem;
   }
 
   .finance-titles-table .data-table th {
@@ -4616,11 +4592,47 @@ a,
     letter-spacing: 0.04em;
   }
 
+  .finance-titles-table .data-table td:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .finance-titles-table .data-table td:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding-top: 0.2rem;
+  }
+
+  .finance-titles-table .data-table td:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .finance-titles-table .data-table td:nth-child(4) {
+    grid-column: 1;
+    grid-row: 2;
+    font-weight: 750;
+  }
+
+  .finance-titles-table .data-table td:nth-child(5) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .finance-titles-table .data-table td:last-child {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    padding-top: 0.25rem;
+  }
+
+  .finance-titles-table .data-table td:first-child .data-secondary:last-child {
+    display: none;
+  }
+
   .finance-titles-table .table-action {
-    max-width: 100%;
-    padding: 0.3rem 0.25rem;
-    font-size: 0.68rem;
-    white-space: normal;
+    min-height: 2.2rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.78rem;
   }
 
   .inventory-balances-table .data-table th,
