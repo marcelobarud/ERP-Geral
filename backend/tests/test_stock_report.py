@@ -1,5 +1,5 @@
 import os
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -173,6 +173,79 @@ def test_stock_report_preserves_empty_period_and_additive_contract(client):
         for point in payload["movement_series"]
     )
     assert payload["deposit"]["code"] == "PRINCIPAL"
+
+
+def test_stock_report_groups_daily_boundaries_in_utc(client, session):
+    deposit = session.scalar(
+        select(DepositoEstoque).where(DepositoEstoque.padrao.is_(True))
+    )
+    supplier = Fornecedor(
+        nome="Fornecedor fronteira UTC",
+        cidade="São Paulo",
+        estado="SP",
+        rua="Rua UTC",
+        numero="11",
+        cnpj="55.555.555/0001-55",
+    )
+    product = Produto(
+        nome="Produto fronteira UTC",
+        sku="ESTOQUE-UTC-FRONTEIRA",
+        categoria="Geral",
+        unidade_medida="UN",
+        preco_custo=Decimal("5.00"),
+        preco_venda=Decimal("8.00"),
+        fornecedor=supplier,
+    )
+    session.add_all([supplier, product])
+    session.flush()
+
+    today_at_midnight = datetime.combine(
+        date.today(), time.min, tzinfo=timezone.utc
+    )
+    session.add_all(
+        [
+            MovimentacaoEstoque(
+                produto_id=product.id,
+                deposito_id=deposit.id,
+                tipo="ENTRADA",
+                quantidade=Decimal("1.000"),
+                data_movimentacao=today_at_midnight - timedelta(minutes=1),
+                origem="RECEBIMENTO_COMPRA",
+            ),
+            MovimentacaoEstoque(
+                produto_id=product.id,
+                deposito_id=deposit.id,
+                tipo="SAIDA",
+                quantidade=Decimal("1.000"),
+                data_movimentacao=today_at_midnight,
+                origem="VENDA",
+            ),
+        ]
+    )
+    session.flush()
+
+    response = client.get("/api/reports/stock?period=30d")
+
+    assert response.status_code == 200
+    series = response.json()["movement_series"]
+    previous_bucket = next(
+        point
+        for point in series
+        if point["bucket"] == (date.today() - timedelta(days=1)).isoformat()
+    )
+    today_bucket = next(
+        point for point in series if point["bucket"] == date.today().isoformat()
+    )
+    assert previous_bucket == {
+        "bucket": (date.today() - timedelta(days=1)).isoformat(),
+        "entries": 1,
+        "exits": 0,
+    }
+    assert today_bucket == {
+        "bucket": date.today().isoformat(),
+        "entries": 0,
+        "exits": 1,
+    }
 
 
 def test_stock_report_rejects_unknown_period(client):

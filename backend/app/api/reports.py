@@ -114,6 +114,10 @@ def _bucket_date(value: date | datetime) -> date:
     return value.date() if isinstance(value, datetime) else value
 
 
+def _utc_bucket(column, granularity: DashboardAnalyticsGranularity):
+    return func.date_trunc(granularity, func.timezone("UTC", column))
+
+
 def _confirmed_settlements_by_installment():
     return (
         select(
@@ -253,9 +257,7 @@ def _stock_movement_trend(
         ),
         else_=0,
     )
-    movement_bucket = func.date_trunc(
-        granularity, MovimentacaoEstoque.data_movimentacao
-    )
+    movement_bucket = _utc_bucket(MovimentacaoEstoque.data_movimentacao, granularity)
     rows = db.execute(
         select(
             movement_bucket,
@@ -360,7 +362,7 @@ def commercial_report(
         temporal_to = date_to or _bucket_date(last_completed_at)
         granularity = _commercial_granularity(temporal_from, temporal_to)
         buckets = _dashboard_buckets(temporal_from, temporal_to, granularity)
-        sales_bucket = func.date_trunc(granularity, Venda.data_venda)
+        sales_bucket = _utc_bucket(Venda.data_venda, granularity)
         sales_rows = db.execute(
             date_filters(
                 select(
@@ -742,7 +744,7 @@ def dashboard_analytics(
         date_to + timedelta(days=1), time.min, tzinfo=timezone.utc
     )
 
-    sales_bucket = func.date_trunc(granularity, Venda.data_venda)
+    sales_bucket = _utc_bucket(Venda.data_venda, granularity)
     sales_rows = db.execute(
         select(
             sales_bucket,

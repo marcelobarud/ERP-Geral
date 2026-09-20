@@ -98,6 +98,7 @@ def test_commercial_report_adds_temporal_reading_and_named_rankings(client, sess
         ],
     )
     session.add_all([first_sale, second_sale])
+    session.flush()
 
     response = client.get(
         f"/api/reports/commercial?date_from={start.isoformat()}&date_to={date.today().isoformat()}"

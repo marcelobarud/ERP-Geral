@@ -128,6 +128,21 @@ def test_dashboard_analytics_aggregates_real_domains_and_interval(client, sessio
     assert finance_bucket["payable"] == 80.0
     assert payload["stock_attention"] == []
 
+    weekly_response = client.get("/api/reports/dashboard/analytics?period=90d")
+
+    assert weekly_response.status_code == 200
+    weekly_payload = weekly_response.json()
+    assert weekly_payload["granularity"] == "week"
+    weekly_bucket_date = date.today() - timedelta(days=40)
+    weekly_bucket_date -= timedelta(days=weekly_bucket_date.weekday())
+    weekly_bucket = next(
+        point
+        for point in weekly_payload["sales_trend"]
+        if point["bucket"] == weekly_bucket_date.isoformat()
+    )
+    assert weekly_bucket["sales_value"] == 30.0
+    assert weekly_bucket["completed_sales"] == 1
+
     short_response = client.get("/api/reports/dashboard/analytics?period=30d")
 
     assert short_response.status_code == 200
