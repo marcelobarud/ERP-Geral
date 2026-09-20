@@ -4452,6 +4452,218 @@ a,
   }
 }
 
+/* Fase 2H.3 - collections operacionais mobile */
+.mobile-row-cards .data-table td::before {
+  content: none;
+}
+
+@media (max-width: 560px) {
+  .customers-page .customers-filter-toolbar,
+  .cadastros-family-page .cadastros-filter-toolbar {
+    gap: 0.55rem;
+    margin-top: 0.65rem;
+    margin-bottom: 0.45rem;
+    padding: 0.35rem 0;
+  }
+
+  .customers-page .customers-filter-toolbar > .search-input,
+  .cadastros-family-page .cadastros-filter-toolbar > .search-input {
+    flex: 0 1 auto;
+  }
+
+  .customers-page .customers-active-filters,
+  .cadastros-family-page .active-filters {
+    gap: 0.35rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .customers-page .customers-table,
+  .cadastros-family-page .cadastros-table {
+    margin-top: 0.5rem;
+  }
+
+  .mobile-row-cards {
+    overflow-x: visible;
+  }
+
+  .mobile-row-cards .data-table {
+    display: block;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .mobile-row-cards .data-table tbody {
+    display: block;
+  }
+
+  .mobile-row-cards .data-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .mobile-row-cards .data-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 0.85rem 0.8rem;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  .mobile-row-cards .data-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .mobile-row-cards .data-table td,
+  .mobile-row-cards .data-table td:last-child {
+    display: block;
+    grid-column: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .mobile-row-cards .data-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.18rem;
+    color: var(--color-text-muted);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .mobile-row-cards .data-table td:last-child {
+    grid-column: 1 / -1;
+    padding-top: 0.1rem;
+  }
+
+  .mobile-row-cards .table-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    white-space: normal;
+  }
+
+  .mobile-row-cards .table-action {
+    min-height: 2.4rem;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .commercial-documents-table .data-table th:nth-child(2),
+  .commercial-documents-table .data-table td:nth-child(2) {
+    display: none;
+  }
+
+  .commercial-documents-table .data-table td:first-child .data-secondary {
+    overflow-wrap: anywhere;
+  }
+
+  .priority-columns .data-table {
+    table-layout: fixed;
+  }
+
+  .finance-titles-table .data-table th:nth-child(2),
+  .finance-titles-table .data-table td:nth-child(2) {
+    display: none;
+  }
+
+  .finance-titles-table .data-table th:first-child,
+  .finance-titles-table .data-table td:first-child {
+    width: 34%;
+  }
+
+  .finance-titles-table .data-table th:nth-child(3),
+  .finance-titles-table .data-table td:nth-child(3),
+  .finance-titles-table .data-table th:nth-child(4),
+  .finance-titles-table .data-table td:nth-child(4) {
+    width: 17%;
+  }
+
+  .finance-titles-table .data-table th:nth-child(5),
+  .finance-titles-table .data-table td:nth-child(5) {
+    width: 14%;
+  }
+
+  .finance-titles-table .data-table th:last-child,
+  .finance-titles-table .data-table td:last-child {
+    width: 18%;
+  }
+
+  .finance-titles-table .data-table th,
+  .finance-titles-table .data-table td {
+    min-width: 0;
+    padding: 0.65rem 0.25rem;
+    overflow-wrap: anywhere;
+  }
+
+  .finance-titles-table .data-table td {
+    font-size: 0.72rem;
+  }
+
+  .finance-titles-table .data-table th {
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+  }
+
+  .finance-titles-table .table-action {
+    max-width: 100%;
+    padding: 0.3rem 0.25rem;
+    font-size: 0.68rem;
+    white-space: normal;
+  }
+
+  .inventory-balances-table .data-table th,
+  .inventory-balances-table .data-table td {
+    padding: 0.7rem 0.55rem;
+  }
+
+  .inventory-balances-table .data-table th:first-child,
+  .inventory-balances-table .data-table td:first-child {
+    width: 38%;
+  }
+
+  .inventory-balances-table .data-table th:nth-child(2),
+  .inventory-balances-table .data-table td:nth-child(2),
+  .inventory-balances-table .data-table th:nth-child(3),
+  .inventory-balances-table .data-table td:nth-child(3) {
+    width: 19%;
+  }
+
+  .inventory-balances-table .data-table th:last-child,
+  .inventory-balances-table .data-table td:last-child {
+    width: 24%;
+  }
+
+  .horizontal-scroll-table .data-table {
+    min-width: 56rem;
+  }
+
+  .inventory-movements-table .data-table th:first-child,
+  .inventory-movements-table .data-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+    box-shadow: 0.35rem 0 0.55rem -0.45rem rgba(23, 40, 63, 0.3);
+  }
+
+  .inventory-movements-table .data-table th,
+  .inventory-movements-table .data-table td {
+    white-space: nowrap;
+  }
+}
+
 /* Fase 2C: controles e leitura operacional. A regra permanece baseada nas
    classes existentes para manter os contratos de customização intactos. */
 :where(.form-field input, .form-field select, .form-field textarea, .filter-field input, .filter-field select, .report-filter-bar input, .search-input input) {
