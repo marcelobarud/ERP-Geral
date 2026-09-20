@@ -3,6 +3,9 @@
 ERP Geral é uma plataforma genérica e configurável de gestão administrativa e
 operacional.
 
+A raiz do repositório pode ser aberta como um vault do Obsidian; o índice
+documental principal está em [docs/OBSIDIAN_PROJECT_INDEX.md](docs/OBSIDIAN_PROJECT_INDEX.md).
+
 ## Estado atual
 
 A versão atual oferece:
