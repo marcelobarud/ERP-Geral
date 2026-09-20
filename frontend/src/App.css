@@ -717,6 +717,12 @@
   margin: 0;
 }
 
+/* Fase 2H.2 — states operacionais devem acompanhar a densidade da tabela. */
+.crud-page .data-table-wrap > .empty-state {
+  min-height: 0;
+  padding: 1.25rem 1.5rem;
+}
+
 .state-card {
   display: flex;
   align-items: flex-start;
@@ -4843,7 +4849,7 @@ a,
 }
 
 .finance-accounts {
-  margin-top: 2.5rem;
+  margin-top: var(--space-6);
 }
 
 .finance-accounts .data-card {
