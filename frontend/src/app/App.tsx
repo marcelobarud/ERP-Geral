@@ -3,19 +3,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import { AppLayout } from '../components/AppLayout'
 import { LoadingState } from '../components/LoadingState'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
-import { CustomersPage } from '../features/customers/CustomersPage'
-import { EmployeesPage } from '../features/employees/EmployeesPage'
-import { ProductsPage } from '../features/products/ProductsPage'
-import { NewSalePage, SalesPage } from '../features/sales/SalesPages'
-import { SuppliersPage } from '../features/suppliers/SuppliersPage'
 import { AppearanceProvider, useAppearance } from '../features/settings/AppearanceContext'
 import { AuthProvider, useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
 import { SetupPage } from '../features/auth/SetupPage'
-import { OrdersPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
-import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
-import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
-import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
 import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
@@ -33,6 +24,24 @@ const CustomFieldsPage = lazy(() => import('../features/settings/SettingsRoutePa
 const PaymentConditionsPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ PaymentConditionsPage: Page }) => ({ default: Page })))
 const ModulesPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ ModulesPage: Page }) => ({ default: Page })))
 const UsersPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ UsersPage: Page }) => ({ default: Page })))
+const CustomersPage = lazy(() => import('../features/cadastros/CadastrosRoutePages').then(({ CustomersPage: Page }) => ({ default: Page })))
+const EmployeesPage = lazy(() => import('../features/cadastros/CadastrosRoutePages').then(({ EmployeesPage: Page }) => ({ default: Page })))
+const ProductsPage = lazy(() => import('../features/cadastros/CadastrosRoutePages').then(({ ProductsPage: Page }) => ({ default: Page })))
+const SuppliersPage = lazy(() => import('../features/cadastros/CadastrosRoutePages').then(({ SuppliersPage: Page }) => ({ default: Page })))
+const NewSalePage = lazy(() => import('../features/sales/SalesPages').then(({ NewSalePage: Page }) => ({ default: Page })))
+const SalesPage = lazy(() => import('../features/sales/SalesPages').then(({ SalesPage: Page }) => ({ default: Page })))
+const QuotesPage = lazy(() => import('../features/commercial/CommercialPages').then(({ QuotesPage: Page }) => ({ default: Page })))
+const OrdersPage = lazy(() => import('../features/commercial/CommercialPages').then(({ OrdersPage: Page }) => ({ default: Page })))
+const ReturnsPage = lazy(() => import('../features/commercial/CommercialPages').then(({ ReturnsPage: Page }) => ({ default: Page })))
+const PurchasesPage = lazy(() => import('../features/purchases/PurchasesPages').then(({ PurchasesPage: Page }) => ({ default: Page })))
+const ReceiptsPage = lazy(() => import('../features/purchases/PurchasesPages').then(({ ReceiptsPage: Page }) => ({ default: Page })))
+const AdjustmentsPage = lazy(() => import('../features/inventory/InventoryPages').then(({ AdjustmentsPage: Page }) => ({ default: Page })))
+const BalancesPage = lazy(() => import('../features/inventory/InventoryPages').then(({ BalancesPage: Page }) => ({ default: Page })))
+const DepositsPage = lazy(() => import('../features/inventory/InventoryPages').then(({ DepositsPage: Page }) => ({ default: Page })))
+const InventoriesPage = lazy(() => import('../features/inventory/InventoryPages').then(({ InventoriesPage: Page }) => ({ default: Page })))
+const MovementsPage = lazy(() => import('../features/inventory/InventoryPages').then(({ MovementsPage: Page }) => ({ default: Page })))
+const CashflowPage = lazy(() => import('../features/finance/FinancePages').then(({ CashflowPage: Page }) => ({ default: Page })))
+const FinancialTitlesPage = lazy(() => import('../features/finance/FinancePages').then(({ FinancialTitlesPage: Page }) => ({ default: Page })))
 
 function currentPathname(): string {
   return getCanonicalPathname(window.location.pathname || '/')

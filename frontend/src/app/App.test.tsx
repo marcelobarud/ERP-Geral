@@ -3,11 +3,14 @@
 import type { ReactNode } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import * as modulesApi from '../features/settings/modulesApi'
 
-const { reportsReady, resolveReports } = vi.hoisted(() => {
+const { cadastrosReady, resolveCadastros, reportsReady, resolveReports } = vi.hoisted(() => {
+  let resolveCadastrosImport: (() => void) | undefined
+  const cadastros = new Promise<void>((nextResolve) => { resolveCadastrosImport = nextResolve })
   let resolve: (() => void) | undefined
   const ready = new Promise<void>((nextResolve) => { resolve = nextResolve })
-  return { reportsReady: ready, resolveReports: () => resolve?.() }
+  return { cadastrosReady: cadastros, resolveCadastros: () => resolveCadastrosImport?.(), reportsReady: ready, resolveReports: () => resolve?.() }
 })
 
 vi.mock('../components/AppLayout', () => ({
@@ -32,15 +35,20 @@ vi.mock('../features/settings/VisualCustomizationContext', () => ({
 vi.mock('../features/settings/modulesApi', () => ({ listModules: vi.fn().mockResolvedValue([]) }))
 
 vi.mock('../features/dashboard/DashboardPage', () => ({ DashboardPage: () => <div>Dashboard imediato</div> }))
-vi.mock('../features/customers/CustomersPage', () => ({ CustomersPage: () => <div>Clientes</div> }))
-vi.mock('../features/employees/EmployeesPage', () => ({ EmployeesPage: () => <div>Funcionários</div> }))
-vi.mock('../features/products/ProductsPage', () => ({ ProductsPage: () => <div>Produtos</div> }))
-vi.mock('../features/sales/SalesPages', () => ({ NewSalePage: () => <div>Nova venda</div>, SalesPage: () => <div>Vendas</div> }))
-vi.mock('../features/suppliers/SuppliersPage', () => ({ SuppliersPage: () => <div>Fornecedores</div> }))
-vi.mock('../features/commercial/CommercialPages', () => ({ OrdersPage: () => <div>Pedidos</div>, QuotesPage: () => <div>Orçamentos</div>, ReturnsPage: () => <div>Devoluções</div> }))
+vi.mock('../features/cadastros/CadastrosRoutePages', async () => {
+  await cadastrosReady
+  return {
+    CustomersPage: () => <div>Clientes lazy</div>,
+    EmployeesPage: () => <div>Funcionários lazy</div>,
+    ProductsPage: () => <div>Produtos lazy</div>,
+    SuppliersPage: () => <div>Fornecedores lazy</div>,
+  }
+})
+vi.mock('../features/sales/SalesPages', () => ({ NewSalePage: () => <div>Nova venda lazy</div>, SalesPage: () => <div>Vendas lazy</div> }))
+vi.mock('../features/commercial/CommercialPages', () => ({ OrdersPage: () => <div>Pedidos lazy</div>, QuotesPage: () => <div>Orçamentos lazy</div>, ReturnsPage: () => <div>Devoluções lazy</div> }))
 vi.mock('../features/purchases/PurchasesPages', () => ({ PurchasesPage: () => <div>Compras</div>, ReceiptsPage: () => <div>Recebimentos</div> }))
-vi.mock('../features/inventory/InventoryPages', () => ({ AdjustmentsPage: () => <div>Ajustes</div>, BalancesPage: () => <div>Saldos</div>, DepositsPage: () => <div>Depósitos</div>, InventoriesPage: () => <div>Inventários</div>, MovementsPage: () => <div>Movimentações</div> }))
-vi.mock('../features/finance/FinancePages', () => ({ CashflowPage: () => <div>Caixa</div>, FinancialTitlesPage: () => <div>Títulos</div> }))
+vi.mock('../features/inventory/InventoryPages', () => ({ AdjustmentsPage: () => <div>Ajustes lazy</div>, BalancesPage: () => <div>Saldos lazy</div>, DepositsPage: () => <div>Depósitos lazy</div>, InventoriesPage: () => <div>Inventários lazy</div>, MovementsPage: () => <div>Movimentações lazy</div> }))
+vi.mock('../features/finance/FinancePages', () => ({ CashflowPage: () => <div>Caixa lazy</div>, FinancialTitlesPage: () => <div>Títulos lazy</div> }))
 vi.mock('../features/auth/LoginPage', () => ({ LoginPage: () => <div>Login</div> }))
 vi.mock('../features/auth/SetupPage', () => ({ SetupPage: () => <div>Setup</div> }))
 vi.mock('../pages/NotFoundPage', () => ({ ModuleDisabledPage: () => <div>Módulo desativado</div>, NotFoundPage: () => <div>Não encontrado</div> }))
@@ -74,9 +82,44 @@ function visit(pathname: string) {
 afterEach(() => {
   cleanup()
   window.history.replaceState({}, '', '/')
+  vi.mocked(modulesApi.listModules).mockResolvedValue([])
 })
 
 describe('route-level code splitting', () => {
+  it('mantém o Shell e o fallback durante o carregamento lazy de Cadastros', async () => {
+    visit('/customers')
+
+    expect(screen.getByTestId('app-shell')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Carregando página...')
+
+    resolveCadastros()
+    expect(await screen.findByText('Clientes lazy')).toBeTruthy()
+  })
+
+  it.each([
+    { path: '/customers', text: 'Clientes lazy' },
+    { path: '/sales/new', text: 'Nova venda lazy' },
+    { path: '/sales', text: 'Vendas lazy' },
+    { path: '/commercial/quotes', text: 'Orçamentos lazy' },
+    { path: '/purchases/receipts', text: 'Recebimentos' },
+    { path: '/inventory/balances', text: 'Saldos lazy' },
+    { path: '/finance/cashflow', text: 'Caixa lazy' },
+  ])('carrega a família lazy para a rota $path', async ({ path, text }) => {
+    visit(path)
+    expect(await screen.findByText(text)).toBeTruthy()
+  })
+
+  it('preserva o bloqueio de acesso a módulos desativados', async () => {
+    vi.mocked(modulesApi.listModules).mockResolvedValue([
+      { id: 1, codigo: 'finance', nome: 'Financeiro', ativo: false, ordem: 1 },
+    ])
+
+    visit('/finance/cashflow')
+
+    expect(await screen.findByText('Módulo desativado')).toBeTruthy()
+    expect(screen.queryByText('Caixa lazy')).toBeNull()
+  })
+
   it('mantém o Shell renderizado durante o carregamento lazy de Reports', async () => {
     visit('/reports/commercial')
 
