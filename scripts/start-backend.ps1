@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Host = '127.0.0.1',
+    [string]$BindHost = '127.0.0.1',
     [int]$Port = 8000,
     [switch]$AccessLog
 )
@@ -18,6 +18,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $projectRoot '.env'))) {
 }
 
 Set-Location -LiteralPath $backend
-$arguments = @('-m', 'uvicorn', 'app.main:app', '--host', $Host, '--port', $Port)
+$arguments = @('-m', 'uvicorn', 'app.main:app', '--host', $BindHost, '--port', $Port)
 if ($AccessLog) { $arguments += '--access-log' } else { $arguments += '--no-access-log' }
 & $python @arguments
