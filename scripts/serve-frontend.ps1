@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Host = '127.0.0.1',
+    [string]$BindHost = '127.0.0.1',
     [int]$Port = 4173
 )
 
@@ -16,4 +16,4 @@ if (-not (Test-Path -LiteralPath (Join-Path $build 'index.html'))) {
 }
 
 Set-Location -LiteralPath $projectRoot
-& $python.Source scripts\static_server.py --directory $build --host $Host --port $Port
+& $python.Source scripts\static_server.py --directory $build --host $BindHost --port $Port

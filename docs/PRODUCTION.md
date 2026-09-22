@@ -29,7 +29,7 @@ O backend fica em `http://127.0.0.1:8000` e o frontend em
 `http://127.0.0.1:4173`. O script do frontend implementa fallback de SPA para
 que um refresh em uma rota como `/customers` continue funcionando.
 
-Para acessar pela rede local, informe explicitamente `-Host 0.0.0.0` nos dois
+Para acessar pela rede local, informe explicitamente `-BindHost 0.0.0.0` nos dois
 scripts e libere somente as portas necessárias no firewall. Em uma instalação
 exposta, prefira o reverse proxy com HTTPS.
 
