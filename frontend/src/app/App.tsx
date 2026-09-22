@@ -1,32 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { AppLayout } from '../components/AppLayout'
+import { LoadingState } from '../components/LoadingState'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { CustomersPage } from '../features/customers/CustomersPage'
 import { EmployeesPage } from '../features/employees/EmployeesPage'
 import { ProductsPage } from '../features/products/ProductsPage'
 import { NewSalePage, SalesPage } from '../features/sales/SalesPages'
 import { SuppliersPage } from '../features/suppliers/SuppliersPage'
-import { AppearancePage } from '../features/settings/AppearancePage'
 import { AppearanceProvider, useAppearance } from '../features/settings/AppearanceContext'
 import { AuthProvider, useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
 import { SetupPage } from '../features/auth/SetupPage'
-import { CustomFieldsPage } from '../features/settings/CustomFieldsPage'
-import { OrdersPage, PaymentConditionsPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
+import { OrdersPage, QuotesPage, ReturnsPage } from '../features/commercial/CommercialPages'
 import { PurchasesPage, ReceiptsPage } from '../features/purchases/PurchasesPages'
 import { AdjustmentsPage, BalancesPage, DepositsPage, InventoriesPage, MovementsPage } from '../features/inventory/InventoryPages'
 import { CashflowPage, FinancialTitlesPage } from '../features/finance/FinancePages'
-import { CommercialReportPage, FinanceReportPage, PurchasesReportPage, StockReportPage } from '../features/reports/ReportsPages'
-import { ModulesPage } from '../features/settings/ModulesPage'
-import { SettingsHubPage } from '../features/settings/SettingsHubPage'
-import { UsersPage } from '../features/settings/UsersPage'
 import { listModules, type ErpModule } from '../features/settings/modulesApi'
 import { VisualCustomizationProvider } from '../features/settings/VisualCustomizationContext'
 import { appearanceLabels, pageIdForPath } from '../features/settings/types'
 import { ModuleDisabledPage, NotFoundPage } from '../pages/NotFoundPage'
 import { navigationIcons } from './iconography'
 import { getCanonicalPathname, getModuleForPath, getRoute, type RouteDefinition } from './routes'
+
+const CommercialReportPage = lazy(() => import('../features/reports/ReportsPages').then(({ CommercialReportPage: Page }) => ({ default: Page })))
+const FinanceReportPage = lazy(() => import('../features/reports/ReportsPages').then(({ FinanceReportPage: Page }) => ({ default: Page })))
+const PurchasesReportPage = lazy(() => import('../features/reports/ReportsPages').then(({ PurchasesReportPage: Page }) => ({ default: Page })))
+const StockReportPage = lazy(() => import('../features/reports/ReportsPages').then(({ StockReportPage: Page }) => ({ default: Page })))
+const SettingsHubPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ SettingsHubPage: Page }) => ({ default: Page })))
+const AppearancePage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ AppearancePage: Page }) => ({ default: Page })))
+const CustomFieldsPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ CustomFieldsPage: Page }) => ({ default: Page })))
+const PaymentConditionsPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ PaymentConditionsPage: Page }) => ({ default: Page })))
+const ModulesPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ ModulesPage: Page }) => ({ default: Page })))
+const UsersPage = lazy(() => import('../features/settings/SettingsRoutePages').then(({ UsersPage: Page }) => ({ default: Page })))
 
 function currentPathname(): string {
   return getCanonicalPathname(window.location.pathname || '/')
@@ -165,7 +171,9 @@ function AppContent() {
 
   return (
       <AppLayout route={route} onNavigate={navigate} activeModules={activeModules.size ? activeModules : undefined} canManageUsers={canManageUsers} pageTheme={pageAppearances[pageId]?.resolved}>
-      <PageForRoute route={route} onNavigate={navigate} canManageUsers={canManageUsers} />
+      <Suspense fallback={<LoadingState label="Carregando página..." />}>
+        <PageForRoute route={route} onNavigate={navigate} canManageUsers={canManageUsers} />
+      </Suspense>
     </AppLayout>
   )
 }
