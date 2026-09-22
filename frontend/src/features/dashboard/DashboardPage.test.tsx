@@ -33,6 +33,16 @@ describe('DashboardPage', () => {
     vi.mocked(dashboardApi.getDashboardAnalytics).mockResolvedValue(analyticsFixture)
   })
 
+  it('mantém o contexto analítico enquanto o módulo de analytics é carregado', async () => {
+    render(<DashboardPage onNavigate={vi.fn()} />)
+
+    expect(screen.getByRole('heading', { name: 'Visão geral do ERP' })).toBeTruthy()
+    expect(await screen.findByText('Resumo operacional')).toBeTruthy()
+    expect(screen.getByText('Desempenho recente')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Carregando análise...')
+    expect(await screen.findByText('Vendas ao longo do tempo', {}, { timeout: 5000 })).toBeTruthy()
+  })
+
   it('loads and renders operational counts and all shortcuts', async () => {
     vi.mocked(dashboardApi.getDashboardSummary).mockResolvedValue({ customers: 2, products: 3, suppliers: 1, employees: 4, sales: 5 })
     const onNavigate = vi.fn()
@@ -52,7 +62,7 @@ describe('DashboardPage', () => {
     expect(sections[0]?.querySelector('#dashboard-summary-title')).toBeTruthy()
     expect(sections[1]?.classList.contains('dashboard-analytics')).toBe(true)
     expect(sections[2]?.classList.contains('dashboard-actions-section')).toBe(true)
-    expect(screen.getByText('Vendas ao longo do tempo')).toBeTruthy()
+    expect(await screen.findByText('Vendas ao longo do tempo', {}, { timeout: 5000 })).toBeTruthy()
     expect(screen.getByText('Total vendido')).toBeTruthy()
     expect(screen.getByText('A receber')).toBeTruthy()
     expect(screen.getByText('A pagar')).toBeTruthy()

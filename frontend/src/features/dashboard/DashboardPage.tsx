@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useState, type MouseEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from 'react'
 
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { PageHeader } from '../../components/PageHeader'
-import { DashboardAnalytics } from './DashboardAnalytics'
 import { getDashboardAnalytics, getDashboardSummary } from './api'
 import type { DashboardAnalyticsPeriod } from './analytics'
 import { useCustomizable } from '../settings/VisualCustomizationContext'
 import { actionIcons, iconSizes, iconStroke } from '../../app/iconography'
 
 const ArrowRightIcon = actionIcons.arrowRight
+const LazyDashboardAnalytics = lazy(() => import('./DashboardAnalytics').then(({ DashboardAnalytics: Component }) => ({ default: Component })))
 
 type DashboardPageProps = {
   onNavigate: (path: string) => void
@@ -135,6 +135,21 @@ function DashboardLoading() {
   )
 }
 
+function DashboardAnalyticsLoading() {
+  return (
+    <section className="dashboard-section dashboard-analytics dashboard-analytics-loading" aria-labelledby="dashboard-analytics-title">
+      <div className="dashboard-section-heading dashboard-analytics-heading">
+        <div>
+          <p className="eyebrow">Leitura analítica</p>
+          <h2 id="dashboard-analytics-title">Desempenho recente</h2>
+          <p className="dashboard-analytics-description">Tendências agregadas para entender o ritmo da operação e escolher onde investigar.</p>
+        </div>
+      </div>
+      <LoadingState label="Carregando análise..." />
+    </section>
+  )
+}
+
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [counts, setCounts] = useState<DashboardCounts>(initialCounts)
   const [loading, setLoading] = useState(true)
@@ -212,15 +227,17 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             </div>
           </section>
 
-          <DashboardAnalytics
-            data={analytics}
-            period={analyticsPeriod}
-            loading={analyticsLoading}
-            error={analyticsError}
-            onPeriodChange={setAnalyticsPeriod}
-            onRetry={() => void loadAnalytics(analyticsPeriod)}
-            onNavigate={onNavigate}
-          />
+          <Suspense fallback={<DashboardAnalyticsLoading />}>
+            <LazyDashboardAnalytics
+              data={analytics}
+              period={analyticsPeriod}
+              loading={analyticsLoading}
+              error={analyticsError}
+              onPeriodChange={setAnalyticsPeriod}
+              onRetry={() => void loadAnalytics(analyticsPeriod)}
+              onNavigate={onNavigate}
+            />
+          </Suspense>
 
           <section className="dashboard-section dashboard-actions-section" aria-labelledby="dashboard-actions-title">
             <div className="dashboard-section-heading">
