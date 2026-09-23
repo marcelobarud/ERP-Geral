@@ -20,6 +20,7 @@ describe('navegação comercial', () => {
       '/commercial/orders',
       '/commercial/returns',
     ])
+    expect(commercial?.items.map((item) => item.path)).not.toContain('/commercial/sales')
     expect(groups.find((group) => group.label === 'Vendas')).toBeUndefined()
     expect(groups.flatMap((group) => group.items).map((item) => item.path)).toContain(
       '/settings/payment-conditions',
@@ -63,6 +64,10 @@ describe('navegação comercial', () => {
     expect(getCanonicalPathname('/reports/dashboard')).toBe('/')
     expect(getCanonicalPathname('/reports/dashboard/')).toBe('/')
     expect(getRoute('/reports/dashboard').path).toBe('/')
+    expect(getCanonicalPathname('/commercial/sales')).toBe('/sales')
+    expect(getCanonicalPathname('/commercial/sales/')).toBe('/sales')
+    expect(getRoute('/commercial/sales').path).toBe('/sales')
+    expect(getRoute('/sales').path).toBe('/sales')
     expect(getRoute('/settings').label).toBe('Visão geral')
   })
 })

@@ -116,7 +116,6 @@ const routeDescriptions: Record<string, string> = {
   '/sales': 'Consulte o histórico de vendas e seus totais.',
   '/commercial/quotes': 'Crie e acompanhe orçamentos comerciais.',
   '/commercial/orders': 'Gerencie pedidos de venda e conversões.',
-  '/commercial/sales': 'Acesse as vendas originadas do fluxo comercial.',
   '/commercial/returns': 'Registre e aprove devoluções de vendas.',
   '/purchases': 'Gerencie pedidos de compra e itens pendentes.',
   '/purchases/receipts': 'Registre recebimentos parciais ou totais.',
@@ -158,6 +157,7 @@ export const notFoundRoute: RouteDefinition = {
 
 const legacyRouteRedirects: Record<string, string> = {
   '/reports/dashboard': '/',
+  '/commercial/sales': '/sales',
 }
 
 export function getCanonicalPathname(pathname: string): string {

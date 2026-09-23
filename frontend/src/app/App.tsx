@@ -75,8 +75,6 @@ function PageForRoute({
       return <QuotesPage />
     case '/commercial/orders':
       return <OrdersPage />
-    case '/commercial/sales':
-      return <SalesPage />
     case '/commercial/returns':
       return <ReturnsPage />
     case '/purchases':

@@ -109,6 +109,14 @@ describe('route-level code splitting', () => {
     expect(await screen.findByText(text)).toBeTruthy()
   })
 
+  it('canonicaliza o alias legado de Vendas para a rota oficial', async () => {
+    visit('/commercial/sales')
+
+    expect(await screen.findByText('Vendas lazy')).toBeTruthy()
+    expect(window.location.pathname).toBe('/sales')
+    expect(screen.queryByText('Não encontrado')).toBeNull()
+  })
+
   it('preserva o bloqueio de acesso a módulos desativados', async () => {
     vi.mocked(modulesApi.listModules).mockResolvedValue([
       { id: 1, codigo: 'finance', nome: 'Financeiro', ativo: false, ordem: 1 },
