@@ -1,13 +1,27 @@
-# Configuração de projeto.
-# Provider/auth do 9Router ficam em ~/.codex/config.toml, não aqui.
+#:schema https://developers.openai.com/codex/config-schema.json
 
-# O modelo padrão do projeto segue o modelo Luna configurado pelo usuário.
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "high"
 
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
 interrupt_message = true
-default_subagent_model = "gpt-5.6-luna"
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "high"
+
+[agents.implementer]
+description = "Executa features e correções já suficientemente compreendidas, preservando arquitetura, contratos e escopo."
+config_file = "agents/implementer.toml"
+
+[agents.planner]
+description = "Investiga bugs desconhecidos e tarefas complexas, reduzindo incerteza e produzindo planos executáveis sem editar a implementação."
+config_file = "agents/planner.toml"
+
+[agents.reviewer]
+description = "Faz revisão independente de alterações, procurando defeitos, regressões e riscos concretos sem reimplementar por preferência."
+config_file = "agents/reviewer.toml"
+
+[agents.architect]
+description = "Analisa decisões estruturais de alto impacto, contratos, persistência, concorrência e trade-offs arquiteturais sem editar diretamente."
+config_file = "agents/architect.toml"
